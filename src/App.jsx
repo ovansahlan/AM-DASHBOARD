@@ -1513,9 +1513,9 @@ export default function App() {
                        <div key={mex.id} onClick={() => { setSelectedMex(mex); setActiveSegmentModal(null); setActiveTab('overview'); }} className="flex justify-between items-center p-3.5 bg-white border border-slate-200 rounded-xl hover:border-[#00B14F] hover:shadow-md cursor-pointer transition-all group">
                           <div className="min-w-0 pr-4">
                              <p className="font-bold text-sm text-slate-800 group-hover:text-[#00B14F] truncate">{mex.name}</p>
-                             <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[10px] text-slate-400 font-mono bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">{mex.id}</span>
-                                <span className="text-[10px] text-slate-500 font-medium truncate">• {mex.amName}</span>
+                             {/* Bagian ini dikembalikan menjadi List Promo (Pills) */}
+                             <div className="-mt-1">
+                                {renderMerchantCampaigns(mex.campaigns)}
                              </div>
                           </div>
                           <div className="text-right shrink-0">
