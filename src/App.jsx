@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo, Fragment } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, 
-  ComposedChart, Line, Cell, AreaChart, Area, PieChart, Pie, LineChart
+  ComposedChart, Line, Cell, AreaChart, Area, PieChart, Pie, LineChart, LabelList
 } from 'recharts';
 import { 
   UploadCloud, TrendingUp, Database, Filter, Megaphone,
   Search, CheckCircle, AlertCircle, DollarSign, Activity, X,
   Store, ArrowUpRight, ArrowDownRight, Minus, Users, Info, ArrowLeft, Zap, MapPin, Phone, Mail, Award, LayoutDashboard, Table, ShoppingBag, Target, Percent, ExternalLink, Calculator,
-  ShoppingCart, Check, ArrowRight, Settings, List, Tags, Ticket, ChevronDown, Plus, MousePointer, Eye, RefreshCw, BarChart2
+  ShoppingCart, Check, ArrowRight, Settings, List, Tags, Ticket, ChevronDown, Plus, MousePointer, Eye, RefreshCw, BarChart2, FileText
 } from 'lucide-react';
 
 // ============================================================================
@@ -1403,11 +1403,15 @@ export default function App() {
   };
 
   const renderMerchantCampaigns = (campaignStr) => {
-    if (!campaignStr || campaignStr === '-' || campaignStr === '0' || campaignStr.toLowerCase().includes('no campaign')) { return <span className="text-slate-400 text-xs font-semibold italic">Tidak ada partisipasi campaign.</span>; }
+    if (!campaignStr || campaignStr === '-' || campaignStr === '0' || campaignStr.toLowerCase().includes('no campaign')) { 
+      return <span className="text-slate-400 text-[10px] font-semibold italic block mt-1">Tidak ada partisipasi campaign.</span>; 
+    }
     const camps = campaignStr.split(/[|,]/).map(c => c.trim()).filter(Boolean);
     return (
-        <div className="flex flex-wrap gap-1.5 mt-2">
-            {camps.map((camp, idx) => ( <span key={idx} className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 rounded-md text-[9px] font-bold flex items-center gap-1 shadow-sm"><Zap className="w-2.5 h-2.5 fill-emerald-500 text-emerald-500" />{camp}</span> ))}
+        <div className="flex flex-wrap gap-1 mt-1">
+            {camps.map((camp, idx) => ( 
+              <span key={idx} className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded text-[9px] font-bold flex items-center gap-1 shadow-sm"><Zap className="w-2.5 h-2.5 fill-emerald-500 text-emerald-500" />{camp}</span> 
+            ))}
         </div>
     );
   };
@@ -1513,7 +1517,6 @@ export default function App() {
                        <div key={mex.id} onClick={() => { setSelectedMex(mex); setActiveSegmentModal(null); setActiveTab('overview'); }} className="flex justify-between items-center p-3.5 bg-white border border-slate-200 rounded-xl hover:border-[#00B14F] hover:shadow-md cursor-pointer transition-all group">
                           <div className="min-w-0 pr-4">
                              <p className="font-bold text-sm text-slate-800 group-hover:text-[#00B14F] truncate">{mex.name}</p>
-                             {/* Bagian ini dikembalikan menjadi List Promo (Pills) */}
                              <div className="-mt-1">
                                 {renderMerchantCampaigns(mex.campaigns)}
                              </div>
@@ -1840,7 +1843,7 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* Campaign Segmentation Chart - FIXED MOBILE VISIBILITY */}
+                      {/* Campaign Segmentation Chart */}
                       <div className="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col h-[350px] lg:h-full lg:max-h-[350px]">
                         <div className="flex justify-between items-center mb-4 shrink-0">
                             <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Campaign Segment</h3>
@@ -1905,7 +1908,7 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* Portfolio Health - FIXED MOBILE VISIBILITY */}
+                      {/* Portfolio Health */}
                       <div className="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-center h-[350px] lg:h-full lg:max-h-[350px]">
                         <div className="flex justify-between items-end mb-4">
                             <div>
@@ -2016,7 +2019,7 @@ export default function App() {
             // =========================================================
             <div className="animate-in slide-in-from-right-8 duration-300 space-y-4 pb-12">
 
-               {/* Makit Man Profil Heda (Klin & Stret) */}
+               {/* Profile Header */}
                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 flex flex-col gap-3">
                   <div className="flex flex-wrap items-center gap-3">
                      <h2 className="text-xl md:text-2xl font-black text-slate-900 leading-tight break-words">{selectedMex.name}</h2>
@@ -2031,6 +2034,85 @@ export default function App() {
                        <Users className="w-4 h-4 text-slate-400" />
                        <span className="text-slate-700">{selectedMex.ownerName}</span>
                     </div>
+                  </div>
+               </div>
+
+               {/* NEW TOP KPI CARDS (PROPORTIONAL) */}
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Card 1: Sales */}
+                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 flex flex-col justify-between">
+                     <div className="flex justify-between items-start mb-3">
+                         <div className="flex items-center gap-1.5">
+                            <Activity className="w-4 h-4 text-[#00B14F]"/>
+                            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Sales</p>
+                         </div>
+                         <div className={`flex items-center gap-0.5 text-[10px] font-black px-1.5 py-0.5 rounded border ${selectedMex.rrBs > selectedMex.lmBs ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
+                            {selectedMex.rrBs > selectedMex.lmBs ? <ArrowUpRight className="w-3 h-3"/> : <ArrowDownRight className="w-3 h-3"/>}
+                            {Math.abs(selectedMex.rrVsLm).toFixed(1)}%
+                         </div>
+                     </div>
+                     <div className="flex flex-col gap-1.5 mt-auto pt-3 border-t border-slate-100">
+                         <div className="flex justify-between items-center"><span className="text-[10px] text-slate-400 font-bold">LM</span><span className="text-sm font-black text-slate-600">{formatCurrency(selectedMex.lmBs)}</span></div>
+                         <div className="flex justify-between items-center"><span className="text-[10px] text-slate-600 font-bold">MTD</span><span className="text-sm font-black text-slate-900">{formatCurrency(selectedMex.mtdBs)}</span></div>
+                         <div className="flex justify-between items-center"><span className="text-[10px] text-[#00B14F] font-bold">Projected</span><span className="text-sm font-black text-[#00B14F]">{formatCurrency(selectedMex.rrBs)}</span></div>
+                     </div>
+                  </div>
+
+                  {/* Card 2: Active Campaigns */}
+                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 flex flex-col justify-between">
+                     <div className="flex justify-between items-start mb-3">
+                         <div className="flex items-center gap-1.5">
+                            <Zap className="w-4 h-4 text-amber-500"/>
+                            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Campaigns</p>
+                         </div>
+                         <div className="bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 flex items-center gap-1 shadow-sm">
+                            <Award className="w-3 h-3 text-indigo-500"/>
+                            <span className="text-[10px] font-bold text-indigo-700">{selectedMex.campaignPoint || 0} Pts</span>
+                         </div>
+                     </div>
+                     <div className="mt-auto pt-2 border-t border-slate-100">
+                         {renderMerchantCampaigns(selectedMex.campaigns)}
+                     </div>
+                  </div>
+
+                  {/* Card 3: Marketing */}
+                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 flex flex-col justify-between">
+                     <div className="flex justify-between items-start mb-3">
+                         <div className="flex items-center gap-1.5">
+                             <Megaphone className="w-4 h-4 text-[#00B14F]"/>
+                             <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Marketing</p>
+                         </div>
+                     </div>
+                     <div className="flex flex-col gap-1.5 mt-auto pt-3 border-t border-slate-100">
+                         <div className="flex justify-between items-center"><span className="text-[10px] text-slate-400 font-bold">Ads Spend</span><span className="text-sm font-black text-rose-500">{formatCurrency(selectedMex.adsTotal)}</span></div>
+                         <div className="flex justify-between items-center"><span className="text-[10px] text-slate-600 font-bold">Promo (MI)</span><span className="text-sm font-black text-amber-500">{formatCurrency(selectedMex.miMtd)}</span></div>
+                         <div className="flex justify-between items-center"><span className="text-[10px] text-slate-600 font-bold">Komisi</span><span className="text-sm font-black text-slate-800">{selectedMex.commission || '-'}</span></div>
+                     </div>
+                  </div>
+
+                  {/* Card 4: MCA */}
+                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 flex flex-col justify-between">
+                     <div className="flex justify-between items-start mb-3">
+                         <div className="flex items-center gap-1.5">
+                             <Database className="w-4 h-4 text-amber-500"/>
+                             <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">MCA Config</p>
+                         </div>
+                         {selectedMex.mcaPriority && selectedMex.mcaPriority !== '-' && (
+                             <span className="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[9px] font-black uppercase shadow-sm border border-amber-200">
+                                {selectedMex.mcaPriority}
+                             </span>
+                         )}
+                     </div>
+                     <div className="flex flex-col gap-1.5 mt-auto pt-3 border-t border-slate-100">
+                         <div className="flex justify-between items-center">
+                            <span className="text-[10px] text-slate-400 font-bold">Status</span>
+                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase border ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
+                               {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'Eligible' : 'Not Eligible'}
+                            </span>
+                         </div>
+                         <div className="flex justify-between items-center"><span className="text-[10px] text-slate-600 font-bold">Limit</span><span className="text-sm font-black text-slate-800">{selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}</span></div>
+                         <div className="flex justify-between items-center"><span className="text-[10px] text-amber-600 font-bold">Cair</span><span className="text-sm font-black text-amber-600">{formatCurrency(selectedMex.mcaAmount)}</span></div>
+                     </div>
                   </div>
                </div>
 
@@ -2158,133 +2240,8 @@ export default function App() {
                    </div>
                )}
 
-               {/* Legacy Details (Current Month) */}
-               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-                  {/* Left Column: Sales & Campaign */}
-                  <div className="space-y-4">
-                     {/* Sales Benchmarking Panel (Current Month) */}
-                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5">
-                        <div className="flex justify-between items-end mb-4">
-                           <div>
-                              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Current Performance</h3>
-                              <p className="text-[10px] text-slate-500">LM vs MTD vs Projected</p>
-                           </div>
-                           <div className={`flex items-center gap-1 text-sm font-black ${selectedMex.rrBs > selectedMex.lmBs ? 'text-emerald-600' : 'text-rose-600'}`}>
-                              {selectedMex.rrBs > selectedMex.lmBs ? <ArrowUpRight className="w-4 h-4"/> : <ArrowDownRight className="w-4 h-4"/>}
-                              {Math.abs(selectedMex.rrVsLm).toFixed(1)}%
-                           </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-3 gap-2 mb-4">
-                           <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                             <p className="text-[9px] text-slate-500 font-bold uppercase">Last Month</p>
-                             <p className="text-xs md:text-sm font-black text-slate-700 mt-0.5 truncate">{formatCurrency(selectedMex.lmBs)}</p>
-                           </div>
-                           <div className="bg-green-50 p-2.5 rounded-lg border border-green-100">
-                             <p className="text-[9px] text-[#00B14F] font-bold uppercase">MTD Sales</p>
-                             <p className="text-xs md:text-sm font-black text-slate-900 mt-0.5 truncate">{formatCurrency(selectedMex.mtdBs)}</p>
-                           </div>
-                           <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                             <p className="text-[9px] text-slate-500 font-bold uppercase">Projected RR</p>
-                             <p className="text-xs md:text-sm font-black text-slate-700 mt-0.5 truncate">{formatCurrency(selectedMex.rrBs)}</p>
-                           </div>
-                        </div>
-                        {!selectedMex.history || selectedMex.history.length === 0 ? (
-                            <div className="h-40 w-full">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={[{ name: 'Sales', lmBs: selectedMex.lmBs, mtdBs: selectedMex.mtdBs, rrBs: selectedMex.rrBs }]} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                  <XAxis dataKey="name" tick={false} axisLine={false} tickLine={false} />
-                                  <YAxis tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={45} />
-                                  <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '10px' }} formatter={(v) => formatCurrency(v)} />
-                                  <Bar dataKey="lmBs" name="LM Sales" fill={COLORS.lastMonth} radius={[3,3,0,0]} maxBarSize={50} />
-                                  <Bar dataKey="mtdBs" name="MTD Sales" fill={COLORS.primary} radius={[3,3,0,0]} maxBarSize={50} />
-                                  <Bar dataKey="rrBs" name="Runrate" fill={COLORS.growth} radius={[3,3,0,0]} maxBarSize={50} />
-                                </BarChart>
-                              </ResponsiveContainer>
-                            </div>
-                        ) : null}
-                     </div>
-
-                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col">
-                         <div className="flex justify-between items-start mb-3">
-                           <div className="flex items-center gap-1.5">
-                              <Zap className="w-4 h-4 text-amber-500"/>
-                              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Active Campaigns</h3>
-                           </div>
-                           <div className="bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 flex items-center gap-1">
-                              <Award className="w-3 h-3 text-indigo-500"/>
-                              <span className="text-[10px] font-bold text-indigo-700">{selectedMex.campaignPoint || 0} Pts</span>
-                           </div>
-                         </div>
-                         <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                            {renderMerchantCampaigns(selectedMex.campaigns)}
-                         </div>
-                      </div>
-                  </div>
-
-                  {/* Right Column: MCA & Marketing */}
-                  <div className="space-y-4">
-                     
-                     <div className="bg-amber-50 rounded-xl shadow-sm border border-amber-100 p-4 md:p-5">
-                        <div className="flex items-center justify-between mb-4">
-                           <div className="flex items-center gap-1.5">
-                               <Database className="w-4 h-4 text-amber-600"/>
-                               <h3 className="text-sm font-bold text-amber-900 uppercase tracking-wide">MCA Eligibility</h3>
-                           </div>
-                           {selectedMex.mcaPriority && selectedMex.mcaPriority !== '-' && (
-                               <span className="bg-amber-200 text-amber-800 border border-amber-300 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider shadow-sm">
-                                  {selectedMex.mcaPriority}
-                               </span>
-                           )}
-                        </div>
-                        
-                        <div className="space-y-3">
-                           <div className="flex items-center justify-between">
-                              <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase border ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
-                                {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'Eligible' : 'Not Eligible'}
-                              </span>
-                              <span className="text-[10px] font-bold text-slate-800">{selectedMex.mcaWlClass}</span>
-                           </div>
-                           
-                           <div className="bg-white p-3 rounded-lg border border-amber-100 shadow-sm">
-                              <p className="text-[9px] text-slate-400 font-bold uppercase mb-0.5">Available Limit</p>
-                              <p className="text-xl md:text-2xl font-black text-amber-500 tracking-tight leading-none">{selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}</p>
-                           </div>
-
-                           <div className="flex justify-between items-center pt-1 border-t border-amber-100/50">
-                              <span className="text-[10px] font-bold text-slate-500 uppercase">Disbursed</span>
-                              <span className="text-sm font-black text-slate-800">{formatCurrency(selectedMex.mcaAmount)}</span>
-                           </div>
-                        </div>
-                     </div>
-
-                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-                        <div className="flex items-center gap-1.5 mb-3">
-                           <Megaphone className="w-4 h-4 text-[#00B14F]"/>
-                           <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Marketing Stats (MTD)</h3>
-                        </div>
-                        <div className="space-y-2">
-                           <div className="flex justify-between items-center pb-1.5 border-b border-slate-100">
-                             <span className="text-[11px] text-slate-500 font-medium">Ads Spend</span>
-                             <span className="text-xs font-black text-rose-500">{formatCurrency(selectedMex.adsTotal)}</span>
-                           </div>
-                           <div className="flex justify-between items-center pb-1.5 border-b border-slate-100">
-                             <span className="text-[11px] text-slate-500 font-medium">Promo Invest (MI)</span>
-                             <span className="text-xs font-bold text-amber-500">{formatCurrency(selectedMex.miMtd)}</span>
-                           </div>
-                           <div className="flex justify-between items-center">
-                             <span className="text-[11px] text-slate-500 font-medium">Commission</span>
-                             <span className="text-xs font-bold text-slate-800">{selectedMex.commission || '-'}</span>
-                           </div>
-                        </div>
-                     </div>
-
-                  </div>
-               </div>
-
                {/* NEW: CONTACT DETAILS AT THE BOTTOM */}
-               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5">
+               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 mt-4">
                   <div className="flex items-center gap-2 mb-3 pb-3 border-b border-slate-100">
                      <Info className="w-4 h-4 text-indigo-500"/>
                      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Contact Details</h3>
@@ -2303,7 +2260,7 @@ export default function App() {
                       </div>
 
                       {/* Map Links */}
-                      <div className="bg-slate-50 p-2.5 md:p-3 rounded-lg border border-slate-200 flex gap-2.5 h-full">
+                      <div className="bg-slate-50 p-2.5 md:p-3 rounded-lg border border-slate-100 flex gap-2.5 h-full">
                          <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5"/>
                          <div className="flex flex-col min-w-0 flex-1">
                             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Location Maps</span>
