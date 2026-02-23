@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, Fragment } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, 
-  ComposedChart, Line, Cell, AreaChart, Area, PieChart, Pie, LineChart, LabelList
+  ComposedChart, Line, Cell, AreaChart, Area, PieChart, Pie, LineChart
 } from 'recharts';
 import { 
   UploadCloud, TrendingUp, Database, Filter, Megaphone,
@@ -1514,7 +1514,8 @@ export default function App() {
                           <div className="min-w-0 pr-4">
                              <p className="font-bold text-sm text-slate-800 group-hover:text-[#00B14F] truncate">{mex.name}</p>
                              <div className="flex items-center gap-2 mt-1">
-                                {renderMerchantCampaigns(mex.campaigns)}
+                                <span className="text-[10px] text-slate-400 font-mono bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">{mex.id}</span>
+                                <span className="text-[10px] text-slate-500 font-medium truncate">• {mex.amName}</span>
                              </div>
                           </div>
                           <div className="text-right shrink-0">
@@ -1839,8 +1840,8 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* Campaign Segmentation Chart */}
-                      <div className="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col h-full max-h-[350px]">
+                      {/* Campaign Segmentation Chart - FIXED MOBILE VISIBILITY */}
+                      <div className="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col h-[350px] lg:h-full lg:max-h-[350px]">
                         <div className="flex justify-between items-center mb-4 shrink-0">
                             <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Campaign Segment</h3>
                             <span className="bg-indigo-50 text-indigo-700 font-black text-[10px] md:text-xs px-2.5 py-1 rounded-lg shadow-sm border border-indigo-100">
@@ -1864,11 +1865,17 @@ export default function App() {
                               <XAxis type="number" hide />
                               <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} width={75} />
                               <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '11px', padding: '6px' }} />
-                              <Bar dataKey="count" name="Total Merchant" radius={[0, 4, 4, 0]} barSize={22} cursor="pointer">
+                              <Bar 
+                                dataKey="count" 
+                                name="Total Merchant" 
+                                radius={[0, 4, 4, 0]} 
+                                barSize={22} 
+                                cursor="pointer"
+                                label={{ position: 'right', fill: '#475569', fontSize: 11, fontWeight: 'bold' }}
+                              >
                                 {campaignStats.classification.map((entry, index) => (
                                   <Cell key={`cell-${index}`} fill={entry.fill} />
                                 ))}
-                                <LabelList dataKey="count" position="right" style={{ fill: '#475569', fontSize: '11px', fontWeight: 'bold' }} />
                               </Bar>
                             </BarChart>
                           </ResponsiveContainer>
@@ -1898,8 +1905,8 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* Portfolio Health */}
-                      <div className="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-center h-full max-h-[350px]">
+                      {/* Portfolio Health - FIXED MOBILE VISIBILITY */}
+                      <div className="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-center h-[350px] lg:h-full lg:max-h-[350px]">
                         <div className="flex justify-between items-end mb-4">
                             <div>
                                 <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Portfolio Health</h3>
@@ -2296,7 +2303,7 @@ export default function App() {
                       </div>
 
                       {/* Map Links */}
-                      <div className="bg-slate-50 p-2.5 md:p-3 rounded-lg border border-slate-100 flex gap-2.5 h-full">
+                      <div className="bg-slate-50 p-2.5 md:p-3 rounded-lg border border-slate-200 flex gap-2.5 h-full">
                          <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5"/>
                          <div className="flex flex-col min-w-0 flex-1">
                             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Location Maps</span>
