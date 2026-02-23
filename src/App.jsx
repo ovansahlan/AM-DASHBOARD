@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, Fragment } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, 
-  ComposedChart, Line, Cell, AreaChart, Area, PieChart, Pie, LineChart
+  ComposedChart, Line, Cell, AreaChart, Area, PieChart, Pie, LineChart, LabelList
 } from 'recharts';
 import { 
   UploadCloud, TrendingUp, Database, Filter, Megaphone,
@@ -39,12 +39,12 @@ const COLORS = {
   growth: '#0ea5e9',    
   decline: '#ef4444',   
   finance: '#f59e0b',   
-  lastMonth: '#94a3b8', 
+  lastMonth: '#fb923c', // Diubah menjadi oranye terang
   white: '#ffffff',
   slate900: '#0f172a',
   slate500: '#64748b',
   netSales: '#10b981', 
-  basketSize: '#cbd5e1' 
+  basketSize: '#3b82f6' 
 };
 
 // ============================================================================
@@ -934,6 +934,21 @@ export default function App() {
   
   const [activeTab, setActiveTab] = useState('overview'); 
 
+  // --- MENAMBAHKAN FAVICON (ICON TAB BROWSER) ---
+  useEffect(() => {
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    // Memasang link gambar yang kamu minta
+    link.href = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTMcKpdYLDWBDdPTYo5MiN-8czZZI_mcRLQQ&s';
+    
+    // Memastikan judul tab-nya rapi
+    document.title = "AM Dashboard Pro"; 
+  }, []);
+
   // --- MEMUAT DATA DARI LOCAL STORAGE (VERSI OFFLINE TAHAN BANTING) ---
   useEffect(() => {
     const loadLocalData = async () => {
@@ -1174,7 +1189,8 @@ export default function App() {
      setLoading(true); 
      setTimeout(() => { 
         const amNames = ['Muhamad Novan', 'Reza Firmansyah', 'Sarah Amelia', 'Andi Pratama'];
-        const possibleCampaigns = ['GMS Booster', 'GMS Cuan', 'Free Ongkir', 'WEEKENDFEST'];
+        // Menambahkan Booster+ ke data dummy
+        const possibleCampaigns = ['GMS Booster', 'GMS Cuan', 'Free Ongkir', 'WEEKENDFEST', 'Booster+'];
         const months = ['2025-01-01','2025-02-01','2025-03-01','2025-04-01','2025-05-01','2025-06-01','2025-07-01','2025-08-01','2025-09-01','2025-10-01','2025-11-01','2025-12-01','2026-01-01','2026-02-01'];
 
         const genData = Array.from({ length: 150 }).map((_, i) => {
@@ -1190,10 +1206,12 @@ export default function App() {
 
           let assignedCampaigns = [];
           const campaignRoll = Math.random();
+          // Logika probabilitas dummy untuk klasifikasi campaign baru
           if (campaignRoll < 0.2) assignedCampaigns = ['No Campaign'];
-          else if (campaignRoll < 0.5) assignedCampaigns = [possibleCampaigns[0]];
-          else if (campaignRoll < 0.8) assignedCampaigns = [possibleCampaigns[1], possibleCampaigns[3]];
-          else assignedCampaigns = [possibleCampaigns[0], possibleCampaigns[2]];
+          else if (campaignRoll < 0.35) assignedCampaigns = [possibleCampaigns[0]]; // GMS Only
+          else if (campaignRoll < 0.5) assignedCampaigns = [possibleCampaigns[4]];  // Booster+
+          else if (campaignRoll < 0.7) assignedCampaigns = [possibleCampaigns[1], possibleCampaigns[3]]; // GMS & Local
+          else assignedCampaigns = [possibleCampaigns[2], possibleCampaigns[3]]; // Local Only
 
           let baseBs = Math.floor(Math.random() * 15000000) + 5000000;
           const history = months.map(m => {
@@ -1283,19 +1301,57 @@ export default function App() {
   }, [data, selectedAM, selectedPriority]);
 
   const campaignStats = useMemo(() => {
-    const counts = {}; let joiners = 0; let noCamp = 0;
+    let zeroInvest = 0, gmsOnly = 0, gmsLocal = 0, boosterPlus = 0, localOnly = 0;
+    let joiners = 0;
+    const counts = {};
+
     activeData.forEach(d => {
       const c = d.campaigns ? String(d.campaigns).trim().toLowerCase() : '';
-      if (!c || c === '-' || c === '0' || c.includes('no campaign')) noCamp++;
-      else {
+      if (!c || c === '-' || c === '0' || c.includes('no campaign')) {
+        zeroInvest++;
+      } else {
         joiners++;
-        d.campaigns.split(/[|,]/).forEach(camp => {
-          const name = camp.trim();
-          if (name && name.toLowerCase() !== 'no campaign') counts[name] = (counts[name] || 0) + 1;
+        const camps = c.split(/[|,]/).map(x => x.trim()).filter(Boolean);
+        
+        let hasGMS = false;
+        let hasBoosterPlus = false;
+        let hasLocal = false;
+
+        camps.forEach(camp => {
+          counts[camp] = (counts[camp] || 0) + 1;
+          
+          if (camp.includes('gms')) hasGMS = true;
+          else if (camp.includes('booster+')) hasBoosterPlus = true;
+          else hasLocal = true;
         });
+
+        // Logika klasifikasi baru:
+        // Jika ada Booster+, langsung masuk klasifikasi Booster+
+        if (hasBoosterPlus) {
+          boosterPlus++;
+        } else if (hasGMS) {
+          if (hasLocal) gmsLocal++;
+          else gmsOnly++;
+        } else if (hasLocal) {
+          localOnly++;
+        }
       }
     });
-    return { joiners, noCamp, list: Object.entries(counts).map(([name, count]) => ({ name, count })).sort((a,b) => b.count - a.count) };
+
+    const classification = [
+      { name: 'GMS Only', count: gmsOnly, fill: '#0ea5e9' },       // Biru
+      { name: 'GMS & Local', count: gmsLocal, fill: '#8b5cf6' },    // Ungu
+      { name: 'Booster+', count: boosterPlus, fill: '#f59e0b' },    // Amber/Kuning
+      { name: 'Local Only', count: localOnly, fill: '#10b981' },    // Hijau
+      { name: '0 Invest', count: zeroInvest, fill: '#cbd5e1' }      // Abu-abu
+    ];
+
+    return { 
+      joiners, 
+      zeroInvest, 
+      classification, 
+      list: Object.entries(counts).map(([name, count]) => ({ name, count })) 
+    };
   }, [activeData]);
 
   const kpi = useMemo(() => {
@@ -1314,7 +1370,8 @@ export default function App() {
 
   const chartsData = useMemo(() => {
     const mtd = [...activeData].sort((a, b) => b.mtdBs - a.mtdBs).slice(0, 10);
-    const ads = [...activeData].sort((a, b) => b.adsLM - a.adsLM).slice(0, 5);
+    // Ubah .slice(0, 5) menjadi .slice(0, 10)
+    const ads = [...activeData].sort((a, b) => b.adsLM - a.adsLM).slice(0, 10);
     let g = 0, d = 0, s = 0;
     activeData.forEach(x => { if (x.rrBs > x.lmBs * 1.05) g++; else if (x.rrBs < x.lmBs * 0.95) d++; else s++; });
     const total = Math.max(1, g + d + s);
@@ -1561,7 +1618,7 @@ export default function App() {
                         <div className="absolute -right-4 -top-4 w-16 h-16 bg-green-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500 ease-out"></div>
                         <div className="flex justify-between items-start mb-3 relative z-10">
                           <div className="flex items-center gap-1.5">
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Basketsize</p>
+                            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Basketsize</p>
                             {kpi && kpi.rr < kpi.lm && (
                               <span className="flex items-center text-rose-500 bg-rose-50 px-1 py-0.5 rounded border border-rose-100" title="Proyeksi Turun">
                                 <ArrowDownRight className="w-3 h-3 animate-float-down" />
@@ -1578,15 +1635,15 @@ export default function App() {
                         <div className="flex flex-col gap-2 mt-auto pt-3 border-t border-slate-100 relative z-10">
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-slate-400 uppercase">LM</span>
-                            <span className="text-[13px] md:text-sm font-black text-slate-600 tracking-tight">{formatCurrency(kpi?.lm || 0)}</span>
+                            <span className="text-base md:text-lg font-black text-slate-600 tracking-tight">{formatCurrency(kpi?.lm || 0)}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-slate-600 uppercase">MTD</span>
-                            <span className="text-[13px] md:text-sm font-black text-slate-800 tracking-tight">{formatCurrency(kpi?.mtd || 0)}</span>
+                            <span className="text-base md:text-lg font-black text-slate-800 tracking-tight">{formatCurrency(kpi?.mtd || 0)}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-[#00B14F] uppercase">RR</span>
-                            <span className="text-[13px] md:text-sm font-black text-[#00B14F] tracking-tight">{formatCurrency(kpi?.rr || 0)}</span>
+                            <span className="text-base md:text-lg font-black text-[#00B14F] tracking-tight">{formatCurrency(kpi?.rr || 0)}</span>
                           </div>
                         </div>
                       </div>
@@ -1596,7 +1653,7 @@ export default function App() {
                         <div className="absolute -right-4 -top-4 w-16 h-16 bg-rose-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500 ease-out"></div>
                         <div className="flex justify-between items-start mb-3 relative z-10">
                           <div className="flex items-center gap-1.5">
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Ads Spend</p>
+                            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Ads Spend</p>
                             {kpi && kpi.adsRr < kpi.adsLm && (
                               <span className="flex items-center text-emerald-500 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100" title="Beban Berkurang">
                                 <ArrowDownRight className="w-3 h-3 animate-float-down" />
@@ -1613,15 +1670,15 @@ export default function App() {
                         <div className="flex flex-col gap-2 mt-auto pt-3 border-t border-slate-100 relative z-10">
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-slate-400 uppercase">LM</span>
-                            <span className="text-[13px] md:text-sm font-black text-slate-600 tracking-tight">{formatCurrency(kpi?.adsLm || 0)}</span>
+                            <span className="text-base md:text-lg font-black text-slate-600 tracking-tight">{formatCurrency(kpi?.adsLm || 0)}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-slate-600 uppercase">MTD</span>
-                            <span className="text-[13px] md:text-sm font-black text-slate-800 tracking-tight">{formatCurrency(kpi?.adsMtd || 0)}</span>
+                            <span className="text-base md:text-lg font-black text-slate-800 tracking-tight">{formatCurrency(kpi?.adsMtd || 0)}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-rose-500 uppercase">RR</span>
-                            <span className="text-[13px] md:text-sm font-black text-rose-500 tracking-tight">{formatCurrency(kpi?.adsRr || 0)}</span>
+                            <span className="text-base md:text-lg font-black text-rose-500 tracking-tight">{formatCurrency(kpi?.adsRr || 0)}</span>
                           </div>
                         </div>
                       </div>
@@ -1630,21 +1687,21 @@ export default function App() {
                       <div className="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between relative overflow-hidden group">
                         <div className="absolute -right-4 -top-4 w-16 h-16 bg-amber-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500 ease-out"></div>
                         <div className="flex justify-between items-start mb-3 relative z-10">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">MCA Config</p>
+                          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">MCA Config</p>
                           <Database className="w-4 h-4 text-amber-500" />
                         </div>
                         <div className="flex flex-col gap-2 mt-auto pt-3 border-t border-slate-100 relative z-10">
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-slate-400 uppercase">Limit</span>
-                            <span className="text-[13px] md:text-sm font-black text-slate-600 tracking-tight">{formatCurrency(kpi?.mcaEli || 0)}</span>
+                            <span className="text-base md:text-lg font-black text-slate-600 tracking-tight">{formatCurrency(kpi?.mcaEli || 0)}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-amber-600 uppercase">Disbursed</span>
-                            <span className="text-[13px] md:text-sm font-black text-amber-600 tracking-tight">{formatCurrency(kpi?.mcaDis || 0)}</span>
+                            <span className="text-base md:text-lg font-black text-amber-600 tracking-tight">{formatCurrency(kpi?.mcaDis || 0)}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-amber-500 uppercase">Toko Cair</span>
-                            <span className="text-[13px] md:text-sm font-black text-amber-500 tracking-tight">{kpi?.mcaDisCount || 0}</span>
+                            <span className="text-base md:text-lg font-black text-amber-500 tracking-tight">{kpi?.mcaDisCount || 0}</span>
                           </div>
                         </div>
                       </div>
@@ -1653,21 +1710,21 @@ export default function App() {
                       <div className="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between relative overflow-hidden group">
                         <div className="absolute -right-4 -top-4 w-16 h-16 bg-indigo-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500 ease-out"></div>
                         <div className="flex justify-between items-start mb-3 relative z-10">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Points</p>
+                          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Points</p>
                           <Award className="w-4 h-4 text-indigo-500" />
                         </div>
                         <div className="flex flex-col gap-2 mt-auto pt-3 border-t border-slate-100 relative z-10">
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-slate-400 uppercase">Active Promo</span>
-                            <span className="text-[13px] md:text-sm font-black text-slate-600 tracking-tight">{kpi?.activeCampCount || 0}</span>
+                            <span className="text-base md:text-lg font-black text-slate-600 tracking-tight">{kpi?.activeCampCount || 0}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-indigo-400 uppercase">Avg/Toko</span>
-                            <span className="text-[13px] md:text-sm font-black text-indigo-500 tracking-tight">{kpi?.avgPtsPerJoiner || 0}</span>
+                            <span className="text-base md:text-lg font-black text-indigo-500 tracking-tight">{kpi?.avgPtsPerJoiner || 0}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-indigo-600 uppercase">Total Pts</span>
-                            <span className="text-[13px] md:text-sm font-black text-indigo-600 tracking-tight">{(kpi?.totalPoints || 0).toLocaleString('id-ID')}</span>
+                            <span className="text-base md:text-lg font-black text-indigo-600 tracking-tight">{(kpi?.totalPoints || 0).toLocaleString('id-ID')}</span>
                           </div>
                         </div>
                       </div>
@@ -1676,21 +1733,21 @@ export default function App() {
                       <div className="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between relative overflow-hidden group cursor-default">
                         <div className="absolute -right-4 -top-4 w-16 h-16 bg-emerald-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500 ease-out"></div>
                         <div className="flex justify-between items-start mb-3 relative z-10">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Outlets</p>
+                          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Outlets</p>
                           <Store className="w-4 h-4 text-emerald-500" />
                         </div>
                         <div className="flex flex-col gap-2 mt-auto pt-3 border-t border-slate-100 relative z-10">
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-slate-400 uppercase">Inactive</span>
-                            <span className="text-[13px] md:text-sm font-black text-slate-500 tracking-tight">{kpi?.inactiveMex || 0}</span>
+                            <span className="text-base md:text-lg font-black text-slate-500 tracking-tight">{kpi?.inactiveMex || 0}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-emerald-500 uppercase">Active</span>
-                            <span className="text-[13px] md:text-sm font-black text-emerald-600 tracking-tight">{kpi?.activeMex || 0}</span>
+                            <span className="text-base md:text-lg font-black text-emerald-600 tracking-tight">{kpi?.activeMex || 0}</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-[#00B14F] uppercase">Joiners</span>
-                            <span className="text-[13px] md:text-sm font-black text-[#00B14F] tracking-tight">{kpi?.joiners || 0}</span>
+                            <span className="text-base md:text-lg font-black text-[#00B14F] tracking-tight">{kpi?.joiners || 0}</span>
                           </div>
                         </div>
                       </div>
@@ -1719,66 +1776,30 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* Campaign Participants Chart & Details (Moved to Row 1) */}
+                      {/* Campaign Segmentation Chart */}
                       <div className="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col h-full max-h-[350px]">
                         <div className="flex justify-between items-center mb-4 shrink-0">
-                            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Campaign Participants</h3>
-                            <span className="bg-emerald-100 text-emerald-700 font-black text-[10px] md:text-xs px-2.5 py-1 rounded-lg shadow-sm border border-emerald-200">
-                                {(( (kpi?.joiners || 0) / Math.max(1, (kpi?.joiners || 0) + campaignStats.noCamp)) * 100).toFixed(0)}% Rate
+                            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Campaign Segment</h3>
+                            <span className="bg-indigo-50 text-indigo-700 font-black text-[10px] md:text-xs px-2.5 py-1 rounded-lg shadow-sm border border-indigo-100">
+                                {(( (kpi?.joiners || 0) / Math.max(1, (kpi?.joiners || 0) + campaignStats.zeroInvest)) * 100).toFixed(0)}% Rate
                             </span>
                         </div>
                         
-                        <div className="flex flex-row items-stretch gap-4 flex-1 overflow-hidden min-h-[140px]">
-                            {/* Left: Chart */}
-                            <div className="w-[55%] relative flex justify-center items-center shrink-0">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <PieChart style={{ outline: 'none' }}>
-                                  <Pie 
-                                      data={[
-                                          { name: 'Joiners', value: kpi?.joiners || 0 },
-                                          { name: 'No Campaign', value: campaignStats.noCamp }
-                                      ]} 
-                                      cx="50%" cy="50%" innerRadius={0} outerRadius={65} dataKey="value" stroke="white" strokeWidth={2}
-                                      style={{ outline: 'none' }}
-                                      labelLine={false}
-                                      label={({ cx, cy, midAngle, innerRadius, outerRadius, value, percent, index }) => {
-                                          const RADIAN = Math.PI / 180;
-                                          const radius = outerRadius * 0.55;
-                                          const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                                          const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                                          if (percent < 0.05) return null;
-                                          return (
-                                              <text 
-                                                  x={x} y={y} 
-                                                  fill={index === 0 ? "white" : "#475569"} 
-                                                  textAnchor="middle" dominantBaseline="central" 
-                                                  className="text-[11px] font-black pointer-events-none"
-                                              >
-                                                  {value}
-                                              </text>
-                                          );
-                                      }}
-                                  >
-                                      <Cell key="cell-0" fill="#00B14F" />
-                                      <Cell key="cell-1" fill="#cbd5e1" />
-                                  </Pie>
-                                </PieChart>
-                              </ResponsiveContainer>
-                            </div>
-
-                            {/* Right: List Details */}
-                            <div className="w-[45%] overflow-y-auto custom-scrollbar pr-1 space-y-1.5 flex flex-col justify-center">
-                                {campaignStats.list.map((it, idx) => (
-                                  <div key={idx} className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100 shadow-sm shrink-0">
-                                    <span className="text-[10px] font-bold text-slate-700 truncate mr-2" title={it.name}>{it.name}</span>
-                                    <span className="text-[10px] font-black bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-md shrink-0">{it.count}</span>
-                                  </div>
+                        <div className="flex-1 w-full overflow-hidden mt-2">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={campaignStats.classification} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
+                              <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
+                              <XAxis type="number" hide />
+                              <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} width={75} />
+                              <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '11px', padding: '6px' }} />
+                              <Bar dataKey="count" name="Total Merchant" radius={[0, 4, 4, 0]} barSize={22}>
+                                {campaignStats.classification.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.fill} />
                                 ))}
-                                <div className="flex justify-between items-center bg-white p-2 rounded-lg border border-slate-200 border-dashed mt-1 shrink-0">
-                                  <span className="text-[10px] font-bold text-slate-500">Non-Participants</span>
-                                  <span className="text-[10px] font-black bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md border border-slate-200">{campaignStats.noCamp}</span>
-                                </div>
-                            </div>
+                                <LabelList dataKey="count" position="right" style={{ fill: '#475569', fontSize: '11px', fontWeight: 'bold' }} />
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
                         </div>
                       </div>
                     </div>
@@ -1787,7 +1808,7 @@ export default function App() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5">
                       <div className="lg:col-span-2 bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Top 5 Ads Spender <span className="text-slate-400 font-medium">(vs LM & RR)</span></h3>
+                            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Top 10 Ads Spender <span className="text-slate-400 font-medium">(vs LM & RR)</span></h3>
                         </div>
                         <div className="h-48 md:h-56 w-full">
                           <ResponsiveContainer width="100%" height="100%">
@@ -1934,129 +1955,132 @@ export default function App() {
                   </div>
                </div>
 
-               {/* MAIN HISTORICAL CHART (Year-in-Review: Basket Size vs Net Sales) */}
+               {/* RESTRUCTURED ANALYTICS CHARTS */}
                {selectedMex.history && selectedMex.history.length > 0 && (
-                   <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5">
-                        <div className="flex justify-between items-start md:items-center mb-4 gap-2">
-                           <div>
-                              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">12-Month Review <span className="text-slate-400 font-medium normal-case block md:inline mt-0.5 md:mt-0">(Basket Size, Net Sales & MI)</span></h3>
+                   <div className="space-y-4">
+                       
+                       {/* ROW 1: 12-Month Review (Left) + Investment (Right) */}
+                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                           {/* 12-Month Review */}
+                           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 flex flex-col">
+                                <div className="flex justify-between items-start md:items-center mb-4 gap-2">
+                                   <div>
+                                      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">12-Month Review <span className="text-slate-400 font-medium normal-case block md:inline mt-0.5 md:mt-0">(Basket Size, Net Sales & MI)</span></h3>
+                                   </div>
+                                   {selectedMex.lastUpdate && (
+                                       <div className="flex flex-col text-right justify-center bg-green-50 px-2.5 py-1.5 md:px-3 md:py-1.5 rounded-lg border border-green-200 shadow-sm shrink-0">
+                                           <span className="text-[8px] md:text-[9px] text-green-700 font-bold uppercase tracking-widest leading-none mb-1">Data Update</span>
+                                           <span className="text-[10px] md:text-xs font-black text-slate-900 leading-none">{selectedMex.lastUpdate}</span>
+                                       </div>
+                                   )}
+                                </div>
+                                <div className="h-48 md:h-64 w-full mt-auto">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                      <ComposedChart data={selectedMex.history.slice(-12)} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                        <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} />
+                                        <YAxis yAxisId="left" tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={45} />
+                                        <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={35} />
+                                        <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '11px', padding: '8px' }} formatter={(v, n) => [n.includes('%') ? `${v}%` : formatCurrency(v), n]} labelFormatter={formatMonth}/>
+                                        <Legend wrapperStyle={{ fontSize: '10px', paddingTop:'5px' }} />
+                                        
+                                        <Line yAxisId="left" type="monotone" dataKey="basket_size" name="Total Basket Size" stroke={COLORS.basketSize} strokeWidth={3} dot={{r:3, fill: '#ffffff', strokeWidth: 2}} activeDot={{r: 5}} />
+                                        <Bar yAxisId="left" dataKey="net_sales" stackId="a" name="Net Sales" fill={COLORS.netSales} maxBarSize={16} />
+                                        <Bar yAxisId="left" dataKey="total_investment" stackId="a" name="MI (Rp)" fill="#f43f5e" radius={[3,3,0,0]} maxBarSize={16} />
+                                        <Line yAxisId="right" type="monotone" dataKey="mi_percentage" name="MI %" stroke="#f97316" strokeWidth={2} dot={{r:3}} activeDot={{r: 5}} />
+                                      </ComposedChart>
+                                    </ResponsiveContainer>
+                                 </div>
                            </div>
-                           {selectedMex.lastUpdate && (
-                               <div className="flex flex-col text-right justify-center bg-green-50 px-2.5 py-1.5 md:px-3 md:py-1.5 rounded-lg border border-green-200 shadow-sm shrink-0">
-                                   <span className="text-[8px] md:text-[9px] text-green-700 font-bold uppercase tracking-widest leading-none mb-1">Data Update</span>
-                                   <span className="text-[10px] md:text-xs font-black text-slate-900 leading-none">{selectedMex.lastUpdate}</span>
-                               </div>
-                           )}
-                        </div>
-                        <div className="h-48 md:h-64 w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <ComposedChart data={selectedMex.history.slice(-12)} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} />
-                                <YAxis yAxisId="left" tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={45} />
-                                <YAxis yAxisId="right" orientation="right" tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={35} />
-                                <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '11px', padding: '8px' }} formatter={(v, n) => [n.includes('%') ? `${v}%` : formatCurrency(v), n]} labelFormatter={formatMonth}/>
-                                <Legend wrapperStyle={{ fontSize: '10px', paddingTop:'5px' }} />
-                                {/* Display Gross Basket Size, Net Sales, and MI */}
-                                <Bar yAxisId="left" dataKey="basket_size" name="Total Basket Size" fill={COLORS.basketSize} radius={[3,3,0,0]} maxBarSize={16} />
-                                <Bar yAxisId="left" dataKey="net_sales" stackId="a" name="Net Sales" fill={COLORS.netSales} maxBarSize={16} />
-                                <Bar yAxisId="left" dataKey="total_investment" stackId="a" name="MI (Rp)" fill="#f43f5e" radius={[3,3,0,0]} maxBarSize={16} />
-                                <Line yAxisId="right" type="monotone" dataKey="mi_percentage" name="MI %" stroke="#f43f5e" strokeWidth={2} dot={{r:3}} activeDot={{r: 5}} />
-                              </ComposedChart>
-                            </ResponsiveContainer>
-                         </div>
+
+                           {/* 3. MERCHANT INVESTMENT */}
+                           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 flex flex-col">
+                                <div className="flex justify-between items-start mb-4">
+                                   <div className="flex items-center gap-2">
+                                      <Activity className="w-4 h-4 text-rose-500"/>
+                                      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Investment (MI)</h3>
+                                   </div>
+                                   <div className="bg-rose-50 px-2 py-0.5 rounded border border-rose-100 flex items-center gap-1">
+                                      <Percent className="w-3 h-3 text-rose-500"/>
+                                      <span className="text-[10px] font-bold text-rose-700" title="MI % dari Basket Size Bulan Terakhir">
+                                          {selectedMex.history[selectedMex.history.length-1].mi_percentage}%
+                                      </span>
+                                   </div>
+                                </div>
+                                <div className="h-48 md:h-64 w-full mt-auto">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                      <BarChart data={selectedMex.history.slice(-12)} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                          <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} />
+                                          <YAxis tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={45} />
+                                          <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '10px', padding: '6px' }} formatter={(v) => formatCurrency(v)} labelFormatter={formatMonth}/>
+                                          
+                                          <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} iconType="circle" />
+                                          
+                                          <Bar dataKey="mfp" stackId="a" name="Local Promo" fill="#3b82f6" />
+                                          <Bar dataKey="mfc" stackId="a" name="Harga Coret" fill="#22c55e" />
+                                          <Bar dataKey="cpo" stackId="a" name="GMS" fill="#f97316" />
+                                          <Bar dataKey="ads_total_hist" stackId="a" name="Iklan" fill="#ef4444" radius={[2,2,0,0]} />
+                                      </BarChart>
+                                  </ResponsiveContainer>
+                                </div>
+                           </div>
+                       </div>
+
+                       {/* ROW 2: AOV & Orders (Left) + Promo Usage (Right) */}
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* 1. AOV TREND */}
+                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5">
+                                <div className="flex items-center gap-2 mb-4">
+                                   <ShoppingBag className="w-4 h-4 text-indigo-500"/>
+                                   <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">AOV & Orders</h3>
+                                </div>
+                                <div className="h-44 w-full">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                      <ComposedChart data={selectedMex.history.slice(-12)} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                                          <defs>
+                                              <linearGradient id="colorAov" x1="0" y1="0" x2="0" y2="1">
+                                                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
+                                                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                                              </linearGradient>
+                                          </defs>
+                                          <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} />
+                                          <YAxis yAxisId="left" domain={['auto', 'auto']} tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={45} />
+                                          <YAxis yAxisId="right" orientation="right" tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} width={30} />
+                                          <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '10px', padding: '6px' }} formatter={(v, n) => [n.includes('Orders') ? v : formatCurrency(v), n]} labelFormatter={formatMonth}/>
+                                          <Area yAxisId="left" type="monotone" dataKey="aov" name="AOV" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorAov)" />
+                                          <Line yAxisId="right" type="monotone" dataKey="completed_orders" name="Completed Orders" stroke="#10b981" strokeWidth={2} dot={{r:2}} activeDot={{r:4}} />
+                                      </ComposedChart>
+                                  </ResponsiveContainer>
+                                </div>
+                            </div>
+
+                            {/* 2. ORDER WITH CAMPAIGN % */}
+                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5">
+                                <div className="flex items-start gap-2 mb-4">
+                                   <Target className="w-4 h-4 text-teal-500 mt-0.5 shrink-0"/>
+                                   <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide leading-tight">
+                                       Promo Usage <span className="text-[10px] text-slate-400 font-medium normal-case tracking-normal block mt-0.5">(Gms & Cofund Only)</span>
+                                   </h3>
+                                </div>
+                                <div className="h-44 w-full">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                      <LineChart data={selectedMex.history.slice(-12)} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                          <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} />
+                                          <YAxis domain={[0, 100]} tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={35} />
+                                          <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '10px', padding: '6px' }} formatter={(v) => `${v}%`} labelFormatter={formatMonth}/>
+                                          <Line type="monotone" dataKey="promo_order_pct" name="% Promo Usage" stroke="#14b8a6" strokeWidth={2} dot={{r:2}} activeDot={{r:4}} />
+                                      </LineChart>
+                                  </ResponsiveContainer>
+                                </div>
+                            </div>
+                       </div>
                    </div>
                )}
 
-               {/* Grid 3 NEW ANALYTICS CHARTS */}
-               {selectedMex.history && selectedMex.history.length > 0 && (
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    
-                    {/* 1. AOV TREND */}
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-                        <div className="flex items-center gap-2 mb-4">
-                           <ShoppingBag className="w-4 h-4 text-indigo-500"/>
-                           <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">AOV & Orders</h3>
-                        </div>
-                        <div className="h-44 w-full">
-                          <ResponsiveContainer width="100%" height="100%">
-                              <ComposedChart data={selectedMex.history} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
-                                  <defs>
-                                      <linearGradient id="colorAov" x1="0" y1="0" x2="0" y2="1">
-                                          <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
-                                          <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                                      </linearGradient>
-                                  </defs>
-                                  <XAxis dataKey="month" hide />
-                                  <YAxis yAxisId="left" domain={['auto', 'auto']} tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={45} />
-                                  <YAxis yAxisId="right" orientation="right" tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} width={30} />
-                                  <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '10px', padding: '6px' }} formatter={(v, n) => [n.includes('Orders') ? v : formatCurrency(v), n]} labelFormatter={formatMonth}/>
-                                  <Area yAxisId="left" type="monotone" dataKey="aov" name="AOV" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorAov)" />
-                                  <Line yAxisId="right" type="monotone" dataKey="completed_orders" name="Completed Orders" stroke="#10b981" strokeWidth={2} dot={{r:2}} activeDot={{r:4}} />
-                              </ComposedChart>
-                          </ResponsiveContainer>
-                        </div>
-                    </div>
-
-                    {/* 2. ORDER WITH CAMPAIGN % */}
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-                        <div className="flex items-start gap-2 mb-4">
-                           <Target className="w-4 h-4 text-teal-500 mt-0.5 shrink-0"/>
-                           <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide leading-tight">
-                               Promo Usage <span className="text-[10px] text-slate-400 font-medium normal-case tracking-normal block mt-0.5">(Gms & Cofund Only)</span>
-                           </h3>
-                        </div>
-                        <div className="h-44 w-full">
-                          <ResponsiveContainer width="100%" height="100%">
-                              <LineChart data={selectedMex.history} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                  <XAxis dataKey="month" hide />
-                                  <YAxis domain={[0, 100]} tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={35} />
-                                  <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '10px', padding: '6px' }} formatter={(v) => `${v}%`} labelFormatter={formatMonth}/>
-                                  <Line type="monotone" dataKey="promo_order_pct" name="% Promo Usage" stroke="#14b8a6" strokeWidth={2} dot={{r:2}} activeDot={{r:4}} />
-                              </LineChart>
-                          </ResponsiveContainer>
-                        </div>
-                    </div>
-
-                    {/* 3. MERCHANT INVESTMENT */}
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-                        <div className="flex justify-between items-start mb-4">
-                           <div className="flex items-center gap-2">
-                              <Activity className="w-4 h-4 text-rose-500"/>
-                              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Investment (MI)</h3>
-                           </div>
-                           <div className="bg-rose-50 px-2 py-0.5 rounded border border-rose-100 flex items-center gap-1">
-                              <Percent className="w-3 h-3 text-rose-500"/>
-                              <span className="text-[10px] font-bold text-rose-700" title="MI % dari Basket Size Bulan Terakhir">
-                                  {selectedMex.history[selectedMex.history.length-1].mi_percentage}%
-                              </span>
-                           </div>
-                        </div>
-                        <div className="h-44 w-full">
-                          <ResponsiveContainer width="100%" height="100%">
-                              <BarChart data={selectedMex.history} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
-                                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                  <XAxis dataKey="month" hide />
-                                  <YAxis tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={45} />
-                                  <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '10px', padding: '6px' }} formatter={(v) => formatCurrency(v)} labelFormatter={formatMonth}/>
-                                  <Legend verticalAlign="top" align="center" wrapperStyle={{ fontSize: '9px', paddingBottom: '10px' }} iconType="circle" />
-                                  <Bar dataKey="mfp" stackId="a" name="Local Promo" fill="#8b5cf6" />
-                                  <Bar dataKey="mfc" stackId="a" name="Harga Coret" fill="#ec4899" />
-                                  <Bar dataKey="cpo" stackId="a" name="GMS" fill="#0ea5e9" />
-                                  <Bar dataKey="gms" stackId="a" name="CPO" fill="#f59e0b" />
-                                  <Bar dataKey="basic_commission" stackId="a" name="BC" fill="#10b981" />
-                                  <Bar dataKey="ads_total_hist" stackId="a" name="Iklan" fill="#f43f5e" radius={[2,2,0,0]} />
-                              </BarChart>
-                          </ResponsiveContainer>
-                        </div>
-                    </div>
-
-                 </div>
-               )}
-
                {/* Legacy Details (Current Month) */}
-               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
                   {/* Left Column: Sales & Campaign */}
                   <div className="space-y-4">
                      {/* Sales Benchmarking Panel (Current Month) */}
