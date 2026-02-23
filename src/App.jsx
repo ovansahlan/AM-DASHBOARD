@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, Fragment } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, 
-  ComposedChart, Line, Cell, AreaChart, Area, PieChart, Pie, LineChart, LabelList
+  ComposedChart, Line, Cell, AreaChart, Area, LineChart
 } from 'recharts';
 import { 
   UploadCloud, TrendingUp, Database, Filter, Megaphone,
@@ -39,7 +39,7 @@ const COLORS = {
   growth: '#0ea5e9',    
   decline: '#ef4444',   
   finance: '#f59e0b',   
-  lastMonth: '#fb923c', // Diubah menjadi oranye terang
+  lastMonth: '#fb923c', 
   white: '#ffffff',
   slate900: '#0f172a',
   slate500: '#64748b',
@@ -171,7 +171,7 @@ const SimLabel = ({ icon: Icon, children }) => (
 const SimInputGroup = ({ label, prefix, suffix, value, onChange, type = "text", inputMode }) => (
   <div className="w-full">
     {label && <div className="mb-1.5"><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</p></div>}
-    <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 flex items-center transition-all focus-within:border-[#00B14F] focus-within:bg-white focus-within:ring-2 focus-within:ring-green-100 h-10 md:h-12 shadow-sm">
+    <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 flex items-center transition-all focus-within:border-[#00B14F] focus-within:bg-white focus-within:ring-2 focus-within:ring-green-100 h-10 md:h-12 shadow-sm">
       {prefix && <span className="text-xs font-bold text-slate-400 mr-2">{prefix}</span>}
       <input 
         type={type}
@@ -185,34 +185,47 @@ const SimInputGroup = ({ label, prefix, suffix, value, onChange, type = "text", 
   </div>
 );
 
-const SimKpiCard = ({ title, value, sub, valueColor = "text-slate-800", isClickable, onClick, isEditing, editValue, onEditChange, onEditFocus, onEditBlur }) => (
+const SimKpiCard = ({ title, value, sub, valueColor = "text-slate-800", isClickable, onClick, isEditing, editValue, onEditChange, onEditFocus, onEditBlur, icon: Icon, iconColorClass = "text-slate-500", bgBlob = "bg-slate-100" }) => (
   <div 
     onClick={onClick}
-    className={`bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-center relative overflow-hidden ${isClickable ? 'cursor-pointer hover:border-[#00B14F] group transition-colors' : ''}`}
+    className={`bg-white p-5 rounded-[24px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col justify-center relative overflow-hidden ${isClickable ? 'cursor-pointer hover:border-[#00B14F] group hover:-translate-y-1 transition-all duration-300' : ''}`}
   >
-    <div className="flex justify-between items-start mb-2">
-       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">
-          {title} {isClickable && <MousePointer size={10} className="text-slate-300 group-hover:text-[#00B14F]"/>}
-       </p>
+    <div className={`absolute top-0 right-0 w-24 h-24 rounded-bl-full opacity-40 -mr-4 -mt-4 transition-transform duration-700 ${bgBlob} ${isClickable ? 'group-hover:scale-125' : ''}`}></div>
+    
+    <div className="flex justify-between items-start mb-3 relative z-10">
+       <div className="flex items-center gap-2">
+          {Icon && <div className={`p-1.5 rounded-xl bg-slate-50 border border-slate-100 ${iconColorClass}`}><Icon size={16}/></div>}
+          <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
+             {title} {isClickable && <MousePointer size={12} className="text-slate-300 group-hover:text-[#00B14F] ml-1"/>}
+          </p>
+       </div>
     </div>
     
-    {isEditing !== undefined ? (
-       <input 
-          className={`w-full bg-transparent border-none outline-none font-black text-xl md:text-2xl ${valueColor} tabular-nums p-0 focus:ring-0`}
-          value={isEditing ? editValue : value}
-          onChange={(e) => onEditChange(e.target.value)}
-          onFocus={onEditFocus}
-          onBlur={onEditBlur}
-          inputMode="numeric"
-          placeholder="0"
-        />
-    ) : (
-       <div className={`text-xl md:text-2xl font-black tracking-tight leading-none ${valueColor}`}>
-         {value}
-       </div>
-    )}
+    <div className="mb-2 relative z-10">
+      {isEditing !== undefined ? (
+         <input 
+            className={`w-full bg-transparent border-none outline-none font-black text-2xl md:text-3xl ${valueColor} tabular-nums p-0 focus:ring-0 leading-none`}
+            value={isEditing ? editValue : value}
+            onChange={(e) => onEditChange(e.target.value)}
+            onFocus={onEditFocus}
+            onBlur={onEditBlur}
+            inputMode="numeric"
+            placeholder="0"
+          />
+      ) : (
+         <div className={`text-2xl md:text-3xl font-black tracking-tight leading-none ${valueColor}`}>
+           {value}
+         </div>
+      )}
+    </div>
     
-    {sub && <div className="mt-auto pt-2"><p className="text-[10px] font-bold text-slate-400">{sub}</p></div>}
+    {sub && (
+      <div className="mt-auto pt-3 relative z-10">
+        <div className="bg-slate-50 inline-block px-2.5 py-1 rounded-lg border border-slate-100">
+           <p className="text-[10px] font-bold text-slate-500">{sub}</p>
+        </div>
+      </div>
+    )}
   </div>
 );
 
@@ -376,7 +389,7 @@ const MerchantSimulator = () => {
   }, [adsBudget, adsType, histData.aov, cpcBid, adsCvr, adsCtr]);
 
   return (
-    <div className="animate-in fade-in duration-300">
+    <div className="animate-in fade-in duration-500 relative z-10">
         
         {/* MODAL BREAKDOWN */}
         {activeModal && (
@@ -431,78 +444,78 @@ const MerchantSimulator = () => {
         )}
 
         {/* TOP SUB-NAVIGATION */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 relative z-10">
             <div>
-              <h2 className="text-lg md:text-xl font-black text-slate-800 uppercase tracking-tight flex items-center gap-2">
-                 <Calculator className="w-5 h-5 text-[#00B14F]"/> Merchant Simulator
+              <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight flex items-center gap-2 drop-shadow-md">
+                 <Calculator className="w-6 h-6 text-emerald-400"/> Merchant Simulator
               </h2>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">Simulasikan margin, harga coret, ongkir, hingga ROAS Ads.</p>
+              <p className="text-xs text-slate-300 font-medium mt-1">Simulasikan margin, harga coret, ongkir, hingga ROAS Ads.</p>
             </div>
             
-            <div className="flex bg-slate-200/60 p-1.5 rounded-xl shrink-0 border border-slate-200 shadow-inner overflow-x-auto w-full sm:w-auto custom-scrollbar">
-               <button onClick={() => setPage('calc')} className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${page === 'calc' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                   <Calculator className="w-3.5 h-3.5" /> Margin
+            <div className="flex bg-slate-900/50 backdrop-blur-md p-1.5 rounded-2xl border border-white/10 shadow-xl overflow-x-auto w-full sm:w-auto custom-scrollbar">
+               <button onClick={() => setPage('calc')} className={`flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap ${page === 'calc' ? 'bg-[#00B14F] text-white shadow-md shadow-emerald-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
+                   <Calculator className="w-4 h-4" /> Margin
                </button>
-               <button onClick={() => setPage('checkout')} className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${page === 'checkout' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                   <ShoppingCart className="w-3.5 h-3.5" /> Checkout {cart.length > 0 && <span className="bg-red-500 text-white w-3 h-3 rounded-full flex items-center justify-center text-[8px] ml-0.5">{cart.length}</span>}
+               <button onClick={() => setPage('checkout')} className={`flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap ${page === 'checkout' ? 'bg-[#00B14F] text-white shadow-md shadow-emerald-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
+                   <ShoppingCart className="w-4 h-4" /> Checkout {cart.length > 0 && <span className="bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center text-[9px] ml-1">{cart.length}</span>}
                </button>
-               <button onClick={() => setPage('prospect')} className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${page === 'prospect' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                   <TrendingUp className="w-3.5 h-3.5" /> Proyeksi
+               <button onClick={() => setPage('prospect')} className={`flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap ${page === 'prospect' ? 'bg-[#00B14F] text-white shadow-md shadow-emerald-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
+                   <TrendingUp className="w-4 h-4" /> Proyeksi
                </button>
-               <button onClick={() => setPage('ads')} className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${page === 'ads' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                   <Megaphone className="w-3.5 h-3.5" /> Ads
+               <button onClick={() => setPage('ads')} className={`flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap ${page === 'ads' ? 'bg-[#00B14F] text-white shadow-md shadow-emerald-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
+                   <Megaphone className="w-4 h-4" /> Ads
                </button>
             </div>
         </div>
 
-        {/* DYNAMIC TOP PANELS */}
-        <div className="grid grid-cols-3 gap-3 md:gap-4 mb-6">
+        {/* DYNAMIC TOP PANELS (SIMULATOR) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 mb-8">
             {page === 'prospect' ? (
               <Fragment>
-                <SimKpiCard title="AOV Lama" value={`Rp ${fNum(projection.hAOV)}`} sub={`${fNum(projection.hOrders)} Order/Bulan`} valueColor="text-slate-600" />
-                <SimKpiCard title="AOV Baru (Est)" value={`Rp ${fNum(projection.newAOV)}`} sub={`${fNum(projection.pOrders)} Order/Bulan`} valueColor="text-emerald-600" />
-                <SimKpiCard title="Selisih Profit" value={`${projection.pNet >= projection.hNet ? '+' : ''}Rp ${fNum(projection.pNet - projection.hNet)}`} valueColor={projection.pNet >= projection.hNet ? 'text-blue-600' : 'text-rose-500'} />
+                <SimKpiCard title="AOV Lama" icon={ShoppingBag} iconColorClass="text-slate-500" bgBlob="bg-slate-100" value={`Rp ${fNum(projection.hAOV)}`} sub={`${fNum(projection.hOrders)} Order/Bulan`} valueColor="text-slate-700" />
+                <SimKpiCard title="AOV Baru (Est)" icon={TrendingUp} iconColorClass="text-emerald-500" bgBlob="bg-gradient-to-br from-emerald-100 to-transparent" value={`Rp ${fNum(projection.newAOV)}`} sub={`${fNum(projection.pOrders)} Order/Bulan`} valueColor="text-emerald-600" />
+                <SimKpiCard title="Selisih Profit" icon={DollarSign} iconColorClass={projection.pNet >= projection.hNet ? 'text-blue-500' : 'text-rose-500'} bgBlob={projection.pNet >= projection.hNet ? 'bg-gradient-to-br from-blue-100 to-transparent' : 'bg-gradient-to-br from-rose-100 to-transparent'} value={`${projection.pNet >= projection.hNet ? '+' : ''}Rp ${fNum(projection.pNet - projection.hNet)}`} valueColor={projection.pNet >= projection.hNet ? 'text-blue-600' : 'text-rose-500'} />
               </Fragment>
             ) : page === 'checkout' ? (
                <Fragment>
-                <SimKpiCard title="Subtotal Cart" value={`Rp ${fNum(checkout.subtotal)}`} valueColor="text-slate-700" />
-                <SimKpiCard title="Promo Terpakai" value={activeVoucher ? activeVoucher.code : 'NORMAL'} valueColor={activeVoucher ? 'text-emerald-600' : 'text-slate-400'} />
-                <SimKpiCard title="Total Diskon" value={checkout.finalDisc > 0 ? `- Rp ${fNum(checkout.finalDisc)}` : '-'} valueColor="text-rose-500" />
+                <SimKpiCard title="Subtotal Cart" icon={ShoppingCart} iconColorClass="text-slate-500" bgBlob="bg-slate-100" value={`Rp ${fNum(checkout.subtotal)}`} valueColor="text-slate-700" />
+                <SimKpiCard title="Promo Terpakai" icon={Zap} iconColorClass={activeVoucher ? "text-emerald-500" : "text-slate-400"} bgBlob={activeVoucher ? "bg-gradient-to-br from-emerald-100 to-transparent" : "bg-slate-100"} value={activeVoucher ? activeVoucher.code : 'NORMAL'} valueColor={activeVoucher ? 'text-emerald-600' : 'text-slate-400'} />
+                <SimKpiCard title="Total Diskon" icon={Ticket} iconColorClass="text-rose-500" bgBlob="bg-gradient-to-br from-rose-100 to-transparent" value={checkout.finalDisc > 0 ? `- Rp ${fNum(checkout.finalDisc)}` : '-'} valueColor="text-rose-500" />
                </Fragment>
             ) : page === 'ads' ? (
                <Fragment>
-                <SimKpiCard title="Model Ads" value={adsType === 'cpo' ? 'Pesanan' : adsType.toUpperCase()} valueColor="text-slate-700" />
-                <SimKpiCard title={adsType === 'cpo' ? 'Biaya/Order' : 'Bid CPC'} value={`Rp ${fNum(pNum(cpcBid))}`} valueColor="text-slate-700" />
-                <SimKpiCard title="Target ROAS" value={`${adsSim.roas.toFixed(1)}x`} valueColor={adsSim.roas >= 5 ? 'text-emerald-600' : adsSim.roas >= 3 ? 'text-blue-500' : 'text-rose-500'} />
+                <SimKpiCard title="Model Ads" icon={Megaphone} iconColorClass="text-slate-500" bgBlob="bg-slate-100" value={adsType === 'cpo' ? 'Pesanan' : adsType.toUpperCase()} valueColor="text-slate-700" />
+                <SimKpiCard title={adsType === 'cpo' ? 'Biaya/Order' : 'Bid CPC'} icon={DollarSign} iconColorClass="text-slate-500" bgBlob="bg-slate-100" value={`Rp ${fNum(pNum(cpcBid))}`} valueColor="text-slate-700" />
+                <SimKpiCard title="Target ROAS" icon={Target} iconColorClass={adsSim.roas >= 5 ? 'text-emerald-500' : adsSim.roas >= 3 ? 'text-blue-500' : 'text-rose-500'} bgBlob={adsSim.roas >= 5 ? 'bg-gradient-to-br from-emerald-100 to-transparent' : adsSim.roas >= 3 ? 'bg-gradient-to-br from-blue-100 to-transparent' : 'bg-gradient-to-br from-rose-100 to-transparent'} value={`${adsSim.roas.toFixed(1)}x`} valueColor={adsSim.roas >= 5 ? 'text-emerald-600' : adsSim.roas >= 3 ? 'text-blue-500' : 'text-rose-500'} />
                </Fragment>
             ) : (
               <Fragment>
-                <SimKpiCard title="Harga Aplikasi" value={`Rp ${fNum(calc.list)}`} valueColor="text-slate-800"
+                <SimKpiCard title="Harga Aplikasi" icon={List} iconColorClass="text-slate-500" bgBlob="bg-slate-100" value={`Rp ${fNum(calc.list)}`} valueColor="text-slate-800"
                    isEditing={isEditingAppPrice} editValue={localAppPrice} 
                    onEditChange={handleAppPriceManual} onEditFocus={() => { setIsEditingAppPrice(true); setLocalAppPrice(fNum(calc.list)); }} onEditBlur={() => { setIsEditingAppPrice(false); setLocalAppPrice(fNum(calc.list)); }}
                 />
-                <SimKpiCard title="Pax Pays (Bayar)" value={`Rp ${fNum(calc.pay)}`} sub={calc.list > calc.pay ? `Coret dari Rp ${fNum(calc.list)}` : 'Harga Normal'} valueColor="text-[#00B14F]" isClickable onClick={() => setActiveModal('cust')} />
-                <SimKpiCard title="Net Rev (Bersih)" value={`Rp ${fNum(calc.net)}`} sub={`Mex Inv: ${calc.mexInvestPct.toFixed(1)}%`} valueColor="text-blue-600" isClickable onClick={() => setActiveModal('net')} />
+                <SimKpiCard title="Pax Pays (Bayar)" icon={ShoppingCart} iconColorClass="text-emerald-500" bgBlob="bg-gradient-to-br from-emerald-100 to-transparent" value={`Rp ${fNum(calc.pay)}`} sub={calc.list > calc.pay ? `Coret dari Rp ${fNum(calc.list)}` : 'Harga Normal'} valueColor="text-[#00B14F]" isClickable onClick={() => setActiveModal('cust')} />
+                <SimKpiCard title="Net Rev (Bersih)" icon={Activity} iconColorClass="text-blue-500" bgBlob="bg-gradient-to-br from-blue-100 to-transparent" value={`Rp ${fNum(calc.net)}`} sub={`Mex Inv: ${calc.mexInvestPct.toFixed(1)}%`} valueColor="text-blue-600" isClickable onClick={() => setActiveModal('net')} />
               </Fragment>
             )}
         </div>
 
         {/* TAB CONTENTS */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:p-6 mb-10">
+        <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 mb-10 relative z-10">
           
           {/* TAB 1: MARGIN CALC */}
           {page === 'calc' && (
-            <div className="space-y-6">
-              <div className="border-b border-slate-100 pb-6">
+            <div className="space-y-8">
+              <div className="border-b border-slate-100 pb-8">
                 <SimLabel icon={Tags}>1. Strategi Campaign</SimLabel>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                   {Object.keys(STRATEGY).map(k => {
                     const isActive = scheme === k;
                     return (
                       <button 
                         key={k} onClick={() => setScheme(k)} 
-                        className={`py-3 rounded-xl text-xs font-black uppercase transition-all duration-200 border-2 relative
-                          ${isActive ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
+                        className={`py-4 rounded-2xl text-xs font-black uppercase transition-all duration-200 border-2 relative
+                          ${isActive ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-md shadow-emerald-500/10' : 'bg-slate-50 border-slate-200 text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
                       >
                         {k === 'normal' ? 'Normal' : k === 'puas-cuan' ? 'Cuan 32%' : k === 'booster' ? 'Boost 38%' : 'CoFund'}
                       </button>
@@ -510,73 +523,73 @@ const MerchantSimulator = () => {
                   })}
                 </div>
 
-                <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-5 bg-slate-50 p-5 rounded-2xl border border-slate-100">
                   <div className="flex-1">
-                    <h2 className="font-black text-sm text-slate-800 tracking-tight mb-2">{STRATEGY[scheme].title}</h2>
-                    <div className="flex flex-col gap-1.5">
+                    <h2 className="font-black text-sm md:text-base text-slate-800 tracking-tight mb-3">{STRATEGY[scheme].title}</h2>
+                    <div className="flex flex-col gap-2">
                       {STRATEGY[scheme].benefits.map((b, i) => (
-                        <div key={i} className="flex items-start gap-2">
-                          <div className="text-emerald-500 mt-0.5 shrink-0"><Check size={12} strokeWidth={4}/></div>
-                          <span className="text-xs font-bold text-slate-600 leading-snug">{b}</span>
+                        <div key={i} className="flex items-start gap-2.5">
+                          <div className="text-emerald-500 mt-0.5 shrink-0"><Check size={14} strokeWidth={4}/></div>
+                          <span className="text-xs md:text-sm font-bold text-slate-600 leading-snug">{b}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                   {STRATEGY[scheme].tiers && (
-                    <div className="flex bg-white p-1 rounded-lg border border-slate-200 shadow-sm self-start">
+                    <div className="flex bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm self-start">
                       {['hemat', 'ekstra'].map(t => (
-                        <button key={t} onClick={() => setTier(t)} className={`px-4 py-2 rounded-md text-[10px] font-black uppercase transition-all ${tier === t ? 'bg-[#00B14F] text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}>{t}</button>
+                        <button key={t} onClick={() => setTier(t)} className={`px-5 py-2.5 rounded-lg text-[11px] font-black uppercase transition-all ${tier === t ? 'bg-[#00B14F] text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}>{t}</button>
                       ))}
                     </div>
                   )}
                 </div>
 
                 {scheme === 'cofund' && (
-                  <div className="mt-4 bg-blue-50 rounded-xl p-4 border border-blue-200">
-                    <div className="flex justify-between items-center mb-2">
+                  <div className="mt-5 bg-blue-50/80 rounded-2xl p-5 border border-blue-200">
+                    <div className="flex justify-between items-center mb-3">
                       <div className="flex items-center gap-2">
-                        <Users size={16} className="text-blue-500" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-blue-700">Mex Promo Share</span>
+                        <Users size={18} className="text-blue-500" />
+                        <span className="text-xs font-black uppercase tracking-widest text-blue-800">Mex Promo Share</span>
                       </div>
-                      <span className="text-xs font-black bg-white text-blue-600 px-2.5 py-1 rounded-lg border border-blue-200 shadow-sm">{inputs.mShare}%</span>
+                      <span className="text-sm font-black bg-white text-blue-600 px-3 py-1 rounded-lg border border-blue-200 shadow-sm">{inputs.mShare}%</span>
                     </div>
-                    <input type="range" min="0" max="100" step="5" value={inputs.mShare} onChange={(e) => setInputs(prev => ({ ...prev, mShare: parseInt(e.target.value) }))} className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600 mb-3" />
-                    <div className="flex justify-between items-end bg-white p-3 rounded-xl border border-blue-100">
-                      <div className="text-left"><p className="text-[9px] text-slate-500 uppercase font-bold mb-0.5">Beban Toko</p><p className="font-black text-sm text-slate-800">Rp {fNum(calc.mPromoCost)}</p></div>
-                      <div className="text-right"><p className="text-[9px] text-slate-500 uppercase font-bold mb-0.5">Beban Grab</p><p className="font-black text-sm text-blue-600">Rp {fNum(calc.totalDisc - calc.mPromoCost)}</p></div>
+                    <input type="range" min="0" max="100" step="5" value={inputs.mShare} onChange={(e) => setInputs(prev => ({ ...prev, mShare: parseInt(e.target.value) }))} className="w-full h-2.5 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600 mb-4" />
+                    <div className="flex justify-between items-end bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
+                      <div className="text-left"><p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Beban Toko</p><p className="font-black text-base text-slate-800">Rp {fNum(calc.mPromoCost)}</p></div>
+                      <div className="text-right"><p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Beban Grab</p><p className="font-black text-base text-blue-600">Rp {fNum(calc.totalDisc - calc.mPromoCost)}</p></div>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
                 {/* Left: Input Menu */}
                 <div>
                    <SimLabel icon={List}>2. Harga Menu</SimLabel>
-                   <div className="space-y-4 mb-5">
+                   <div className="space-y-5 mb-6">
                       <SimInputGroup label="Harga Jual Offline" prefix="Rp" value={inputs.mainVal} onChange={(e) => handleInputChange('mainVal', e.target.value)} />
                       
                       <div>
-                        <div className="mb-1.5"><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Subsidi Toko / Mark-up</p></div>
-                        <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 flex items-center transition-all focus-within:border-[#00B14F] focus-within:bg-white focus-within:ring-2 focus-within:ring-green-100 h-10 md:h-12 shadow-sm">
-                          <input type="text" inputMode="numeric" className="w-full bg-transparent outline-none font-bold text-slate-700 text-sm tabular-nums placeholder:text-slate-300" value={inputs.subVal} onChange={(e) => handleInputChange('subVal', e.target.value)} />
-                          <div className="flex bg-slate-200/50 rounded-lg p-1 ml-2 shrink-0 gap-1 border border-slate-200">
-                            <button onClick={() => setSubMode('val')} className={`w-8 h-6 flex items-center justify-center text-[10px] font-black rounded transition-all ${subMode === 'val' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}>Rp</button>
-                            <button onClick={() => setSubMode('pct')} className={`w-8 h-6 flex items-center justify-center text-[10px] font-black rounded transition-all ${subMode === 'pct' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}>%</button>
+                        <div className="mb-2"><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Subsidi Toko / Mark-up</p></div>
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 flex items-center transition-all focus-within:border-[#00B14F] focus-within:bg-white focus-within:ring-2 focus-within:ring-green-100 h-12 shadow-sm">
+                          <input type="text" inputMode="numeric" className="w-full bg-transparent outline-none font-bold text-slate-700 text-base tabular-nums placeholder:text-slate-300" value={inputs.subVal} onChange={(e) => handleInputChange('subVal', e.target.value)} />
+                          <div className="flex bg-slate-200/60 rounded-lg p-1 ml-3 shrink-0 gap-1 border border-slate-200">
+                            <button onClick={() => setSubMode('val')} className={`w-10 h-7 flex items-center justify-center text-xs font-black rounded-md transition-all ${subMode === 'val' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}>Rp</button>
+                            <button onClick={() => setSubMode('pct')} className={`w-10 h-7 flex items-center justify-center text-xs font-black rounded-md transition-all ${subMode === 'pct' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}>%</button>
                           </div>
                         </div>
                       </div>
                    </div>
-                   <div className="flex gap-3 items-end pt-4 border-t border-slate-100">
+                   <div className="flex gap-4 items-end pt-5 border-t border-slate-100">
                       <SimInputGroup label="Nama Menu" value={inputs.menuName} onChange={(e) => handleInputChange('menuName', e.target.value)} inputMode="text" />
-                      <button onClick={addToCart} className="h-10 md:h-12 px-6 bg-slate-800 hover:bg-slate-900 active:scale-95 text-white rounded-xl font-bold text-[11px] uppercase tracking-wider shadow-md transition-all flex items-center gap-2 shrink-0">Add <ArrowRight size={14} strokeWidth={3}/></button>
+                      <button onClick={addToCart} className="h-12 px-6 bg-slate-800 hover:bg-slate-900 active:scale-95 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-slate-900/20 transition-all flex items-center gap-2 shrink-0">Add <ArrowRight size={16} strokeWidth={3}/></button>
                    </div>
                 </div>
 
                 {/* Right: Config */}
                 <div>
                   <SimLabel icon={Settings}>3. Aturan Skema</SimLabel>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+                  <div className="grid grid-cols-2 gap-x-5 gap-y-5">
                     <SimInputGroup label="Komisi" suffix="%" value={inputs.kPct} type="number" onChange={(e) => handleInputChange('kPct', e.target.value)} />
                     <SimInputGroup label="Diskon" suffix="%" value={inputs.vDisk} type="number" onChange={(e) => handleInputChange('vDisk', e.target.value)} />
                     <SimInputGroup label="Min. Order" prefix="Rp" value={inputs.minO} onChange={(e) => handleInputChange('minO', e.target.value)} />
@@ -591,28 +604,28 @@ const MerchantSimulator = () => {
           {page === 'checkout' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                <div className="space-y-6">
-                  <div className="border border-slate-200 rounded-2xl p-4 md:p-5 bg-slate-50/50">
+                  <div className="border border-slate-200 rounded-2xl p-5 md:p-6 bg-slate-50/50">
                     <SimLabel icon={Info}>1. Pengiriman</SimLabel>
-                    <div className="space-y-2.5">
+                    <div className="space-y-3">
                       {['prioritas', 'standar', 'hemat'].map(id => (
-                        <div key={id} onClick={() => setDeliveryType(id)} className={`p-4 rounded-xl border cursor-pointer transition-all flex justify-between items-center ${deliveryType === id ? 'bg-emerald-50 border-emerald-400 shadow-sm' : 'bg-white border-slate-200 hover:border-slate-300'}`}>
-                          <div className="flex items-center gap-3">
-                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${deliveryType === id ? 'border-emerald-500' : 'border-slate-300'}`}>
-                              {deliveryType === id && <div className="w-2 h-2 bg-emerald-500 rounded-full"/>}
+                        <div key={id} onClick={() => setDeliveryType(id)} className={`p-4 md:p-5 rounded-2xl border-2 cursor-pointer transition-all flex justify-between items-center ${deliveryType === id ? 'bg-emerald-50 border-emerald-400 shadow-md' : 'bg-white border-slate-200 hover:border-slate-300'}`}>
+                          <div className="flex items-center gap-4">
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${deliveryType === id ? 'border-emerald-500' : 'border-slate-300'}`}>
+                              {deliveryType === id && <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full"/>}
                             </div>
                             <div>
-                              <p className={`font-black text-[11px] uppercase tracking-wider ${deliveryType === id ? 'text-emerald-700' : 'text-slate-700'}`}>{id}</p>
-                              <p className="text-[10px] text-slate-400 font-bold">Est. {id === 'prioritas' ? '20' : id === 'standar' ? '30' : '45'} mnt</p>
+                              <p className={`font-black text-xs md:text-sm uppercase tracking-wider ${deliveryType === id ? 'text-emerald-800' : 'text-slate-700'}`}>{id}</p>
+                              <p className="text-[10px] text-slate-400 font-bold mt-0.5">Est. {id === 'prioritas' ? '20' : id === 'standar' ? '30' : '45'} mnt</p>
                             </div>
                           </div>
                           <div className="text-right">
                              {checkout.ongkirDisc > 0 ? (
                                <Fragment>
                                  <span className="block text-[10px] text-slate-400 line-through font-medium">Rp {fNum(id === 'prioritas' ? 15000 : id === 'standar' ? 10000 : 5000)}</span>
-                                 <span className="block font-black text-sm text-emerald-600">Rp {fNum(Math.max(0, (id === 'prioritas' ? 15000 : id === 'standar' ? 10000 : 5000) - checkout.ongkirDisc))}</span>
+                                 <span className="block font-black text-base text-emerald-600">Rp {fNum(Math.max(0, (id === 'prioritas' ? 15000 : id === 'standar' ? 10000 : 5000) - checkout.ongkirDisc))}</span>
                                </Fragment>
                              ) : (
-                               <span className="font-black text-sm text-slate-700">Rp {fNum(id === 'prioritas' ? 15000 : id === 'standar' ? 10000 : 5000)}</span>
+                               <span className="font-black text-base text-slate-700">Rp {fNum(id === 'prioritas' ? 15000 : id === 'standar' ? 10000 : 5000)}</span>
                              )}
                           </div>
                         </div>
@@ -620,34 +633,34 @@ const MerchantSimulator = () => {
                     </div>
                   </div>
 
-                  <div className="border border-slate-200 rounded-2xl p-4 md:p-5">
-                    <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+                  <div className="border border-slate-200 rounded-2xl p-5 md:p-6 bg-slate-50/50">
+                    <div className="flex justify-between items-center mb-5 pb-4 border-b border-slate-100">
                       <div className="flex items-center gap-2">
-                        <div className="bg-slate-100 p-1.5 rounded-lg text-slate-500"><ShoppingCart size={16} /></div>
+                        <div className="bg-slate-100 p-2 rounded-xl text-slate-500"><ShoppingCart size={18} /></div>
                         <span className="text-sm font-bold text-slate-800 uppercase tracking-wide">2. Rincian Item</span>
                       </div>
-                      <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-2.5 py-1 rounded-md border border-emerald-200">{cart.reduce((a,b)=>a+b.qty,0)}</span>
+                      <span className="bg-emerald-100 text-emerald-700 text-[11px] font-black px-3 py-1 rounded-lg border border-emerald-200 shadow-sm">{cart.reduce((a,b)=>a+b.qty,0)} Item</span>
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {cart.length === 0 ? (
-                         <div className="text-center py-8 text-slate-400 font-bold text-[10px] uppercase tracking-widest border border-dashed border-slate-200 rounded-xl bg-slate-50">Keranjang Kosong</div>
+                         <div className="text-center py-10 text-slate-400 font-bold text-xs uppercase tracking-widest border-2 border-dashed border-slate-200 rounded-2xl bg-white">Keranjang Kosong</div>
                       ) : cart.map(item => {
                         return (
-                          <div key={item.id} className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 font-black flex items-center justify-center text-xs border border-emerald-100">{item.qty}</div>
+                          <div key={item.id} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 font-black flex items-center justify-center text-sm border border-emerald-100">{item.qty}</div>
                               <div>
-                                <p className="font-black text-[11px] text-slate-800">{item.name}</p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <button onClick={() => updateCartQty(item.id, -1)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200"><Minus size={10} strokeWidth={3} /></button>
-                                  <span className="text-[10px] font-black text-slate-800 w-3 text-center">{item.qty}</span>
-                                  <button onClick={() => updateCartQty(item.id, 1)} className="w-5 h-5 flex items-center justify-center bg-emerald-100 rounded text-emerald-700 hover:bg-emerald-200"><Plus size={10} strokeWidth={3} /></button>
+                                <p className="font-black text-xs text-slate-800 mb-1">{item.name}</p>
+                                <div className="flex items-center gap-3">
+                                  <button onClick={() => updateCartQty(item.id, -1)} className="w-6 h-6 flex items-center justify-center bg-slate-100 rounded-lg text-slate-600 hover:bg-slate-200"><Minus size={12} strokeWidth={3} /></button>
+                                  <span className="text-xs font-black text-slate-800 w-3 text-center">{item.qty}</span>
+                                  <button onClick={() => updateCartQty(item.id, 1)} className="w-6 h-6 flex items-center justify-center bg-emerald-100 rounded-lg text-emerald-700 hover:bg-emerald-200"><Plus size={12} strokeWidth={3} /></button>
                                 </div>
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="font-black text-slate-800 text-sm">Rp {fNum(item.price * item.qty)}</p>
-                              <button onClick={() => setCart(prev => prev.filter(i=>i.id!==item.id))} className="text-[9px] text-red-500 font-bold hover:text-red-700 uppercase tracking-widest mt-1">Hapus</button>
+                              <p className="font-black text-slate-800 text-sm md:text-base">Rp {fNum(item.price * item.qty)}</p>
+                              <button onClick={() => setCart(prev => prev.filter(i=>i.id!==item.id))} className="text-[10px] text-red-500 font-bold hover:text-red-700 uppercase tracking-widest mt-1.5">Hapus</button>
                             </div>
                           </div>
                         )
@@ -656,37 +669,37 @@ const MerchantSimulator = () => {
                   </div>
                </div>
 
-               <div className="space-y-6">
-                   <div className="border border-slate-200 rounded-2xl p-4 md:p-5 bg-slate-50/50 h-full flex flex-col">
+               <div className="space-y-6 flex flex-col">
+                   <div className="border border-slate-200 rounded-2xl p-5 md:p-6 bg-slate-50/50 h-full flex flex-col">
                       <SimLabel icon={Ticket}>3. Voucher & Promo</SimLabel>
                       <div className="relative mb-6">
-                        <button onClick={() => setShowVoucherDropdown(!showVoucherDropdown)} className={`w-full p-3 md:p-4 rounded-xl border flex justify-between items-center transition-all bg-white shadow-sm ${activeVoucher ? 'border-emerald-400 ring-2 ring-emerald-50' : 'border-slate-200 hover:border-slate-300'}`}>
-                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${activeVoucher ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}><Ticket size={16} /></div>
+                        <button onClick={() => setShowVoucherDropdown(!showVoucherDropdown)} className={`w-full p-4 md:p-5 rounded-2xl border-2 flex justify-between items-center transition-all bg-white shadow-sm ${activeVoucher ? 'border-emerald-400 ring-4 ring-emerald-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                          <div className="flex items-center gap-4">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${activeVoucher ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}><Ticket size={20} /></div>
                             <div className="text-left">
-                              <p className={`text-[11px] md:text-xs font-black uppercase tracking-wide ${activeVoucher ? 'text-emerald-700' : 'text-slate-600'}`}>{activeVoucher ? activeVoucher.code : 'Pilih Voucher'}</p>
-                              <p className={`text-[9px] md:text-[10px] font-bold mt-0.5 ${activeVoucher ? 'text-emerald-500' : 'text-slate-400'}`}>{activeVoucher ? activeVoucher.label : 'Makin hemat pakai promo'}</p>
+                              <p className={`text-xs md:text-sm font-black uppercase tracking-wider ${activeVoucher ? 'text-emerald-800' : 'text-slate-600'}`}>{activeVoucher ? activeVoucher.code : 'Pilih Voucher'}</p>
+                              <p className={`text-[10px] md:text-xs font-bold mt-1 ${activeVoucher ? 'text-emerald-500' : 'text-slate-400'}`}>{activeVoucher ? activeVoucher.label : 'Makin hemat pakai promo'}</p>
                             </div>
                           </div>
-                          <ChevronDown size={18} className={`transition-transform duration-300 ${showVoucherDropdown ? 'rotate-180' : ''} ${activeVoucher ? 'text-emerald-600' : 'text-slate-400'}`}/>
+                          <ChevronDown size={20} className={`transition-transform duration-300 ${showVoucherDropdown ? 'rotate-180' : ''} ${activeVoucher ? 'text-emerald-600' : 'text-slate-400'}`}/>
                         </button>
 
                         {showVoucherDropdown && (
-                          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                            <div className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100" onClick={() => selectVoucher(null)}>
+                          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                            <div className="p-4 hover:bg-slate-50 cursor-pointer border-b border-slate-100" onClick={() => selectVoucher(null)}>
                               <div className="flex justify-between items-center">
-                                <div><p className="text-[11px] font-black text-slate-700">NORMAL</p><p className="text-[9px] text-slate-500 font-medium">Tanpa Voucher (Harga Normal)</p></div>
-                                {!activeVoucher && <Check size={16} className="text-[#00B14F]" />}
+                                <div><p className="text-xs font-black text-slate-700">NORMAL</p><p className="text-[10px] text-slate-500 font-medium">Tanpa Voucher (Harga Normal)</p></div>
+                                {!activeVoucher && <Check size={18} className="text-[#00B14F]" />}
                               </div>
                             </div>
                             {VOUCHERS.map((v, i) => (
-                              <div key={i} className="p-3 hover:bg-emerald-50 cursor-pointer border-b border-slate-100 last:border-0 transition-colors" onClick={() => selectVoucher(v)}>
+                              <div key={i} className="p-4 hover:bg-emerald-50 cursor-pointer border-b border-slate-100 last:border-0 transition-colors" onClick={() => selectVoucher(v)}>
                                 <div className="flex justify-between items-center">
                                   <div>
-                                    <p className="text-[11px] font-black text-[#00B14F]">{v.code}</p>
-                                    <p className="text-[10px] font-bold text-slate-700 mt-0.5">{v.label}</p>
+                                    <p className="text-xs font-black text-[#00B14F]">{v.code}</p>
+                                    <p className="text-[10px] font-bold text-slate-700 mt-1">{v.label}</p>
                                   </div>
-                                  {activeVoucher?.code === v.code && <Check size={16} className="text-[#00B14F]" />}
+                                  {activeVoucher?.code === v.code && <Check size={18} className="text-[#00B14F]" />}
                                 </div>
                               </div>
                             ))}
@@ -695,38 +708,38 @@ const MerchantSimulator = () => {
                       </div>
                       
                       {activeVoucher && (
-                        <div className="mb-6 bg-white rounded-xl p-3 border border-slate-200 shadow-sm">
-                          <div className="flex justify-between text-[10px] mb-1.5"><span className="text-slate-500 font-bold">Min. Order</span><span className="font-black text-slate-700">Rp {fNum(checkout.limitMin)}</span></div>
-                          <div className="flex justify-between text-[10px]"><span className="text-slate-500 font-bold">Max. Diskon</span><span className="font-black text-slate-700">{checkout.limitMax === Infinity ? 'Tanpa Batas' : `Rp ${fNum(checkout.limitMax)}`}</span></div>
-                          {!checkout.thresholdMet && (<div className="mt-3 text-[9px] text-rose-600 font-bold flex items-center gap-1.5 bg-rose-50 p-2 rounded-lg border border-rose-100"><AlertCircle size={12} /> Belum memenuhi minimum order</div>)}
+                        <div className="mb-6 bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+                          <div className="flex justify-between text-xs mb-2"><span className="text-slate-500 font-bold">Min. Order</span><span className="font-black text-slate-800">Rp {fNum(checkout.limitMin)}</span></div>
+                          <div className="flex justify-between text-xs"><span className="text-slate-500 font-bold">Max. Diskon</span><span className="font-black text-slate-800">{checkout.limitMax === Infinity ? 'Tanpa Batas' : `Rp ${fNum(checkout.limitMax)}`}</span></div>
+                          {!checkout.thresholdMet && (<div className="mt-4 text-[10px] text-rose-600 font-bold flex items-center gap-2 bg-rose-50 p-3 rounded-xl border border-rose-100"><AlertCircle size={14} /> Belum memenuhi minimum order</div>)}
                         </div>
                       )}
 
-                      <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-200 mt-auto">
-                        <div className="space-y-3 mb-4">
-                            <div className="flex justify-between text-[11px] md:text-xs font-bold text-slate-600"><span>Subtotal</span><span>Rp {fNum(checkout.subtotal)}</span></div>
-                            <div className="flex justify-between text-[11px] md:text-xs font-bold text-slate-600"><span>Ongkos Kirim</span><span>Rp {fNum(checkout.finalOngkir)}</span></div>
-                            <div className="flex justify-between text-[11px] md:text-xs font-bold text-slate-600"><span>Biaya Layanan</span><span>Rp 1.500</span></div>
-                            {checkout.finalDisc > 0 && (<div className="flex justify-between text-[11px] md:text-xs font-black text-emerald-600 pt-3 border-t border-slate-100"><span className="flex items-center gap-1"><Zap size={12}/> Promo Aktif</span><span>- Rp {fNum(checkout.finalDisc)}</span></div>)}
+                      <div className="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-200 mt-auto">
+                        <div className="space-y-4 mb-5">
+                            <div className="flex justify-between text-xs md:text-sm font-bold text-slate-600"><span>Subtotal</span><span>Rp {fNum(checkout.subtotal)}</span></div>
+                            <div className="flex justify-between text-xs md:text-sm font-bold text-slate-600"><span>Ongkos Kirim</span><span>Rp {fNum(checkout.finalOngkir)}</span></div>
+                            <div className="flex justify-between text-xs md:text-sm font-bold text-slate-600"><span>Biaya Layanan</span><span>Rp 1.500</span></div>
+                            {checkout.finalDisc > 0 && (<div className="flex justify-between text-xs md:text-sm font-black text-emerald-600 pt-4 border-t border-slate-100"><span className="flex items-center gap-1.5"><Zap size={14}/> Promo Aktif</span><span>- Rp {fNum(checkout.finalDisc)}</span></div>)}
                             
                             {checkout.schemeKey === 'cofund' && checkout.totalMerchantCost > 0 && (
-                              <div className="bg-blue-50 p-2.5 rounded-lg border border-blue-100 mt-2">
-                                <p className="text-[9px] font-black text-blue-700 uppercase tracking-widest mb-1.5">Rincian Patungan (Cofund)</p>
-                                <div className="flex justify-between text-[10px] mb-1"><span className="text-slate-600 font-medium">Beban Toko</span><span className="font-bold text-slate-800">Rp {fNum(checkout.totalMerchantCost)}</span></div>
-                                <div className="flex justify-between text-[10px]"><span className="text-slate-600 font-medium">Beban Grab</span><span className="font-bold text-slate-800">Rp {fNum(checkout.finalDisc - checkout.totalMerchantCost)}</span></div>
+                              <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 mt-3">
+                                <p className="text-[10px] font-black text-blue-800 uppercase tracking-widest mb-2">Rincian Patungan (Cofund)</p>
+                                <div className="flex justify-between text-[11px] mb-1.5"><span className="text-slate-600 font-medium">Beban Toko</span><span className="font-bold text-slate-800">Rp {fNum(checkout.totalMerchantCost)}</span></div>
+                                <div className="flex justify-between text-[11px]"><span className="text-slate-600 font-medium">Beban Grab</span><span className="font-bold text-slate-800">Rp {fNum(checkout.finalDisc - checkout.totalMerchantCost)}</span></div>
                               </div>
                             )}
                         </div>
 
-                        <div className="pt-4 mt-2 border-t-2 border-slate-100 border-dashed">
-                          <div className="flex justify-between items-end mb-5">
+                        <div className="pt-5 mt-3 border-t-2 border-slate-100 border-dashed">
+                          <div className="flex justify-between items-end mb-6">
                               <div>
-                                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Total Tagihan</p>
-                                  <p className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">Rp {fNum(checkout.total)}</p>
+                                  <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Tagihan</p>
+                                  <p className="text-3xl md:text-4xl font-black text-slate-800 tracking-tight">Rp {fNum(checkout.total)}</p>
                               </div>
                           </div>
-                          <button className="w-full bg-[#00B14F] hover:bg-green-600 text-white p-3 md:p-4 rounded-xl font-bold text-xs md:text-sm uppercase tracking-wide shadow-md transition-all active:scale-[0.98] flex justify-center items-center gap-2 group">
-                              Simulasi Pesan <ArrowRight size={16} strokeWidth={3} className="group-hover:translate-x-1 transition-transform"/>
+                          <button className="w-full bg-[#00B14F] hover:bg-emerald-600 text-white p-4 md:p-5 rounded-2xl font-black text-sm md:text-base uppercase tracking-wider shadow-xl shadow-emerald-500/20 transition-all active:scale-[0.98] flex justify-center items-center gap-3 group">
+                              Simulasi Pesan <ArrowRight size={18} strokeWidth={3} className="group-hover:translate-x-1 transition-transform"/>
                           </button>
                         </div>
                       </div>
@@ -739,9 +752,9 @@ const MerchantSimulator = () => {
           {page === 'prospect' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
               <div className="space-y-6">
-                <div className="border border-slate-200 rounded-2xl p-4 md:p-5 bg-slate-50/50">
+                <div className="border border-slate-200 rounded-2xl p-5 md:p-6 bg-slate-50/50">
                   <SimLabel icon={BarChart2}>1. Data Historis (Bulan Lalu)</SimLabel>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <SimInputGroup label="Omset Penjualan" prefix="Rp" value={histData.omset} onChange={(e) => handleHistChange('omset', e.target.value)} />
                     <SimInputGroup label="Jumlah Order" value={histData.orders} onChange={(e) => handleHistChange('orders', e.target.value)} />
                     <SimInputGroup label="AOV (Rata2 Order)" prefix="Rp" value={histData.aov} onChange={(e) => handleHistChange('aov', e.target.value)} />
@@ -749,18 +762,18 @@ const MerchantSimulator = () => {
                   </div>
                 </div>
 
-                <div className="border border-slate-200 rounded-2xl p-4 md:p-5 bg-slate-50/50">
+                <div className="border border-slate-200 rounded-2xl p-5 md:p-6 bg-slate-50/50">
                   <SimLabel icon={TrendingUp}>2. Target Proyeksi Baru</SimLabel>
-                  <div className="bg-white p-4 md:p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Kenaikan Order</span>
-                      <span className="text-xl font-black text-[#00B14F] bg-green-50 px-2 py-0.5 rounded-lg border border-green-100">+{growthProj}%</span>
+                  <div className="bg-white p-5 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div className="flex justify-between items-center mb-5">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Kenaikan Order</span>
+                      <span className="text-2xl font-black text-[#00B14F] bg-green-50 px-3 py-1 rounded-xl border border-green-100">+{growthProj}%</span>
                     </div>
-                    <input type="range" min="0" max="200" step="5" value={growthProj} onChange={(e) => setGrowthProj(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#00B14F]" />
-                    <div className="mt-5 pt-5 border-t border-slate-100 flex items-center justify-between">
-                      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Est. Total Order Baru</div>
-                      <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 flex items-center gap-2">
-                        <input type="text" inputMode="numeric" className="bg-transparent outline-none font-black text-slate-800 text-base tabular-nums w-16 text-right" value={fNum(Math.round(pNum(histData.orders) * (1 + growthProj/100)))} onChange={(e) => handleTargetOrderChange(e.target.value)} />
+                    <input type="range" min="0" max="200" step="5" value={growthProj} onChange={(e) => setGrowthProj(Number(e.target.value))} className="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#00B14F]" />
+                    <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-between">
+                      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Est. Total Order Baru</div>
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 flex items-center gap-2 shadow-sm">
+                        <input type="text" inputMode="numeric" className="bg-transparent outline-none font-black text-slate-800 text-lg tabular-nums w-20 text-right" value={fNum(Math.round(pNum(histData.orders) * (1 + growthProj/100)))} onChange={(e) => handleTargetOrderChange(e.target.value)} />
                         <span className="text-xs font-bold text-slate-400">Trx</span>
                       </div>
                     </div>
@@ -768,39 +781,39 @@ const MerchantSimulator = () => {
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {/* Historis Summary */}
-                <div className="bg-white rounded-2xl p-5 md:p-6 border border-slate-200 shadow-sm relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-bl-full -mr-4 -mt-4 opacity-50 pointer-events-none"></div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 relative z-10">Ringkasan Bulan Lalu</p>
-                  <div className="space-y-3 relative z-10">
-                    <div className="flex justify-between items-end"><p className="text-[11px] font-bold text-slate-500 uppercase">Omset</p><p className="text-lg font-black text-slate-800">Rp {fNum(projection.hOmset)}</p></div>
-                    <div className="flex justify-between items-end"><p className="text-[11px] font-bold text-slate-500 uppercase">Orders</p><p className="text-base font-black text-slate-700">{fNum(projection.hOrders)} <span className="text-[10px] font-medium text-slate-400 ml-1">({fNum(projection.hDailyOrders)}/hr)</span></p></div>
-                    <div className="flex justify-between items-end"><p className="text-[11px] font-bold text-slate-500 uppercase">AOV</p><p className="text-base font-black text-slate-700">Rp {fNum(projection.hAOV)}</p></div>
-                    <div className="flex justify-between items-end"><p className="text-[11px] font-bold text-slate-500 uppercase">Beban ({projection.hInvestPct}%)</p><p className="text-base font-black text-rose-500">Rp {fNum(projection.hInvestAmount)}</p></div>
-                    <div className="flex justify-between items-end pt-2 border-t border-slate-100"><p className="text-xs font-bold text-slate-800 uppercase">Net Profit</p><p className="text-xl font-black text-blue-600">Rp {fNum(projection.hNet)}</p></div>
+                <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full -mr-4 -mt-4 opacity-50 pointer-events-none"></div>
+                  <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-5 relative z-10">Ringkasan Bulan Lalu</p>
+                  <div className="space-y-4 relative z-10">
+                    <div className="flex justify-between items-end"><p className="text-xs font-bold text-slate-500 uppercase">Omset</p><p className="text-xl font-black text-slate-800">Rp {fNum(projection.hOmset)}</p></div>
+                    <div className="flex justify-between items-end"><p className="text-xs font-bold text-slate-500 uppercase">Orders</p><p className="text-lg font-black text-slate-700">{fNum(projection.hOrders)} <span className="text-[11px] font-medium text-slate-400 ml-1">({fNum(projection.hDailyOrders)}/hr)</span></p></div>
+                    <div className="flex justify-between items-end"><p className="text-xs font-bold text-slate-500 uppercase">AOV</p><p className="text-lg font-black text-slate-700">Rp {fNum(projection.hAOV)}</p></div>
+                    <div className="flex justify-between items-end"><p className="text-xs font-bold text-slate-500 uppercase">Beban ({projection.hInvestPct}%)</p><p className="text-lg font-black text-rose-500">Rp {fNum(projection.hInvestAmount)}</p></div>
+                    <div className="flex justify-between items-end pt-4 border-t border-slate-100 mt-2"><p className="text-sm font-black text-slate-800 uppercase">Net Profit</p><p className="text-2xl font-black text-blue-600">Rp {fNum(projection.hNet)}</p></div>
                   </div>
                 </div>
 
                 {/* Proyeksi Summary */}
-                <div className="bg-emerald-50 rounded-2xl p-5 md:p-6 border border-emerald-200 shadow-sm relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100 rounded-bl-full -mr-8 -mt-8 opacity-50 pointer-events-none"></div>
-                  <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-4 relative z-10">Simulasi Masa Depan</p>
-                  <div className="space-y-3 relative z-10">
-                    <div className="flex justify-between items-end"><p className="text-[11px] font-bold text-emerald-700 uppercase">Est. Omset</p><p className="text-xl font-black text-emerald-800">Rp {fNum(projection.pOmset)}</p></div>
+                <div className="bg-emerald-50 rounded-3xl p-6 md:p-8 border border-emerald-200 shadow-xl shadow-emerald-500/10 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-100 rounded-bl-full -mr-8 -mt-8 opacity-50 pointer-events-none"></div>
+                  <p className="text-[11px] font-black text-emerald-700 uppercase tracking-widest mb-5 relative z-10">Simulasi Masa Depan</p>
+                  <div className="space-y-4 relative z-10">
+                    <div className="flex justify-between items-end"><p className="text-xs font-bold text-emerald-800 uppercase">Est. Omset</p><p className="text-2xl font-black text-emerald-900 tracking-tight">Rp {fNum(projection.pOmset)}</p></div>
                     <div className="flex justify-between items-end">
-                       <div className="flex flex-col"><p className="text-[11px] font-bold text-emerald-700 uppercase">Est. Orders</p><span className="text-[9px] font-bold text-emerald-500 mt-0.5">+{growthProj.toFixed(0)}% Kenaikan</span></div>
-                       <p className="text-base font-black text-emerald-700">{fNum(projection.pOrders)} <span className="text-[10px] font-medium text-emerald-600/70 ml-1">({fNum(projection.pDailyOrders)}/hr)</span></p>
+                       <div className="flex flex-col"><p className="text-xs font-bold text-emerald-800 uppercase">Est. Orders</p><span className="text-[10px] font-black text-emerald-600 mt-1">+{growthProj.toFixed(0)}% Kenaikan</span></div>
+                       <p className="text-lg font-black text-emerald-800">{fNum(projection.pOrders)} <span className="text-[11px] font-medium text-emerald-600/70 ml-1">({fNum(projection.pDailyOrders)}/hr)</span></p>
                     </div>
                     <div className="flex justify-between items-end">
-                       <div className="flex flex-col"><p className="text-[11px] font-bold text-emerald-700 uppercase">Est. AOV</p><span className="text-[9px] font-medium text-emerald-600/70 mt-0.5">Diambil dari Cart</span></div>
-                       <p className="text-base font-black text-emerald-700">Rp {fNum(projection.newAOV)}</p>
+                       <div className="flex flex-col"><p className="text-xs font-bold text-emerald-800 uppercase">Est. AOV</p><span className="text-[10px] font-bold text-emerald-600/70 mt-1">Diambil dari Cart</span></div>
+                       <p className="text-lg font-black text-emerald-800">Rp {fNum(projection.newAOV)}</p>
                     </div>
                     <div className="flex justify-between items-end">
-                       <div className="flex flex-col gap-1"><p className="text-[11px] font-bold text-emerald-700 uppercase">Est. Beban</p><div className="flex items-center gap-1.5 bg-white px-1.5 py-0.5 rounded border border-emerald-200 w-fit"><input type="number" value={futureCostPct} onChange={(e) => setFutureCostPct(e.target.value)} className="bg-transparent text-emerald-800 font-bold text-xs w-8 outline-none text-center" /><span className="text-[9px] font-bold text-emerald-500">%</span></div></div>
-                       <p className="text-base font-black text-rose-500">Rp {fNum(projection.pInvestTotal)}</p>
+                       <div className="flex flex-col gap-1.5"><p className="text-xs font-bold text-emerald-800 uppercase">Est. Beban</p><div className="flex items-center gap-1.5 bg-white px-2 py-1 rounded-md border border-emerald-200 w-fit shadow-sm"><input type="number" value={futureCostPct} onChange={(e) => setFutureCostPct(e.target.value)} className="bg-transparent text-emerald-800 font-black text-sm w-10 outline-none text-center" /><span className="text-[10px] font-black text-emerald-500">%</span></div></div>
+                       <p className="text-lg font-black text-rose-500">Rp {fNum(projection.pInvestTotal)}</p>
                     </div>
-                    <div className="flex justify-between items-end pt-3 border-t border-emerald-200/50 mt-1"><p className="text-xs font-bold text-emerald-900 uppercase">Est. Net Profit</p><p className="text-2xl font-black text-[#00B14F]">Rp {fNum(projection.pNet)}</p></div>
+                    <div className="flex justify-between items-end pt-5 border-t border-emerald-200/50 mt-2"><p className="text-sm font-black text-emerald-900 uppercase">Est. Net Profit</p><p className="text-3xl font-black text-[#00B14F] tracking-tight">Rp {fNum(projection.pNet)}</p></div>
                   </div>
                 </div>
               </div>
@@ -812,27 +825,27 @@ const MerchantSimulator = () => {
             <div className="space-y-8 pb-10">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                 <div className="space-y-6">
-                  <div className="border border-slate-200 rounded-2xl p-4 md:p-5 bg-slate-50/50">
+                  <div className="border border-slate-200 rounded-2xl p-5 md:p-6 bg-slate-50/50">
                     <SimLabel icon={Megaphone}>1. Pilih Jenis Iklan</SimLabel>
                     <div className="space-y-3">
-                      <div onClick={() => setAdsType('keyword')} className={`p-4 rounded-xl border-2 cursor-pointer transition-all bg-white ${adsType === 'keyword' ? 'border-[#00B14F] shadow-md ring-1 ring-green-100' : 'border-slate-200 hover:border-slate-300'}`}>
-                        <div className="flex justify-between items-start mb-1.5"><h4 className="font-black text-sm text-slate-800">Pencarian (Keyword)</h4>{adsType === 'keyword' && <Check size={16} className="text-[#00B14F]" />}</div>
-                        <p className="text-[11px] text-slate-500 leading-relaxed font-medium">Tampil di hasil pencarian. Bayar per klik (CPC). Sangat cocok menangkap niat beli tinggi.</p>
+                      <div onClick={() => setAdsType('keyword')} className={`p-4 md:p-5 rounded-2xl border-2 cursor-pointer transition-all bg-white ${adsType === 'keyword' ? 'border-[#00B14F] shadow-lg shadow-emerald-500/10 ring-1 ring-green-100' : 'border-slate-200 hover:border-slate-300'}`}>
+                        <div className="flex justify-between items-start mb-2"><h4 className="font-black text-sm text-slate-800">Pencarian (Keyword)</h4>{adsType === 'keyword' && <Check size={18} className="text-[#00B14F]" />}</div>
+                        <p className="text-xs text-slate-500 leading-relaxed font-medium">Tampil di hasil pencarian. Bayar per klik (CPC). Sangat cocok menangkap niat beli tinggi.</p>
                       </div>
-                      <div onClick={() => setAdsType('banner')} className={`p-4 rounded-xl border-2 cursor-pointer transition-all bg-white ${adsType === 'banner' ? 'border-[#00B14F] shadow-md ring-1 ring-green-100' : 'border-slate-200 hover:border-slate-300'}`}>
-                        <div className="flex justify-between items-start mb-1.5"><h4 className="font-black text-sm text-slate-800">Jelajah (Banner)</h4>{adsType === 'banner' && <Check size={16} className="text-[#00B14F]" />}</div>
-                        <p className="text-[11px] text-slate-500 leading-relaxed font-medium">Tampil di halaman utama. Cocok untuk membangun brand awareness toko Anda.</p>
+                      <div onClick={() => setAdsType('banner')} className={`p-4 md:p-5 rounded-2xl border-2 cursor-pointer transition-all bg-white ${adsType === 'banner' ? 'border-[#00B14F] shadow-lg shadow-emerald-500/10 ring-1 ring-green-100' : 'border-slate-200 hover:border-slate-300'}`}>
+                        <div className="flex justify-between items-start mb-2"><h4 className="font-black text-sm text-slate-800">Jelajah (Banner)</h4>{adsType === 'banner' && <Check size={18} className="text-[#00B14F]" />}</div>
+                        <p className="text-xs text-slate-500 leading-relaxed font-medium">Tampil di halaman utama. Cocok untuk membangun brand awareness toko Anda.</p>
                       </div>
-                      <div onClick={() => setAdsType('cpo')} className={`p-4 rounded-xl border-2 cursor-pointer transition-all bg-white ${adsType === 'cpo' ? 'border-[#00B14F] shadow-md ring-1 ring-green-100' : 'border-slate-200 hover:border-slate-300'}`}>
-                        <div className="flex justify-between items-start mb-1.5"><h4 className="font-black text-sm text-slate-800">Pesanan (CPO)</h4>{adsType === 'cpo' && <Check size={16} className="text-[#00B14F]" />}</div>
-                        <p className="text-[11px] text-slate-500 leading-relaxed font-medium">Hanya bayar ketika terjadi order. Resiko sangat rendah dan garansi ROAS.</p>
+                      <div onClick={() => setAdsType('cpo')} className={`p-4 md:p-5 rounded-2xl border-2 cursor-pointer transition-all bg-white ${adsType === 'cpo' ? 'border-[#00B14F] shadow-lg shadow-emerald-500/10 ring-1 ring-green-100' : 'border-slate-200 hover:border-slate-300'}`}>
+                        <div className="flex justify-between items-start mb-2"><h4 className="font-black text-sm text-slate-800">Pesanan (CPO)</h4>{adsType === 'cpo' && <Check size={18} className="text-[#00B14F]" />}</div>
+                        <p className="text-xs text-slate-500 leading-relaxed font-medium">Hanya bayar ketika terjadi order. Resiko sangat rendah dan garansi ROAS.</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="border border-slate-200 rounded-2xl p-4 md:p-5 bg-slate-50/50">
+                  <div className="border border-slate-200 rounded-2xl p-5 md:p-6 bg-slate-50/50">
                     <SimLabel icon={Target}>2. Budget & Performa</SimLabel>
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                       <SimInputGroup label="Budget Harian" prefix="Rp" value={adsBudget} onChange={(e) => setAdsBudget(e.target.value)} />
                       <div className="flex gap-4">
                         <div className="flex-1"><SimInputGroup label={adsType === 'cpo' ? "Biaya per Order" : "Max CPC (Bid)"} prefix="Rp" value={cpcBid} onChange={(e) => setCpcBid(e.target.value)} inputMode="numeric"/></div>
@@ -843,9 +856,9 @@ const MerchantSimulator = () => {
                           <div className="flex-1"><SimInputGroup label="Est. CVR (%)" suffix="%" value={adsCvr} onChange={(e) => setAdsCvr(e.target.value)} inputMode="decimal"/></div>
                         </div>
                       )}
-                      <div className="bg-blue-50 p-3.5 rounded-xl border border-blue-100 flex items-start gap-2.5">
-                        <Info size={14} className="text-blue-500 mt-0.5 shrink-0" />
-                        <p className="text-[10px] text-blue-700 font-medium leading-relaxed">
+                      <div className="bg-blue-50/80 p-4 rounded-xl border border-blue-100 flex items-start gap-3">
+                        <Info size={16} className="text-blue-500 mt-0.5 shrink-0" />
+                        <p className="text-[11px] text-blue-800 font-medium leading-relaxed">
                           {adsType === 'cpo' ? <span>Anda hanya akan ditagih <b className="font-black">Rp {cpcBid}</b> saat order masuk.</span> : <span>Default rekomendasi sistem: CPC <b className="font-black">Rp {adsType === 'keyword' ? '2.500' : '800'}</b>, CTR <b className="font-black">{adsType === 'keyword' ? '3.5' : '1.2'}%</b>.</span>}
                         </p>
                       </div>
@@ -854,73 +867,73 @@ const MerchantSimulator = () => {
                 </div>
 
                 <div className="h-full">
-                  <div className="bg-white rounded-2xl p-5 md:p-6 shadow-sm border border-slate-200 h-full flex flex-col relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full -mr-8 -mt-8 opacity-50 pointer-events-none transition-transform group-hover:scale-110"></div>
+                  <div className="bg-white rounded-[32px] p-6 md:p-8 shadow-xl shadow-slate-200/40 border border-slate-100 h-full flex flex-col relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-slate-50 rounded-bl-full -mr-8 -mt-8 opacity-50 pointer-events-none transition-transform duration-700 group-hover:scale-110"></div>
                     
-                    <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100 relative z-10">
-                      <div className="bg-green-50 p-1.5 rounded-lg text-[#00B14F]"><Activity size={16} /></div>
-                      <span className="text-sm font-black uppercase tracking-wide text-slate-800">Estimasi Hasil Harian</span>
+                    <div className="flex items-center gap-3 mb-8 pb-5 border-b border-slate-100 relative z-10">
+                      <div className="bg-green-50 p-2 rounded-xl text-[#00B14F]"><Activity size={20} /></div>
+                      <span className="text-sm md:text-base font-black uppercase tracking-widest text-slate-800">Estimasi Hasil Harian</span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-6 mb-6 relative z-10">
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-8 mb-8 relative z-10">
                       <div>
-                         <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Est. Tayangan (Mata)</p>
-                         <p className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">{fNum(adsSim.estImpressions)}</p>
-                         {adsType !== 'cpo' && (<p className="text-[9px] text-slate-500 font-bold flex items-center gap-1 mt-1"><Eye size={10} className="text-[#00B14F]"/> CTR {adsSim.ctrVal}%</p>)}
+                         <p className="text-[11px] font-bold text-slate-400 uppercase mb-1.5 tracking-widest">Est. Tayangan</p>
+                         <p className="text-3xl md:text-4xl font-black text-slate-800 tracking-tight">{fNum(adsSim.estImpressions)}</p>
+                         {adsType !== 'cpo' && (<p className="text-[10px] text-slate-500 font-bold flex items-center gap-1 mt-2"><Eye size={12} className="text-[#00B14F]"/> CTR {adsSim.ctrVal}%</p>)}
                       </div>
                       <div>
-                         <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Est. Klik (Traffic)</p>
-                         <p className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">{fNum(adsSim.estClicks)}</p>
-                         {adsType !== 'cpo' && (<p className="text-[9px] text-slate-500 font-bold flex items-center gap-1 mt-1"><MousePointer size={10} className="text-[#00B14F]"/> Bayar jika diklik</p>)}
+                         <p className="text-[11px] font-bold text-slate-400 uppercase mb-1.5 tracking-widest">Est. Klik Traffic</p>
+                         <p className="text-3xl md:text-4xl font-black text-slate-800 tracking-tight">{fNum(adsSim.estClicks)}</p>
+                         {adsType !== 'cpo' && (<p className="text-[10px] text-slate-500 font-bold flex items-center gap-1 mt-2"><MousePointer size={12} className="text-[#00B14F]"/> Bayar jika diklik</p>)}
                       </div>
-                      <div className="pt-4 border-t border-slate-100">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Biaya Iklan</p>
-                        <p className="text-lg md:text-xl font-black text-rose-500 tracking-tight">Rp {fNum(adsSim.actualCost)}</p>
+                      <div className="pt-5 border-t border-slate-100">
+                        <p className="text-[11px] font-bold text-slate-400 uppercase mb-1.5 tracking-widest">Biaya Iklan</p>
+                        <p className="text-xl md:text-2xl font-black text-rose-500 tracking-tight">Rp {fNum(adsSim.actualCost)}</p>
                       </div>
-                      <div className="pt-4 border-t border-slate-100">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Est. Order</p>
-                        <p className="text-lg md:text-xl font-black text-[#00B14F] tracking-tight">{fNum(adsSim.estOrders)}</p>
-                        {adsType !== 'cpo' && (<p className="text-[9px] text-slate-500 font-bold mt-1.5">Mengingat CVR {(adsSim.cvr * 100).toFixed(0)}%</p>)}
+                      <div className="pt-5 border-t border-slate-100">
+                        <p className="text-[11px] font-bold text-slate-400 uppercase mb-1.5 tracking-widest">Est. Order</p>
+                        <p className="text-xl md:text-2xl font-black text-[#00B14F] tracking-tight">{fNum(adsSim.estOrders)}</p>
+                        {adsType !== 'cpo' && (<p className="text-[10px] text-slate-500 font-bold mt-2">CVR {(adsSim.cvr * 100).toFixed(0)}%</p>)}
                       </div>
                     </div>
 
-                    <div className="mt-auto pt-5 border-t-2 border-slate-100 border-dashed relative z-10">
-                      <div className="flex justify-between items-end mb-3">
-                        <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Potensi Omset</span>
-                        <span className="text-2xl md:text-3xl font-black text-[#00B14F] tracking-tight">Rp {fNum(adsSim.estGrossSales)}</span>
+                    <div className="mt-auto pt-6 border-t-2 border-slate-100 border-dashed relative z-10">
+                      <div className="flex justify-between items-end mb-4">
+                        <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Potensi Omset</span>
+                        <span className="text-3xl md:text-4xl font-black text-[#00B14F] tracking-tight">Rp {fNum(adsSim.estGrossSales)}</span>
                       </div>
-                      <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 flex justify-between items-center">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">ROAS</span>
-                        <span className={`text-sm md:text-base font-black ${adsSim.roas >= 5 ? 'text-emerald-600' : adsSim.roas >= 3 ? 'text-blue-600' : 'text-rose-600'}`}>{adsSim.roas.toFixed(1)}x</span>
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex justify-between items-center shadow-sm">
+                        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">ROAS</span>
+                        <span className={`text-base md:text-lg font-black ${adsSim.roas >= 5 ? 'text-emerald-600' : adsSim.roas >= 3 ? 'text-blue-600' : 'text-rose-600'}`}>{adsSim.roas.toFixed(1)}x</span>
                       </div>
-                      <p className="text-[9px] text-slate-400 mt-3 text-center italic font-medium">*Diestimasi dengan AOV Rp {fNum(adsSim.baseAOV)}. Aktual dapat berbeda.</p>
+                      <p className="text-[10px] text-slate-400 mt-4 text-center italic font-medium">*Diestimasi dengan AOV Rp {fNum(adsSim.baseAOV)}. Aktual dapat berbeda.</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* TABEL METRIK */}
-              <div className="border border-slate-200 rounded-2xl p-4 md:p-5 bg-white shadow-sm overflow-hidden">
+              <div className="border border-slate-200 rounded-[32px] p-5 md:p-8 bg-white shadow-xl shadow-slate-200/40 overflow-hidden mb-10">
                 <SimLabel icon={Activity}>Panduan Kesehatan Metrik</SimLabel>
-                <div className="overflow-x-auto custom-scrollbar pb-2">
-                  <table className="w-full text-left border-collapse min-w-[600px]">
+                <div className="overflow-x-auto custom-scrollbar pb-2 mt-4">
+                  <table className="w-full text-left border-collapse min-w-[700px]">
                     <thead>
                       <tr className="border-b-2 border-slate-100">
-                        <th className="py-3 px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest w-[140px]">Metrik</th>
-                        <th className="py-3 px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest w-[90px]">Status</th>
-                        <th className="py-3 px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest w-[100px]">Target</th>
-                        <th className="py-3 px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Analisis & Tindakan</th>
+                        <th className="py-4 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest w-[160px]">Metrik</th>
+                        <th className="py-4 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest w-[100px]">Status</th>
+                        <th className="py-4 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest w-[120px]">Target</th>
+                        <th className="py-4 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Analisis & Tindakan</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                       {METRICS_GUIDE.map((metricItem, mIdx) => (
                         <Fragment key={mIdx}>
                           {metricItem.rows.map((row, rIdx) => (
-                            <tr key={`${mIdx}-${rIdx}`} className="hover:bg-slate-50 transition-colors">
-                              {rIdx === 0 && (<td rowSpan={3} className="py-3 px-3 align-top border-r border-slate-50"><span className="text-xs font-black text-slate-800">{metricItem.metric}</span></td>)}
-                              <td className="py-3 px-3 align-top"><span className={`text-[10px] font-black uppercase px-2 py-1 rounded border ${row.bg} ${row.color}`}>{row.status}</span></td>
-                              <td className="py-3 px-3 align-top"><span className="text-xs font-bold text-slate-600">{row.range}</span></td>
-                              <td className="py-3 px-3 align-top"><p className="text-[11px] text-slate-500 leading-relaxed font-medium">{row.desc}</p></td>
+                            <tr key={`${mIdx}-${rIdx}`} className="hover:bg-slate-50/80 transition-colors">
+                              {rIdx === 0 && (<td rowSpan={3} className="py-4 px-4 align-top border-r border-slate-50"><span className="text-sm font-black text-slate-800">{metricItem.metric}</span></td>)}
+                              <td className="py-4 px-4 align-top"><span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md border shadow-sm ${row.bg} ${row.color}`}>{row.status}</span></td>
+                              <td className="py-4 px-4 align-top"><span className="text-xs font-bold text-slate-600">{row.range}</span></td>
+                              <td className="py-4 px-4 align-top"><p className="text-xs text-slate-500 leading-relaxed font-medium">{row.desc}</p></td>
                             </tr>
                           ))}
                         </Fragment>
@@ -955,22 +968,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('overview'); 
   const [activeSegmentModal, setActiveSegmentModal] = useState(null);
 
-  // --- MENAMBAHKAN FAVICON (ICON TAB BROWSER) ---
-  useEffect(() => {
-    let link = document.querySelector("link[rel~='icon']");
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = 'icon';
-      document.head.appendChild(link);
-    }
-    // Memasang link gambar yang kamu minta
-    link.href = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTMcKpdYLDWBDdPTYo5MiN-8czZZI_mcRLQQ&s';
-    
-    // Memastikan judul tab-nya rapi
-    document.title = "AM Dashboard Pro"; 
-  }, []);
-
-  // --- MEMUAT DATA DARI LOCAL STORAGE (VERSI OFFLINE TAHAN BANTING) ---
+  // --- MEMUAT DATA DARI LOCAL STORAGE (INDEXEDDB) ---
   useEffect(() => {
     const loadLocalData = async () => {
         try {
@@ -988,17 +986,15 @@ export default function App() {
     loadLocalData();
   }, []);
 
-  // --- SIMPAN KE LOCAL STORAGE (VERSI INDEXED DB) ---
+  // --- SIMPAN KE LOCAL STORAGE ---
   const saveToLocal = async (finalData) => {
       setLoading(true);
       try {
-          // Simulasi loading sejenak agar terlihat prosesnya
           await new Promise(resolve => setTimeout(resolve, 500));
           await saveToIndexedDB('am_dashboard_data', finalData);
           setData(finalData);
           setIsForceUpload(false);
       } catch (e) {
-          console.error("Save error", e);
           setErrorMsg("Gagal menyimpan data (File terlalu besar/Error): " + e.message);
       }
       setLoading(false);
@@ -1181,7 +1177,6 @@ export default function App() {
             return merchant;
         });
 
-        // Simpan hasil parse ke Local Storage (Sekarang pakai IndexedDB)
         await saveToLocal(finalData);
 
     } catch (err) {
@@ -1210,7 +1205,6 @@ export default function App() {
      setLoading(true); 
      setTimeout(() => { 
         const amNames = ['Muhamad Novan', 'Reza Firmansyah', 'Sarah Amelia', 'Andi Pratama'];
-        // Menambahkan Booster+ ke data dummy
         const possibleCampaigns = ['GMS Booster', 'GMS Cuan', 'Free Ongkir', 'WEEKENDFEST', 'Booster+'];
         const months = ['2025-01-01','2025-02-01','2025-03-01','2025-04-01','2025-05-01','2025-06-01','2025-07-01','2025-08-01','2025-09-01','2025-10-01','2025-11-01','2025-12-01','2026-01-01','2026-02-01'];
 
@@ -1227,7 +1221,6 @@ export default function App() {
 
           let assignedCampaigns = [];
           const campaignRoll = Math.random();
-          // Logika probabilitas dummy untuk klasifikasi campaign baru
           if (campaignRoll < 0.2) assignedCampaigns = ['No Campaign'];
           else if (campaignRoll < 0.35) assignedCampaigns = [possibleCampaigns[0]]; // GMS Only
           else if (campaignRoll < 0.5) assignedCampaigns = [possibleCampaigns[4]];  // Booster+
@@ -1347,11 +1340,11 @@ export default function App() {
     });
 
     const classification = [
-      { name: 'GMS Only', count: gmsOnly, fill: '#0ea5e9' },       // Biru
-      { name: 'GMS & Local', count: gmsLocal, fill: '#8b5cf6' },    // Ungu
-      { name: 'Booster+', count: boosterPlus, fill: '#f59e0b' },    // Amber/Kuning
-      { name: 'Local Only', count: localOnly, fill: '#10b981' },    // Hijau
-      { name: '0 Invest', count: zeroInvest, fill: '#cbd5e1' }      // Abu-abu
+      { name: 'GMS Only', count: gmsOnly, fill: '#0ea5e9' },       
+      { name: 'GMS & Local', count: gmsLocal, fill: '#8b5cf6' },  
+      { name: 'Booster+', count: boosterPlus, fill: '#f59e0b' },  
+      { name: 'Local Only', count: localOnly, fill: '#10b981' },  
+      { name: '0 Invest', count: zeroInvest, fill: '#cbd5e1' }   
     ];
 
     return { 
@@ -1366,7 +1359,7 @@ export default function App() {
   const filteredSegmentMerchants = useMemo(() => {
      if (!activeSegmentModal) return [];
      return activeData.filter(m => getMerchantSegment(m.campaigns) === activeSegmentModal)
-                      .sort((a, b) => b.mtdBs - a.mtdBs); // Urutkan berdasar MTD Sales terbesar
+                      .sort((a, b) => b.mtdBs - a.mtdBs); 
   }, [activeData, activeSegmentModal]);
 
   const kpi = useMemo(() => {
@@ -1408,9 +1401,11 @@ export default function App() {
     }
     const camps = campaignStr.split(/[|,]/).map(c => c.trim()).filter(Boolean);
     return (
-        <div className="flex flex-wrap gap-1 mt-1">
+        <div className="flex flex-wrap gap-1 mt-1.5">
             {camps.map((camp, idx) => ( 
-              <span key={idx} className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded text-[9px] font-bold flex items-center gap-1 shadow-sm"><Zap className="w-2.5 h-2.5 fill-emerald-500 text-emerald-500" />{camp}</span> 
+              <span key={idx} className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded-md text-[9px] font-bold flex items-center gap-1 shadow-[0_1px_2px_rgb(0,0,0,0.05)]">
+                <Zap className="w-2.5 h-2.5 fill-emerald-500 text-emerald-500" />{camp}
+              </span> 
             ))}
         </div>
     );
@@ -1424,7 +1419,7 @@ export default function App() {
 
   if (isInitializing) {
      return (
-       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+       <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
          <div className="text-center animate-pulse flex flex-col items-center">
             <Activity className="w-12 h-12 text-[#00B14F] mb-4" />
             <h2 className="text-sm font-bold text-slate-500 uppercase tracking-widest">Memuat Dashboard...</h2>
@@ -1436,45 +1431,50 @@ export default function App() {
   // --- RENDER SCREEN AWAL (UPLOAD) ---
   if (data.length === 0 || isForceUpload) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 relative overflow-hidden font-sans text-slate-800">
-        <div className="text-center max-w-xl z-10 bg-white p-8 md:p-10 rounded-3xl shadow-xl w-full mx-auto border border-slate-200 animate-in fade-in zoom-in-95 relative">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden font-sans text-slate-800">
+        
+        {/* Background Accents */}
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[100%] bg-emerald-900/40 rounded-full blur-[120px] pointer-events-none"></div>
+        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[100%] bg-blue-900/30 rounded-full blur-[120px] pointer-events-none"></div>
+
+        <div className="text-center max-w-xl z-10 bg-white/95 backdrop-blur-xl p-8 md:p-10 rounded-[32px] shadow-2xl w-full mx-auto border border-white/20 animate-in fade-in zoom-in-95 relative">
           
-          <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Activity className="w-8 h-8 text-[#00B14F]" />
+          <div className="w-16 h-16 bg-gradient-to-br from-[#00B14F] to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-500/30">
+            <Activity className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl md:text-3xl font-black mb-1 text-slate-900 tracking-tight uppercase">AM DASHBOARD <span className="text-[#00B14F]">PRO</span></h1>
-          <p className="text-slate-500 mb-8 text-xs font-medium">Merchant Intelligence Platform</p>
+          <p className="text-slate-500 mb-8 text-xs font-semibold tracking-wide">MERCHANT INTELLIGENCE PLATFORM</p>
           
-          {errorMsg && <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-xs font-bold flex gap-2 border border-red-100"><AlertCircle className="w-4 h-4 shrink-0" />{errorMsg}</div>}
+          {errorMsg && <div className="mb-6 p-3 bg-rose-50 text-rose-600 rounded-xl text-xs font-bold flex gap-2 border border-rose-100 items-center text-left leading-snug"><AlertCircle className="w-5 h-5 shrink-0" />{errorMsg}</div>}
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className="flex flex-col items-center justify-center p-4 border-2 border-slate-200 border-dashed rounded-xl bg-slate-50 relative group hover:border-slate-400 transition-all">
-                <Store className={`w-6 h-6 mb-2 ${fileMaster ? 'text-slate-800' : 'text-slate-400'}`} />
-                <p className="text-slate-700 font-bold text-xs mb-1">CSV Master Outlet</p>
-                <p className="text-[10px] text-slate-400 text-center px-4">{fileMaster ? fileMaster.name : 'Upload file database utama'}</p>
+              <div className="flex flex-col items-center justify-center p-5 border-2 border-slate-200 border-dashed rounded-2xl bg-slate-50 relative group hover:border-[#00B14F] hover:bg-emerald-50/50 transition-all cursor-pointer">
+                <Store className={`w-7 h-7 mb-2 transition-colors ${fileMaster ? 'text-[#00B14F]' : 'text-slate-400 group-hover:text-emerald-500'}`} />
+                <p className="text-slate-800 font-bold text-xs mb-1">Master Outlet</p>
+                <p className="text-[10px] text-slate-400 text-center px-2 line-clamp-2 leading-tight">{fileMaster ? fileMaster.name : 'Upload file utama (.csv)'}</p>
                 <input type="file" accept=".csv" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => setFileMaster(e.target.files[0])} />
-                {fileMaster && <div className="absolute top-2 right-2"><CheckCircle className="w-4 h-4 text-slate-800" /></div>}
+                {fileMaster && <div className="absolute top-3 right-3 bg-white rounded-full shadow-sm"><CheckCircle className="w-4 h-4 text-[#00B14F]" /></div>}
               </div>
-              <div className="flex flex-col items-center justify-center p-4 border-2 border-slate-200 border-dashed rounded-xl bg-slate-50 relative group hover:border-slate-400 transition-all">
-                <BarChart2 className={`w-6 h-6 mb-2 ${fileHistory ? 'text-slate-800' : 'text-slate-400'}`} />
-                <p className="text-slate-700 font-bold text-xs mb-1">CSV Historis (Opsional)</p>
-                <p className="text-[10px] text-slate-400 text-center px-4">{fileHistory ? fileHistory.name : 'Data bulanan merchant'}</p>
+              <div className="flex flex-col items-center justify-center p-5 border-2 border-slate-200 border-dashed rounded-2xl bg-slate-50 relative group hover:border-[#00B14F] hover:bg-emerald-50/50 transition-all cursor-pointer">
+                <FileText className={`w-7 h-7 mb-2 transition-colors ${fileHistory ? 'text-[#00B14F]' : 'text-slate-400 group-hover:text-emerald-500'}`} />
+                <p className="text-slate-800 font-bold text-xs mb-1">Data Historis</p>
+                <p className="text-[10px] text-slate-400 text-center px-2 line-clamp-2 leading-tight">{fileHistory ? fileHistory.name : 'Upload data bulanan (opsional)'}</p>
                 <input type="file" accept=".csv" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => setFileHistory(e.target.files[0])} />
-                {fileHistory && <div className="absolute top-2 right-2"><CheckCircle className="w-4 h-4 text-slate-800" /></div>}
+                {fileHistory && <div className="absolute top-3 right-3 bg-white rounded-full shadow-sm"><CheckCircle className="w-4 h-4 text-[#00B14F]" /></div>}
               </div>
           </div>
 
-          <button onClick={handleProcessFiles} disabled={loading || !fileMaster} className={`w-full py-3.5 bg-slate-800 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 mb-4 text-sm hover:bg-slate-900 shadow-md ${!fileMaster ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}>
-            {loading ? <Activity className="w-5 h-5 animate-spin" /> : <UploadCloud className="w-5 h-5" />} {loading ? 'Memproses Data...' : 'Simpan & Proses Dashboard'}
+          <button onClick={handleProcessFiles} disabled={loading || !fileMaster} className={`w-full py-4 bg-slate-900 text-white rounded-2xl font-black transition-all flex items-center justify-center gap-2 mb-4 text-sm hover:bg-slate-800 shadow-xl shadow-slate-900/20 ${!fileMaster ? 'opacity-50 cursor-not-allowed shadow-none' : 'active:scale-95'}`}>
+            {loading ? <Activity className="w-5 h-5 animate-spin" /> : <UploadCloud className="w-5 h-5" />} {loading ? 'MEMPROSES DATA...' : 'MASUK KE DASHBOARD'}
           </button>
           
-          <button onClick={loadDemo} disabled={loading} className="w-full py-3 bg-transparent text-slate-500 hover:text-slate-800 font-bold transition-all flex items-center justify-center gap-2 text-sm border border-slate-200 rounded-xl hover:bg-slate-50">
-            <TrendingUp className="w-4 h-4" /> Lihat dengan Data Dummy
+          <button onClick={loadDemo} disabled={loading} className="w-full py-3 bg-transparent text-slate-500 hover:text-slate-800 font-bold transition-all flex items-center justify-center gap-2 text-xs rounded-xl hover:bg-slate-50">
+            <TrendingUp className="w-4 h-4" /> Eksplorasi dengan Data Dummy
           </button>
 
           {data.length > 0 && isForceUpload && (
-             <button onClick={() => setIsForceUpload(false)} disabled={loading} className="w-full py-2.5 mt-3 bg-slate-100 text-slate-500 hover:text-slate-700 font-bold transition-all text-xs rounded-xl hover:bg-slate-200">
-                Batal Update & Kembali
+             <button onClick={() => setIsForceUpload(false)} disabled={loading} className="w-full py-3 mt-2 bg-slate-100 text-slate-500 hover:text-slate-700 font-bold transition-all text-xs rounded-xl hover:bg-slate-200">
+                Batal & Kembali
              </button>
           )}
         </div>
@@ -1484,46 +1484,52 @@ export default function App() {
 
   // --- RENDER DASHBOARD UTAMA ---
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans overflow-hidden relative">
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col font-sans overflow-hidden relative">
       
+      {/* DECORATIVE TOP BACKGROUND ANCHOR */}
+      <div className="absolute top-0 left-0 right-0 h-[280px] md:h-[320px] bg-slate-900 z-0 rounded-b-[40px] shadow-lg">
+         <div className="absolute top-[-50%] left-[-10%] w-[60%] h-[200%] bg-emerald-900/30 rounded-full blur-[120px] pointer-events-none"></div>
+         <div className="absolute top-[0%] right-[-10%] w-[50%] h-[150%] bg-blue-900/20 rounded-full blur-[100px] pointer-events-none"></div>
+      </div>
+
       {/* ========================================================= */}
       {/* MODAL DAFTAR MERCHANT PER SEGMEN CAMPAIGN */}
       {/* ========================================================= */}
       {activeSegmentModal && (
         <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 sm:p-6">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setActiveSegmentModal(null)} />
-          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
+          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200 overflow-hidden">
             
-            <div className="flex justify-between items-center p-4 md:p-5 border-b border-slate-100 shrink-0">
+            <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10">
                <div>
-                  <h3 className="font-black text-lg text-slate-800 flex items-center gap-2">
+                  <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
                      <Target className="w-5 h-5 text-[#00B14F]"/>
                      Segmen: <span className="text-[#00B14F]">{activeSegmentModal}</span>
                   </h3>
-                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">Daftar {filteredSegmentMerchants.length} merchant dalam kategori ini</p>
+                  <p className="text-xs text-slate-500 font-medium mt-1">Daftar {filteredSegmentMerchants.length} merchant dalam kategori ini</p>
                </div>
-               <button onClick={() => setActiveSegmentModal(null)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={18}/></button>
+               <button onClick={() => setActiveSegmentModal(null)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
             </div>
             
-            <div className="flex-1 overflow-auto p-4 custom-scrollbar bg-slate-50/50">
+            <div className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar bg-[#f8fafc]">
                {filteredSegmentMerchants.length === 0 ? (
-                 <div className="flex flex-col items-center justify-center h-40 text-slate-400">
-                    <Store className="w-8 h-8 mb-2 opacity-30" />
-                    <p className="text-xs font-bold">Tidak ada merchant di segmen ini.</p>
+                 <div className="flex flex-col items-center justify-center h-48 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
+                    <Store className="w-10 h-10 mb-3 opacity-30" />
+                    <p className="text-xs font-bold uppercase tracking-widest">Kosong</p>
                  </div>
                ) : (
-                 <div className="grid grid-cols-1 gap-2">
+                 <div className="grid grid-cols-1 gap-3">
                     {filteredSegmentMerchants.map((mex) => (
-                       <div key={mex.id} onClick={() => { setSelectedMex(mex); setActiveSegmentModal(null); setActiveTab('overview'); }} className="flex justify-between items-center p-3.5 bg-white border border-slate-200 rounded-xl hover:border-[#00B14F] hover:shadow-md cursor-pointer transition-all group">
+                       <div key={mex.id} onClick={() => { setSelectedMex(mex); setActiveSegmentModal(null); setActiveTab('overview'); }} className="flex justify-between items-center p-4 bg-white border border-slate-200 rounded-2xl hover:border-[#00B14F] hover:shadow-lg hover:shadow-emerald-500/10 cursor-pointer transition-all duration-300 group">
                           <div className="min-w-0 pr-4">
-                             <p className="font-bold text-sm text-slate-800 group-hover:text-[#00B14F] truncate">{mex.name}</p>
-                             <div className="-mt-1">
+                             <p className="font-bold text-sm md:text-base text-slate-800 group-hover:text-[#00B14F] truncate transition-colors">{mex.name}</p>
+                             <div className="-mt-0.5">
                                 {renderMerchantCampaigns(mex.campaigns)}
                              </div>
                           </div>
                           <div className="text-right shrink-0">
-                             <p className="font-black text-sm text-slate-700">{formatCurrency(mex.mtdBs)}</p>
-                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">MTD Sales</p>
+                             <p className="font-black text-sm md:text-base text-slate-800">{formatCurrency(mex.mtdBs)}</p>
+                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">MTD Sales</p>
                           </div>
                        </div>
                     ))}
@@ -1536,34 +1542,33 @@ export default function App() {
       )}
 
       {/* ELEGAN & MODERN HEADER */}
-      <header className="bg-white/90 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-40 shadow-sm flex flex-col shrink-0 transition-all">
-        <div className="flex items-center justify-between px-4 md:px-6 h-16 md:h-20 gap-4 md:gap-6">
+      <header className="sticky top-0 z-40 transition-all pt-4 pb-2 md:py-4 px-4 md:px-6">
+        <div className="flex items-center justify-between gap-4 md:gap-6 bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-3xl p-3 md:p-4 shadow-2xl shadow-black/20">
           
           {/* 1. Left Section: Logo & Desktop Tabs / Back Button */}
-          <div className="flex items-center gap-4 shrink-0">
+          <div className="flex items-center gap-4 md:gap-6 shrink-0">
              {/* Logo */}
-             <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => { setSelectedMex(null); setActiveTab('overview'); setSearchTerm(''); }}>
-               <div className="w-9 h-9 bg-gradient-to-br from-green-400 to-[#00B14F] rounded-xl flex items-center justify-center shadow-md shadow-green-500/20">
+             <div className="flex items-center gap-3 cursor-pointer group" onClick={() => { setSelectedMex(null); setActiveTab('overview'); setSearchTerm(''); }}>
+               <div className="w-10 h-10 bg-gradient-to-br from-[#00B14F] to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-105 transition-transform duration-300">
                  <Activity className="w-5 h-5 text-white" />
                </div>
-               <h1 className="text-xl font-black text-slate-800 tracking-tight hidden lg:block">
-                 AM DASHBOARD <span className="text-[#00B14F] ml-0.5">PRO</span>
+               <h1 className="text-xl md:text-2xl font-black text-white tracking-tight hidden lg:block drop-shadow-sm">
+                 AM DASHBOARD <span className="text-emerald-400 ml-0.5">PRO</span>
                </h1>
              </div>
 
              {/* TABS NAVIGATION (Desktop) */}
              {!selectedMex && (
                <Fragment>
-                 <div className="hidden md:block w-px h-6 bg-slate-200 mx-1"></div>
-                 <div className="hidden md:flex bg-slate-100/80 p-1.5 rounded-xl shrink-0 border border-slate-200/50">
-                     <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'overview' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}>
+                 <div className="hidden md:block w-px h-8 bg-slate-700/50 mx-1"></div>
+                 <div className="hidden md:flex bg-slate-950/50 p-1.5 rounded-2xl shrink-0 border border-white/5">
+                     <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'overview' ? 'bg-[#00B14F] text-white shadow-md shadow-emerald-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
                          <LayoutDashboard className="w-4 h-4" /> Overview
                      </button>
-                     <button onClick={() => setActiveTab('data')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'data' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}>
+                     <button onClick={() => setActiveTab('data')} className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'data' ? 'bg-[#00B14F] text-white shadow-md shadow-emerald-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
                          <Table className="w-4 h-4" /> Master Data
                      </button>
-                     {/* TAB SIMULATOR */}
-                     <button onClick={() => setActiveTab('simulator')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'simulator' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}>
+                     <button onClick={() => setActiveTab('simulator')} className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'simulator' ? 'bg-[#00B14F] text-white shadow-md shadow-emerald-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
                          <Calculator className="w-4 h-4" /> Simulator
                      </button>
                  </div>
@@ -1572,7 +1577,7 @@ export default function App() {
 
              {/* Back Button for Detail View */}
              {selectedMex && (
-                 <button onClick={() => setSelectedMex(null)} className="group flex items-center gap-1.5 text-slate-500 hover:text-slate-900 font-bold text-xs md:text-sm transition-all px-4 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 ml-2">
+                 <button onClick={() => setSelectedMex(null)} className="group flex items-center gap-2 text-slate-300 hover:text-white font-bold text-xs md:text-sm transition-all px-4 py-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-700 border border-white/10 ml-2">
                     <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform"/> Kembali
                  </button>
              )}
@@ -1581,19 +1586,19 @@ export default function App() {
           {/* 2. Center Section: Global Search Bar */}
           {!selectedMex && activeTab !== 'simulator' && (
             <div className="flex-1 max-w-md mx-auto relative group hidden md:block animate-in fade-in zoom-in-95">
-               <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none">
-                   <Search className="w-4 h-4 text-slate-400 group-focus-within:text-[#00B14F] transition-colors" />
+               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                   <Search className="w-4 h-4 text-slate-400 group-focus-within:text-emerald-400 transition-colors" />
                </div>
                <input 
                    type="text" 
                    value={searchTerm} 
                    onChange={handleSearchChange} 
                    placeholder="Cari nama atau ID merchant..." 
-                   className="w-full bg-slate-100/70 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-800 font-semibold placeholder:text-slate-400 placeholder:font-medium focus:outline-none focus:bg-white focus:border-[#00B14F] focus:ring-4 focus:ring-[#00B14F]/10 transition-all shadow-inner shadow-slate-100" 
+                   className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl pl-11 pr-10 py-3 text-sm text-white font-semibold placeholder:text-slate-400 focus:outline-none focus:bg-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-inner" 
                />
                {searchTerm && (
-                   <button onClick={() => setSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors">
-                       <X className="w-3.5 h-3.5" />
+                   <button onClick={() => setSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-xl transition-colors">
+                       <X className="w-4 h-4" />
                    </button>
                )}
             </div>
@@ -1601,65 +1606,66 @@ export default function App() {
 
           {/* 3. Right Section: Filters & Actions */}
           {!selectedMex && activeTab !== 'simulator' && (
-            <div className="flex items-center gap-2 shrink-0 ml-auto md:ml-0 animate-in fade-in">
+            <div className="flex items-center gap-3 shrink-0 ml-auto md:ml-0 animate-in fade-in">
                {/* Filters Pill */}
-               <div className="flex items-center bg-white border border-slate-200 rounded-xl px-2 py-2 md:px-3 shadow-sm hover:border-slate-300 transition-colors">
-                   <Filter className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#00B14F] hidden sm:block mr-1.5" />
+               <div className="flex items-center bg-slate-800/80 border border-slate-700 rounded-2xl px-3 py-2.5 md:py-3 shadow-inner hover:border-slate-500 transition-colors">
+                   <Filter className="w-3.5 h-3.5 md:w-4 md:h-4 text-emerald-400 hidden sm:block mr-2" />
                    
-                   <select value={selectedAM} onChange={(e) => { setSelectedAM(e.target.value); setSelectedMex(null); }} className="bg-transparent text-slate-700 hover:text-slate-900 text-xs font-bold focus:outline-none w-16 sm:w-28 cursor-pointer appearance-none truncate">
-                      {amOptions.map(am => <option key={am} value={am}>{am}</option>)}
+                   <select value={selectedAM} onChange={(e) => { setSelectedAM(e.target.value); setSelectedMex(null); }} className="bg-transparent text-slate-200 hover:text-white text-xs font-bold focus:outline-none w-20 sm:w-28 cursor-pointer appearance-none truncate">
+                      {amOptions.map(am => <option key={am} value={am} className="text-slate-900">{am}</option>)}
                    </select>
                    
-                   <div className="w-px h-4 bg-slate-200 mx-1.5 md:mx-2"></div>
+                   <div className="w-px h-5 bg-slate-600 mx-2 md:mx-3"></div>
                    
-                   <select value={selectedPriority} onChange={(e) => { setSelectedPriority(e.target.value); setSelectedMex(null); }} className="bg-transparent text-amber-600 hover:text-amber-700 text-xs font-bold focus:outline-none w-16 sm:w-24 cursor-pointer appearance-none text-right sm:text-left pr-1">
-                      {priorityOptions.map(p => <option key={p} value={p}>{p === 'All' ? 'All Prio' : p}</option>)}
+                   <select value={selectedPriority} onChange={(e) => { setSelectedPriority(e.target.value); setSelectedMex(null); }} className="bg-transparent text-amber-400 hover:text-amber-300 text-xs font-bold focus:outline-none w-16 sm:w-24 cursor-pointer appearance-none text-right sm:text-left pr-1">
+                      {priorityOptions.map(p => <option key={p} value={p} className="text-slate-900">{p === 'All' ? 'All Prio' : p}</option>)}
                    </select>
                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block ml-1" />
                </div>
 
                {/* UPDATE DATA BUTTON */}
-               <button onClick={() => setIsForceUpload(true)} className="group flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-600 hover:text-[#00B14F] border border-slate-200 hover:border-[#00B14F] px-3 py-2 md:py-2.5 rounded-xl font-bold text-xs transition-all shadow-sm">
-                   <RefreshCw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" /> 
-                   <span className="hidden sm:block">Update</span>
+               <button onClick={() => setIsForceUpload(true)} className="group flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 w-10 h-10 md:w-auto md:px-4 md:h-11 rounded-2xl font-bold text-xs transition-all shadow-lg shadow-black/20">
+                   <RefreshCw className="w-4 h-4 md:mr-2 group-hover:rotate-180 transition-transform duration-500" /> 
+                   <span className="hidden md:block">Update</span>
                </button>
             </div>
           )}
-
         </div>
 
-        {/* TABS NAVIGATION (Mobile - Sleek Bottom Border style) */}
+        {/* TABS NAVIGATION (Mobile - Floating below header) */}
         {!selectedMex && (
-          <div className="md:hidden flex px-4 pt-1 bg-white border-t border-slate-100 shadow-[0_4px_6px_-1px_rgb(0,0,0,0.05)] z-10 relative overflow-x-auto custom-scrollbar">
-            <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`flex-none px-4 py-3 text-xs font-bold flex items-center justify-center gap-2 border-b-[3px] transition-all ${activeTab === 'overview' ? 'border-[#00B14F] text-[#00B14F]' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}>
-                <LayoutDashboard className="w-4 h-4" /> Overview
-            </button>
-            <button onClick={() => setActiveTab('data')} className={`flex-none px-4 py-3 text-xs font-bold flex items-center justify-center gap-2 border-b-[3px] transition-all ${activeTab === 'data' ? 'border-[#00B14F] text-[#00B14F]' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}>
-                <Table className="w-4 h-4" /> Data
-            </button>
-            <button onClick={() => setActiveTab('simulator')} className={`flex-none px-4 py-3 text-xs font-bold flex items-center justify-center gap-2 border-b-[3px] transition-all ${activeTab === 'simulator' ? 'border-[#00B14F] text-[#00B14F]' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}>
-                <Calculator className="w-4 h-4" /> Simulator
-            </button>
+          <div className="md:hidden flex justify-center mt-3 animate-in fade-in slide-in-from-top-2 relative z-40">
+             <div className="flex bg-slate-900/90 backdrop-blur-xl p-1.5 rounded-2xl border border-white/10 shadow-2xl">
+                <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 ${activeTab === 'overview' ? 'bg-[#00B14F] text-white shadow-md' : 'text-slate-400 hover:text-white'}`}>
+                    <LayoutDashboard className="w-3.5 h-3.5" /> Overview
+                </button>
+                <button onClick={() => setActiveTab('data')} className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 ${activeTab === 'data' ? 'bg-[#00B14F] text-white shadow-md' : 'text-slate-400 hover:text-white'}`}>
+                    <Table className="w-3.5 h-3.5" /> Data
+                </button>
+                <button onClick={() => setActiveTab('simulator')} className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 ${activeTab === 'simulator' ? 'bg-[#00B14F] text-white shadow-md' : 'text-slate-400 hover:text-white'}`}>
+                    <Calculator className="w-3.5 h-3.5" /> Simulator
+                </button>
+             </div>
           </div>
         )}
         
-        {/* Mobile Search Bar (Only shows on mobile when not in detail view) */}
+        {/* Mobile Search Bar */}
         {!selectedMex && activeTab !== 'simulator' && (
-           <div className="md:hidden px-4 py-3 bg-slate-50 border-b border-slate-200">
+           <div className="md:hidden mt-3 px-4 animate-in fade-in slide-in-from-top-2 relative z-30">
                <div className="relative group">
-                   <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                       <Search className="w-4 h-4 text-slate-400 group-focus-within:text-[#00B14F]" />
+                   <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                       <Search className="w-4 h-4 text-slate-400" />
                    </div>
                    <input 
                        type="text" 
                        value={searchTerm} 
                        onChange={handleSearchChange} 
                        placeholder="Cari merchant..." 
-                       className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-8 py-2 text-xs text-slate-800 font-semibold focus:outline-none focus:border-[#00B14F] focus:ring-2 focus:ring-[#00B14F]/10 transition-all shadow-sm" 
+                       className="w-full bg-white/95 backdrop-blur-lg border border-slate-200 rounded-2xl pl-11 pr-10 py-3 text-sm text-slate-800 font-bold focus:outline-none focus:border-[#00B14F] focus:ring-4 focus:ring-[#00B14F]/10 transition-all shadow-lg" 
                    />
                    {searchTerm && (
-                       <button onClick={() => setSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600">
-                           <X className="w-3.5 h-3.5" />
+                       <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 bg-slate-100 text-slate-500 rounded-lg">
+                           <X className="w-4 h-4" />
                        </button>
                    )}
                </div>
@@ -1667,197 +1673,184 @@ export default function App() {
         )}
       </header>
 
-      <main className="flex-1 overflow-y-auto relative w-full hide-scrollbar z-10 p-3 md:p-6 bg-slate-50">
-        <div className="max-w-[1400px] mx-auto">
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 overflow-y-auto relative w-full hide-scrollbar z-10 p-4 md:p-6 lg:p-8">
+        <div className="max-w-[1400px] mx-auto pb-safe">
           {!selectedMex ? (
             <Fragment>
               {/* ========================================================= */}
               {/* TAB 1: DASHBOARD OVERVIEW */}
               {/* ========================================================= */}
               {activeTab === 'overview' && (
-                <div className="space-y-4 md:space-y-5 animate-in fade-in duration-300">
+                <div className="space-y-5 md:space-y-6 animate-in fade-in duration-500 slide-in-from-bottom-4">
 
-                    {/* KPI CARDS - Compact 5 Columns */}
-                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
+                    {/* KPI CARDS - Compact 5 Columns with Colored Blobs */}
+                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                       
                       {/* Basketsize Card */}
-                      <div className="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between col-span-2 lg:col-span-1 ring-1 ring-[#00B14F]/10 relative overflow-hidden group">
-                        <div className="absolute -right-4 -top-4 w-16 h-16 bg-green-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500 ease-out"></div>
-                        <div className="flex justify-between items-start mb-3 relative z-10">
-                          <div className="flex items-center gap-1.5">
-                            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Basketsize</p>
-                            {kpi && kpi.rr < kpi.lm && (
-                              <span className="flex items-center text-rose-500 bg-rose-50 px-1 py-0.5 rounded border border-rose-100" title="Proyeksi Turun">
-                                <ArrowDownRight className="w-3 h-3 animate-float-down" />
-                              </span>
-                            )}
-                            {kpi && kpi.rr > kpi.lm && (
-                              <span className="flex items-center text-emerald-500 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100" title="Proyeksi Naik">
-                                <ArrowUpRight className="w-3 h-3 animate-float-up" />
-                              </span>
-                            )}
+                      <div className="bg-white p-5 md:p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col h-full col-span-2 lg:col-span-1 relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
+                        <div className="flex justify-between items-start mb-6 relative z-10">
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 bg-emerald-50 rounded-xl text-[#00B14F]"><Activity size={18} /></div>
+                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Basketsize</p>
                           </div>
-                          <Activity className="w-4 h-4 text-[#00B14F]" />
                         </div>
-                        <div className="flex flex-col gap-2 mt-auto pt-3 border-t border-slate-100 relative z-10">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">LM</span>
-                            <span className="text-base md:text-lg font-black text-slate-600 tracking-tight">{formatCurrency(kpi?.lm || 0)}</span>
+                        <div className="relative z-10 mb-4">
+                            <span className="text-3xl font-black text-slate-800 tracking-tight leading-none block mb-1">{formatCurrency(kpi?.rr || 0)}</span>
+                            <span className="text-[10px] font-black text-[#00B14F] uppercase tracking-widest">Projected Runrate</span>
+                        </div>
+                        <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
+                          <div className="flex-1 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Last Month</span>
+                            <span className="text-xs font-black text-slate-600 truncate">{formatCurrency(kpi?.lm || 0)}</span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-slate-600 uppercase">MTD</span>
-                            <span className="text-base md:text-lg font-black text-slate-800 tracking-tight">{formatCurrency(kpi?.mtd || 0)}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-[#00B14F] uppercase">RR</span>
-                            <span className="text-base md:text-lg font-black text-[#00B14F] tracking-tight">{formatCurrency(kpi?.rr || 0)}</span>
+                          <div className="flex-1 bg-emerald-50 p-2.5 rounded-2xl border border-emerald-100 flex flex-col justify-center">
+                            <span className="text-[9px] font-bold text-slate-500 uppercase mb-0.5">MTD Sales</span>
+                            <span className="text-xs font-black text-slate-800 truncate">{formatCurrency(kpi?.mtd || 0)}</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Ads Spend Card */}
-                      <div className="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between relative overflow-hidden group">
-                        <div className="absolute -right-4 -top-4 w-16 h-16 bg-rose-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500 ease-out"></div>
-                        <div className="flex justify-between items-start mb-3 relative z-10">
-                          <div className="flex items-center gap-1.5">
-                            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Ads Spend</p>
-                            {kpi && kpi.adsRr < kpi.adsLm && (
-                              <span className="flex items-center text-emerald-500 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100" title="Beban Berkurang">
-                                <ArrowDownRight className="w-3 h-3 animate-float-down" />
-                              </span>
-                            )}
-                            {kpi && kpi.adsRr > kpi.adsLm && (
-                              <span className="flex items-center text-rose-500 bg-rose-50 px-1 py-0.5 rounded border border-rose-100" title="Beban Naik">
-                                <ArrowUpRight className="w-3 h-3 animate-float-up" />
-                              </span>
-                            )}
+                      <div className="bg-white p-5 md:p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col h-full relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-rose-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
+                        <div className="flex justify-between items-start mb-6 relative z-10">
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 bg-rose-50 rounded-xl text-rose-500"><Megaphone size={18} /></div>
+                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Ads Spend</p>
                           </div>
-                          <DollarSign className="w-4 h-4 text-rose-500" />
                         </div>
-                        <div className="flex flex-col gap-2 mt-auto pt-3 border-t border-slate-100 relative z-10">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">LM</span>
-                            <span className="text-base md:text-lg font-black text-slate-600 tracking-tight">{formatCurrency(kpi?.adsLm || 0)}</span>
+                        <div className="relative z-10 mb-4">
+                            <span className="text-3xl font-black text-slate-800 tracking-tight leading-none block mb-1">{formatCurrency(kpi?.adsRr || 0)}</span>
+                            <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Projected Cost</span>
+                        </div>
+                        <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
+                          <div className="flex-1 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Last Month</span>
+                            <span className="text-xs font-black text-slate-600 truncate">{formatCurrency(kpi?.adsLm || 0)}</span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-slate-600 uppercase">MTD</span>
-                            <span className="text-base md:text-lg font-black text-slate-800 tracking-tight">{formatCurrency(kpi?.adsMtd || 0)}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-rose-500 uppercase">RR</span>
-                            <span className="text-base md:text-lg font-black text-rose-500 tracking-tight">{formatCurrency(kpi?.adsRr || 0)}</span>
+                          <div className="flex-1 bg-rose-50 p-2.5 rounded-2xl border border-rose-100 flex flex-col justify-center">
+                            <span className="text-[9px] font-bold text-rose-500 uppercase mb-0.5">MTD Ads</span>
+                            <span className="text-xs font-black text-slate-800 truncate">{formatCurrency(kpi?.adsMtd || 0)}</span>
                           </div>
                         </div>
                       </div>
 
                       {/* MCA Disbursed Card */}
-                      <div className="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between relative overflow-hidden group">
-                        <div className="absolute -right-4 -top-4 w-16 h-16 bg-amber-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500 ease-out"></div>
-                        <div className="flex justify-between items-start mb-3 relative z-10">
-                          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">MCA Config</p>
-                          <Database className="w-4 h-4 text-amber-500" />
+                      <div className="bg-white p-5 md:p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col h-full relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-amber-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
+                        <div className="flex justify-between items-start mb-6 relative z-10">
+                          <div className="flex items-center gap-2">
+                             <div className="p-2 bg-amber-50 rounded-xl text-amber-500"><Database size={18} /></div>
+                             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">MCA Config</p>
+                          </div>
                         </div>
-                        <div className="flex flex-col gap-2 mt-auto pt-3 border-t border-slate-100 relative z-10">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">Limit</span>
-                            <span className="text-base md:text-lg font-black text-slate-600 tracking-tight">{formatCurrency(kpi?.mcaEli || 0)}</span>
+                        <div className="relative z-10 mb-4">
+                            <span className="text-3xl font-black text-slate-800 tracking-tight leading-none block mb-1">{formatCurrency(kpi?.mcaDis || 0)}</span>
+                            <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Total Disbursed</span>
+                        </div>
+                        <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
+                          <div className="flex-1 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Eligibility</span>
+                            <span className="text-xs font-black text-slate-600 truncate">{formatCurrency(kpi?.mcaEli || 0)}</span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-amber-600 uppercase">Disbursed</span>
-                            <span className="text-base md:text-lg font-black text-amber-600 tracking-tight">{formatCurrency(kpi?.mcaDis || 0)}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-amber-500 uppercase">Toko Cair</span>
-                            <span className="text-base md:text-lg font-black text-amber-500 tracking-tight">{kpi?.mcaDisCount || 0}</span>
+                          <div className="w-16 bg-amber-50 p-2.5 rounded-2xl border border-amber-100 flex flex-col items-center justify-center shrink-0">
+                            <span className="text-[9px] font-bold text-amber-600 uppercase mb-0.5">Toko</span>
+                            <span className="text-xs font-black text-amber-700 truncate">{kpi?.mcaDisCount || 0}</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Campaign Pts Card */}
-                      <div className="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between relative overflow-hidden group">
-                        <div className="absolute -right-4 -top-4 w-16 h-16 bg-indigo-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500 ease-out"></div>
-                        <div className="flex justify-between items-start mb-3 relative z-10">
-                          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Points</p>
-                          <Award className="w-4 h-4 text-indigo-500" />
+                      <div className="bg-white p-5 md:p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col h-full relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
+                        <div className="flex justify-between items-start mb-6 relative z-10">
+                           <div className="flex items-center gap-2">
+                             <div className="p-2 bg-indigo-50 rounded-xl text-indigo-500"><Award size={18} /></div>
+                             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Campaign</p>
+                           </div>
                         </div>
-                        <div className="flex flex-col gap-2 mt-auto pt-3 border-t border-slate-100 relative z-10">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">Active Promo</span>
-                            <span className="text-base md:text-lg font-black text-slate-600 tracking-tight">{kpi?.activeCampCount || 0}</span>
+                        <div className="relative z-10 mb-4">
+                            <span className="text-3xl font-black text-slate-800 tracking-tight leading-none block mb-1">{(kpi?.totalPoints || 0).toLocaleString('id-ID')}</span>
+                            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Total Points</span>
+                        </div>
+                        <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
+                          <div className="flex-1 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Joiners</span>
+                            <span className="text-xs font-black text-slate-600 truncate">{kpi?.joiners || 0} Toko</span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-indigo-400 uppercase">Avg/Toko</span>
-                            <span className="text-base md:text-lg font-black text-indigo-500 tracking-tight">{kpi?.avgPtsPerJoiner || 0}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-indigo-600 uppercase">Total Pts</span>
-                            <span className="text-base md:text-lg font-black text-indigo-600 tracking-tight">{(kpi?.totalPoints || 0).toLocaleString('id-ID')}</span>
+                          <div className="flex-1 bg-indigo-50 p-2.5 rounded-2xl border border-indigo-100 flex flex-col justify-center">
+                            <span className="text-[9px] font-bold text-indigo-500 uppercase mb-0.5">Avg Pts</span>
+                            <span className="text-xs font-black text-indigo-700 truncate">{kpi?.avgPtsPerJoiner || 0}</span>
                           </div>
                         </div>
                       </div>
                       
-                      {/* Outlets & Joiners Card */}
-                      <div className="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between relative overflow-hidden group cursor-default">
-                        <div className="absolute -right-4 -top-4 w-16 h-16 bg-emerald-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500 ease-out"></div>
-                        <div className="flex justify-between items-start mb-3 relative z-10">
-                          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Outlets</p>
-                          <Store className="w-4 h-4 text-emerald-500" />
+                      {/* Outlets Card */}
+                      <div className="bg-white p-5 md:p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col h-full relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
+                        <div className="flex justify-between items-start mb-6 relative z-10">
+                           <div className="flex items-center gap-2">
+                             <div className="p-2 bg-blue-50 rounded-xl text-blue-500"><Store size={18} /></div>
+                             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Outlets</p>
+                           </div>
                         </div>
-                        <div className="flex flex-col gap-2 mt-auto pt-3 border-t border-slate-100 relative z-10">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">Inactive</span>
-                            <span className="text-base md:text-lg font-black text-slate-500 tracking-tight">{kpi?.inactiveMex || 0}</span>
+                        <div className="relative z-10 mb-4">
+                            <span className="text-3xl font-black text-slate-800 tracking-tight leading-none block mb-1">{kpi?.totalMex || 0}</span>
+                            <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Total Managed</span>
+                        </div>
+                        <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
+                          <div className="flex-1 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Inactive</span>
+                            <span className="text-xs font-black text-slate-500 truncate">{kpi?.inactiveMex || 0}</span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-emerald-500 uppercase">Active</span>
-                            <span className="text-base md:text-lg font-black text-emerald-600 tracking-tight">{kpi?.activeMex || 0}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-[#00B14F] uppercase">Joiners</span>
-                            <span className="text-base md:text-lg font-black text-[#00B14F] tracking-tight">{kpi?.joiners || 0}</span>
+                          <div className="flex-1 bg-blue-50 p-2.5 rounded-2xl border border-blue-100 flex flex-col justify-center">
+                            <span className="text-[9px] font-bold text-blue-500 uppercase mb-0.5">Active</span>
+                            <span className="text-xs font-black text-blue-700 truncate">{kpi?.activeMex || 0}</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
                     {/* CHARTS ROW 1 */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
                       {/* Top 10 MTD */}
-                      <div className="lg:col-span-2 bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Top 10 Merchants <span className="text-slate-400 font-medium">(MTD Sales)</span></h3>
+                      <div className="lg:col-span-2 bg-white p-5 md:p-6 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="text-[#00B14F] w-5 h-5"/> Top 10 Merchants <span className="text-slate-400 font-bold normal-case text-xs bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">(MTD Sales)</span></h3>
                         </div>
-                        <div className="h-56 md:h-64 w-full">
+                        <div className="h-64 md:h-80 w-full">
                           <ResponsiveContainer width="100%" height="100%">
-                            <ComposedChart data={chartsData.mtd} onClick={onChartClick} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                            <ComposedChart data={chartsData.mtd} onClick={onChartClick} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                              <XAxis dataKey="name" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => v.substring(0, 6)+'.'} />
-                              <YAxis tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={45} />
-                              <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '11px', padding: '6px' }} formatter={(v) => formatCurrency(v)} />
-                              <Legend wrapperStyle={{ fontSize: '10px', paddingTop:'5px' }} iconType="circle"/>
-                              <Bar dataKey="lmBs" name="LM Sales" fill={COLORS.lastMonth} radius={[4,4,0,0]} maxBarSize={24} cursor="pointer" />
-                              <Bar dataKey="mtdBs" name="MTD Sales" fill={COLORS.primary} radius={[4,4,0,0]} maxBarSize={24} cursor="pointer" />
-                              <Line type="monotone" dataKey="rrBs" name="Runrate" stroke={COLORS.growth} strokeWidth={3} dot={{r:3, fill: '#ffffff', strokeWidth: 2}} activeDot={{r: 5}} cursor="pointer" />
+                              <XAxis dataKey="name" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => v.substring(0, 6)+'.'} />
+                              <YAxis tick={{ fill: COLORS.slate400, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={60} />
+                              <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v) => formatCurrency(v)} />
+                              <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop:'10px' }} iconType="circle"/>
+                              <Bar dataKey="lmBs" name="LM Sales" fill={COLORS.lastMonth} radius={[6,6,0,0]} maxBarSize={28} cursor="pointer" />
+                              <Bar dataKey="mtdBs" name="MTD Sales" fill={COLORS.primary} radius={[6,6,0,0]} maxBarSize={28} cursor="pointer" />
+                              <Line type="monotone" dataKey="rrBs" name="Runrate" stroke={COLORS.growth} strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r: 6}} cursor="pointer" />
                             </ComposedChart>
                           </ResponsiveContainer>
                         </div>
                       </div>
 
                       {/* Campaign Segmentation Chart */}
-                      <div className="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col h-[350px] lg:h-full lg:max-h-[350px]">
-                        <div className="flex justify-between items-center mb-4 shrink-0">
-                            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Campaign Segment</h3>
-                            <span className="bg-indigo-50 text-indigo-700 font-black text-[10px] md:text-xs px-2.5 py-1 rounded-lg shadow-sm border border-indigo-100">
+                      <div className="bg-white p-5 md:p-6 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-[400px] lg:h-full lg:max-h-[450px]">
+                        <div className="flex justify-between items-center mb-6 shrink-0">
+                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Target className="text-indigo-500 w-5 h-5"/> Campaign Segment</h3>
+                            <span className="bg-indigo-50 text-indigo-700 font-black text-[10px] md:text-xs px-2.5 py-1 rounded-lg border border-indigo-100">
                                 {(( (kpi?.joiners || 0) / Math.max(1, (kpi?.joiners || 0) + campaignStats.zeroInvest)) * 100).toFixed(0)}% Rate
                             </span>
                         </div>
                         
-                        <div className="flex-1 w-full overflow-hidden mt-2">
+                        <div className="flex-1 w-full overflow-hidden">
                           <ResponsiveContainer width="100%" height="100%">
                             <BarChart 
                                 data={campaignStats.classification} 
                                 layout="vertical" 
-                                margin={{ top: 0, right: 30, left: 0, bottom: 0 }}
+                                margin={{ top: 0, right: 40, left: 0, bottom: 0 }}
                                 onClick={(state) => {
                                   if (state && state.activePayload && state.activePayload.length > 0) {
                                     setActiveSegmentModal(state.activePayload[0].payload.name);
@@ -1866,15 +1859,15 @@ export default function App() {
                             >
                               <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
                               <XAxis type="number" hide />
-                              <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} width={75} />
-                              <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '11px', padding: '6px' }} />
+                              <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: COLORS.slate500, fontSize: 11, fontWeight: 700 }} width={85} />
+                              <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '12px', border:'none', padding: '10px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
                               <Bar 
                                 dataKey="count" 
                                 name="Total Merchant" 
-                                radius={[0, 4, 4, 0]} 
-                                barSize={22} 
+                                radius={[0, 8, 8, 0]} 
+                                barSize={26} 
                                 cursor="pointer"
-                                label={{ position: 'right', fill: '#475569', fontSize: 11, fontWeight: 'bold' }}
+                                label={{ position: 'right', fill: '#475569', fontSize: 12, fontWeight: 900 }}
                               >
                                 {campaignStats.classification.map((entry, index) => (
                                   <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -1883,56 +1876,58 @@ export default function App() {
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
+                        <p className="text-[10px] font-bold text-slate-400 text-center mt-3 bg-slate-50 py-2 rounded-xl">*Klik bar grafik untuk detail merchant</p>
                       </div>
                     </div>
 
                     {/* CHARTS ROW 2 */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5">
-                      <div className="lg:col-span-2 bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Top 10 Ads Spender <span className="text-slate-400 font-medium">(vs LM & RR)</span></h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
+                      <div className="lg:col-span-2 bg-white p-5 md:p-6 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Megaphone className="text-rose-500 w-5 h-5"/> Top 10 Ads Spender <span className="text-slate-400 font-bold normal-case text-xs bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">(vs LM & RR)</span></h3>
                         </div>
-                        <div className="h-48 md:h-56 w-full">
+                        <div className="h-56 md:h-72 w-full">
                           <ResponsiveContainer width="100%" height="100%">
-                            <ComposedChart data={chartsData.ads} onClick={onChartClick} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                            <ComposedChart data={chartsData.ads} onClick={onChartClick} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                              <XAxis dataKey="name" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => v.substring(0, 8)+'.'} />
-                              <YAxis tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={45} />
-                              <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '11px', padding:'6px' }} formatter={(v) => formatCurrency(v)} />
-                              <Legend wrapperStyle={{ fontSize: '10px', paddingTop:'5px' }} iconType="circle" />
-                              <Bar dataKey="adsLM" name="Ads LM" fill="#c084fc" radius={[4,4,0,0]} maxBarSize={30} cursor="pointer" />
-                              <Bar dataKey="adsTotal" name="Ads MTD" fill="#fb923c" radius={[4,4,0,0]} maxBarSize={30} cursor="pointer" />
-                              <Line type="monotone" dataKey="adsRR" name="Ads RR" stroke="#2dd4bf" strokeWidth={3} dot={{r:3, fill: '#ffffff', strokeWidth: 2}} activeDot={{r: 5}} cursor="pointer" />
+                              <XAxis dataKey="name" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => v.substring(0, 8)+'.'} />
+                              <YAxis tick={{ fill: COLORS.slate400, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={60} />
+                              <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding:'12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v) => formatCurrency(v)} />
+                              <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop:'10px' }} iconType="circle" />
+                              <Bar dataKey="adsLM" name="Ads LM" fill="#c084fc" radius={[6,6,0,0]} maxBarSize={32} cursor="pointer" />
+                              <Bar dataKey="adsTotal" name="Ads MTD" fill="#fb923c" radius={[6,6,0,0]} maxBarSize={32} cursor="pointer" />
+                              <Line type="monotone" dataKey="adsRR" name="Ads RR" stroke="#2dd4bf" strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r: 6}} cursor="pointer" />
                             </ComposedChart>
                           </ResponsiveContainer>
                         </div>
                       </div>
 
                       {/* Portfolio Health */}
-                      <div className="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-center h-[350px] lg:h-full lg:max-h-[350px]">
-                        <div className="flex justify-between items-end mb-4">
+                      <div className="bg-white p-5 md:p-6 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col justify-center h-[350px] lg:h-full lg:max-h-[400px] relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none"></div>
+                        <div className="flex justify-between items-end mb-6 relative z-10">
                             <div>
-                                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Portfolio Health</h3>
-                                <p className="text-[10px] text-slate-500 mt-0.5">Growth vs LM</p>
+                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Activity className="text-blue-500 w-5 h-5"/> Portfolio Health</h3>
+                                <p className="text-[11px] font-bold text-slate-500 mt-1">Growth vs LM</p>
                             </div>
                             <div className="text-right">
-                                <span className="text-xl md:text-2xl font-black text-[#00B14F] leading-none">{chartsData.health[0].percentage}%</span>
-                                <p className="text-[9px] font-bold text-slate-400 uppercase">Growing</p>
+                                <span className="text-2xl md:text-3xl font-black text-[#00B14F] leading-none drop-shadow-sm">{chartsData.health[0].percentage}%</span>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Growing</p>
                             </div>
                         </div>
-                        <div className="flex h-4 md:h-5 w-full rounded-full overflow-hidden bg-slate-100 shadow-inner mb-6 md:mb-8">
+                        <div className="flex h-5 md:h-6 w-full rounded-full overflow-hidden bg-slate-100 shadow-inner mb-8 relative z-10">
                             {chartsData.health.map((h, i) => (
-                                <div key={i} style={{ width: `${h.percentage}%`, backgroundColor: h.color }} className="h-full border-r border-white/30" />
+                                <div key={i} style={{ width: `${h.percentage}%`, backgroundColor: h.color }} className="h-full border-r-2 border-white/40 hover:brightness-110 transition-all cursor-pointer" title={`${h.name}: ${h.percentage}%`} />
                             ))}
                         </div>
-                        <div className="space-y-3">
+                        <div className="space-y-4 relative z-10">
                             {chartsData.health.map((h, i) => (
-                                <div key={i} className="flex items-center justify-between text-xs md:text-sm">
-                                    <div className="flex items-center gap-2.5">
-                                        <div className="w-3 h-3 rounded-sm shadow-sm" style={{ backgroundColor: h.color }} />
-                                        <span className="font-semibold text-slate-600">{h.name}</span>
+                                <div key={i} className="flex items-center justify-between text-sm bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-3.5 h-3.5 rounded-md shadow-sm" style={{ backgroundColor: h.color }} />
+                                        <span className="font-bold text-slate-700">{h.name}</span>
                                     </div>
-                                    <span className="font-bold text-slate-900">{h.count} <span className="text-[10px] text-slate-400 font-normal ml-1.5">({h.percentage}%)</span></span>
+                                    <span className="font-black text-slate-900 bg-white px-2 py-0.5 rounded-md shadow-sm border border-slate-100">{h.count} <span className="text-[10px] text-slate-400 font-bold ml-1.5">({h.percentage}%)</span></span>
                                 </div>
                             ))}
                         </div>
@@ -1946,56 +1941,58 @@ export default function App() {
               {/* TAB 2: MASTER DATASET */}
               {/* ========================================================= */}
               {activeTab === 'data' && (
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in duration-300 flex flex-col h-[80vh]">
-                  <div className="p-3 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
-                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Master Data Directory</h3>
-                    <div className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold">Records: {filtered.length}</div>
+                <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden animate-in fade-in duration-500 flex flex-col h-[80vh]">
+                  <div className="p-4 md:p-5 border-b border-slate-100 flex justify-between items-center bg-[#f8fafc] shrink-0">
+                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Table className="w-5 h-5 text-indigo-500"/> Master Data Directory</h3>
+                    <div className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-lg text-xs font-black shadow-sm">Records: {filtered.length}</div>
                   </div>
                   
                   <div className="overflow-auto flex-1 custom-scrollbar">
                     {filtered.length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                        <Search className="w-10 h-10 mb-2 opacity-20" />
-                        <p className="text-xs font-bold">Data tidak ditemukan.</p>
+                        <Search className="w-12 h-12 mb-3 opacity-20" />
+                        <p className="text-sm font-bold uppercase tracking-widest">Data tidak ditemukan.</p>
                       </div>
                     ) : (
                       <table className="w-full text-left text-sm relative">
-                         <thead className="bg-white text-slate-400 text-[9px] font-bold uppercase border-b border-slate-200 sticky top-0 z-10">
+                         <thead className="bg-white text-slate-400 text-[10px] font-black uppercase tracking-widest border-b-2 border-slate-100 sticky top-0 z-10">
                            <tr>
-                             <th className="px-4 py-2.5 font-semibold">Merchant</th>
-                             <th className="px-3 py-2.5 font-semibold text-center hidden md:table-cell">Campaign</th>
-                             <th className="px-3 py-2.5 font-semibold text-center">Trend vs LM</th>
-                             <th className="px-3 py-2.5 font-semibold text-center hidden md:table-cell">Priority</th>
-                             <th className="px-4 py-2.5 font-semibold text-right">MTD Sales</th>
-                             <th className="px-4 py-2.5 font-semibold text-center">Status</th>
+                             <th className="px-5 py-4">Merchant</th>
+                             <th className="px-4 py-4 text-center hidden md:table-cell">Campaign</th>
+                             <th className="px-4 py-4 text-center">Trend vs LM</th>
+                             <th className="px-4 py-4 text-center hidden lg:table-cell">Priority</th>
+                             <th className="px-5 py-4 text-right">MTD Sales</th>
+                             <th className="px-5 py-4 text-center">Status</th>
                            </tr>
                          </thead>
                          <tbody className="divide-y divide-slate-50">
                             {filtered.map((r) => (
-                              <tr key={r.id} onClick={() => setSelectedMex(r)} className="hover:bg-slate-50 transition-colors cursor-pointer group">
-                                <td className="px-4 py-2 w-1/3">
-                                  <p className="font-semibold text-slate-800 text-[11px] md:text-xs group-hover:text-[#00B14F] truncate">{r.name}</p>
-                                  <p className="text-[9px] text-slate-400 font-mono">{r.id}</p>
+                              <tr key={r.id} onClick={() => setSelectedMex(r)} className="hover:bg-slate-50/80 transition-colors cursor-pointer group">
+                                <td className="px-5 py-3 w-1/3">
+                                  <p className="font-bold text-slate-800 text-xs md:text-sm group-hover:text-[#00B14F] truncate transition-colors">{r.name}</p>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <p className="text-[10px] text-slate-400 font-mono bg-slate-100 px-1.5 py-0.5 rounded">{r.id}</p>
+                                  </div>
                                 </td>
-                                <td className="px-3 py-2 text-center hidden md:table-cell">
-                                  <span className={`text-[9px] font-bold ${r.campaigns && r.campaigns !== '-' && !r.campaigns.toLowerCase().includes('no campaign') ? 'text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded' : 'text-slate-400'}`}>
+                                <td className="px-4 py-3 text-center hidden md:table-cell">
+                                  <span className={`text-[10px] font-bold ${r.campaigns && r.campaigns !== '-' && !r.campaigns.toLowerCase().includes('no campaign') ? 'text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100' : 'text-slate-400 bg-slate-50 px-2 py-1 rounded-md'}`}>
                                     {r.campaigns && r.campaigns !== '-' && !r.campaigns.toLowerCase().includes('no campaign') ? 'Active' : '-'}
                                   </span>
                                 </td>
-                                <td className="px-3 py-2 text-center">
-                                   <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold ${r.rrBs > r.lmBs ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                                      {r.rrBs > r.lmBs ? <ArrowUpRight className="w-3 h-3"/> : <ArrowDownRight className="w-3 h-3"/>}
+                                <td className="px-4 py-3 text-center">
+                                   <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-black shadow-sm ${r.rrBs > r.lmBs ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+                                      {r.rrBs > r.lmBs ? <ArrowUpRight className="w-3.5 h-3.5"/> : <ArrowDownRight className="w-3.5 h-3.5"/>}
                                       {Math.abs(r.rrVsLm).toFixed(0)}%
                                    </span>
                                 </td>
-                                <td className="px-3 py-2 text-center hidden md:table-cell">
-                                   <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${r.mcaPriority !== '-' ? 'bg-amber-100 text-amber-700' : 'text-slate-400'}`}>
+                                <td className="px-4 py-3 text-center hidden lg:table-cell">
+                                   <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${r.mcaPriority !== '-' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'text-slate-400 bg-slate-50'}`}>
                                       {r.mcaPriority}
                                    </span>
                                 </td>
-                                <td className="px-4 py-2 font-mono text-slate-700 font-semibold text-right text-[11px] md:text-xs">{formatCurrency(r.mtdBs)}</td>
-                                <td className="px-4 py-2 text-center">
-                                   <div className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${r.zeusStatus === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>{r.zeusStatus}</div>
+                                <td className="px-5 py-3 font-mono text-slate-800 font-black text-right text-xs md:text-sm">{formatCurrency(r.mtdBs)}</td>
+                                <td className="px-5 py-3 text-center">
+                                   <div className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${r.zeusStatus === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>{r.zeusStatus}</div>
                                 </td>
                               </tr>
                             ))}
@@ -2017,171 +2014,199 @@ export default function App() {
             // =========================================================
             // VIEW MERCHANT DETAIL
             // =========================================================
-            <div className="animate-in slide-in-from-right-8 duration-300 space-y-4 pb-12">
+            <div className="animate-in slide-in-from-right-8 duration-500 space-y-5 md:space-y-6 pb-12">
 
                {/* Profile Header */}
-               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 flex flex-col gap-3">
-                  <div className="flex flex-wrap items-center gap-3">
-                     <h2 className="text-xl md:text-2xl font-black text-slate-900 leading-tight break-words">{selectedMex.name}</h2>
-                     <span className={`inline-flex px-2.5 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${selectedMex.zeusStatus === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>{selectedMex.zeusStatus}</span>
+               <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none"></div>
+                  <div className="relative z-10">
+                     <div className="flex items-center gap-3 mb-1.5">
+                        <h2 className="text-2xl md:text-3xl font-black text-slate-900 leading-tight tracking-tight">{selectedMex.name}</h2>
+                        <span className={`hidden md:inline-flex px-3 py-1 rounded-lg text-[10px] font-black border uppercase tracking-widest ${selectedMex.zeusStatus === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>{selectedMex.zeusStatus}</span>
+                     </div>
+                     <div className="flex items-center gap-3 text-sm text-slate-600 font-medium">
+                        <span className="font-mono bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-xs font-bold">{selectedMex.id}</span>
+                        <span className="text-slate-400">•</span>
+                        <span className="text-slate-700 font-bold uppercase tracking-wider text-xs"><Users className="w-3.5 h-3.5 inline mr-1 text-slate-400" /> {selectedMex.amName}</span>
+                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-600 font-medium">
-                    <div className="flex items-center gap-2">
-                       <Store className="w-4 h-4 text-slate-400" />
-                       <span className="font-mono bg-slate-50 text-slate-600 px-2 py-0.5 rounded text-xs border border-slate-200">{selectedMex.id}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                       <Users className="w-4 h-4 text-slate-400" />
-                       <span className="text-slate-700">{selectedMex.ownerName}</span>
-                    </div>
-                  </div>
+                  <span className={`md:hidden inline-flex px-3 py-1 rounded-lg text-[10px] font-black border uppercase tracking-widest ${selectedMex.zeusStatus === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>{selectedMex.zeusStatus}</span>
                </div>
 
-               {/* NEW TOP KPI CARDS (PROPORTIONAL) */}
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+               {/* NEW TOP KPI CARDS (PROPORTIONAL 4-COLS) DIBAWAH HEADER */}
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                   {/* Card 1: Sales */}
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 flex flex-col justify-between">
-                     <div className="flex justify-between items-start mb-3">
-                         <div className="flex items-center gap-1.5">
-                            <Activity className="w-4 h-4 text-[#00B14F]"/>
-                            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Sales</p>
+                  <div className="bg-white rounded-[32px] shadow-lg shadow-slate-200/40 border border-slate-100 p-5 md:p-6 flex flex-col h-full group hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden">
+                     <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
+                     <div className="flex justify-between items-start mb-6 relative z-10">
+                         <div className="flex items-center gap-2">
+                            <div className="p-2 bg-emerald-50 rounded-xl text-[#00B14F]"><Activity size={16}/></div>
+                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Sales</p>
                          </div>
-                         <div className={`flex items-center gap-0.5 text-[10px] font-black px-1.5 py-0.5 rounded border ${selectedMex.rrBs > selectedMex.lmBs ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
+                         <div className={`flex items-center gap-0.5 text-[10px] font-black px-2 py-0.5 rounded-lg border ${selectedMex.rrBs > selectedMex.lmBs ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
                             {selectedMex.rrBs > selectedMex.lmBs ? <ArrowUpRight className="w-3 h-3"/> : <ArrowDownRight className="w-3 h-3"/>}
                             {Math.abs(selectedMex.rrVsLm).toFixed(1)}%
                          </div>
                      </div>
-                     <div className="flex flex-col gap-1.5 mt-auto pt-3 border-t border-slate-100">
-                         <div className="flex justify-between items-center"><span className="text-[10px] text-slate-400 font-bold">LM</span><span className="text-sm font-black text-slate-600">{formatCurrency(selectedMex.lmBs)}</span></div>
-                         <div className="flex justify-between items-center"><span className="text-[10px] text-slate-600 font-bold">MTD</span><span className="text-sm font-black text-slate-900">{formatCurrency(selectedMex.mtdBs)}</span></div>
-                         <div className="flex justify-between items-center"><span className="text-[10px] text-[#00B14F] font-bold">Projected</span><span className="text-sm font-black text-[#00B14F]">{formatCurrency(selectedMex.rrBs)}</span></div>
+                     <div className="relative z-10 mb-4">
+                         <span className="text-2xl md:text-3xl font-black text-[#00B14F] tracking-tight leading-none block mb-1">{formatCurrency(selectedMex.rrBs)}</span>
+                         <span className="text-[10px] font-black text-[#00B14F] uppercase tracking-widest">Projected Runrate</span>
+                     </div>
+                     <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
+                         <div className="flex-1 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col justify-center">
+                           <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5">Last Month</span>
+                           <span className="text-xs font-black text-slate-600 truncate">{formatCurrency(selectedMex.lmBs)}</span>
+                         </div>
+                         <div className="flex-1 bg-emerald-50 p-2 rounded-xl border border-emerald-100 flex flex-col justify-center">
+                           <span className="text-[9px] text-slate-500 font-bold uppercase mb-0.5">MTD Sales</span>
+                           <span className="text-xs font-black text-slate-800 truncate">{formatCurrency(selectedMex.mtdBs)}</span>
+                         </div>
                      </div>
                   </div>
 
                   {/* Card 2: Active Campaigns */}
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 flex flex-col justify-between">
-                     <div className="flex justify-between items-start mb-3">
-                         <div className="flex items-center gap-1.5">
-                            <Zap className="w-4 h-4 text-amber-500"/>
-                            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Campaigns</p>
-                         </div>
-                         <div className="bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 flex items-center gap-1 shadow-sm">
-                            <Award className="w-3 h-3 text-indigo-500"/>
-                            <span className="text-[10px] font-bold text-indigo-700">{selectedMex.campaignPoint || 0} Pts</span>
+                  <div className="bg-white rounded-[32px] shadow-lg shadow-slate-200/40 border border-slate-100 p-5 md:p-6 flex flex-col h-full group hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden">
+                     <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-amber-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
+                     <div className="flex justify-between items-start mb-6 relative z-10">
+                         <div className="flex items-center gap-2">
+                            <div className="p-2 bg-amber-50 rounded-xl text-amber-500"><Zap size={16}/></div>
+                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Campaigns</p>
                          </div>
                      </div>
-                     <div className="mt-auto pt-2 border-t border-slate-100">
+                     <div className="relative z-10 mb-4">
+                         <span className="text-2xl md:text-3xl font-black text-amber-500 tracking-tight leading-none block mb-1 flex items-center gap-2">
+                           {selectedMex.campaignPoint || 0} <Award className="w-6 h-6 text-amber-300" />
+                         </span>
+                         <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Campaign Points</span>
+                     </div>
+                     <div className="mt-auto pt-4 border-t border-slate-50 relative z-10">
+                         <span className="text-[9px] text-slate-400 font-bold uppercase block mb-1">Active List:</span>
                          {renderMerchantCampaigns(selectedMex.campaigns)}
                      </div>
                   </div>
 
                   {/* Card 3: Marketing */}
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 flex flex-col justify-between">
-                     <div className="flex justify-between items-start mb-3">
-                         <div className="flex items-center gap-1.5">
-                             <Megaphone className="w-4 h-4 text-[#00B14F]"/>
-                             <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Marketing</p>
+                  <div className="bg-white rounded-[32px] shadow-lg shadow-slate-200/40 border border-slate-100 p-5 md:p-6 flex flex-col h-full group hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden">
+                     <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-rose-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
+                     <div className="flex justify-between items-start mb-6 relative z-10">
+                         <div className="flex items-center gap-2">
+                             <div className="p-2 bg-rose-50 rounded-xl text-rose-500"><Megaphone size={16}/></div>
+                             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Marketing</p>
                          </div>
                      </div>
-                     <div className="flex flex-col gap-1.5 mt-auto pt-3 border-t border-slate-100">
-                         <div className="flex justify-between items-center"><span className="text-[10px] text-slate-400 font-bold">Ads Spend</span><span className="text-sm font-black text-rose-500">{formatCurrency(selectedMex.adsTotal)}</span></div>
-                         <div className="flex justify-between items-center"><span className="text-[10px] text-slate-600 font-bold">Promo (MI)</span><span className="text-sm font-black text-amber-500">{formatCurrency(selectedMex.miMtd)}</span></div>
-                         <div className="flex justify-between items-center"><span className="text-[10px] text-slate-600 font-bold">Komisi</span><span className="text-sm font-black text-slate-800">{selectedMex.commission || '-'}</span></div>
+                     <div className="relative z-10 mb-4">
+                         <span className="text-2xl md:text-3xl font-black text-rose-500 tracking-tight leading-none block mb-1">{formatCurrency(selectedMex.adsTotal)}</span>
+                         <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Ads Spend (MTD)</span>
+                     </div>
+                     <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
+                         <div className="flex-1 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col justify-center">
+                           <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5">Promo (MI)</span>
+                           <span className="text-xs font-black text-slate-700 truncate">{formatCurrency(selectedMex.miMtd)}</span>
+                         </div>
+                         <div className="w-16 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col items-center justify-center shrink-0">
+                           <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5">Komisi</span>
+                           <span className="text-xs font-black text-slate-800 truncate">{selectedMex.commission || '-'}</span>
+                         </div>
                      </div>
                   </div>
 
                   {/* Card 4: MCA */}
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 flex flex-col justify-between">
-                     <div className="flex justify-between items-start mb-3">
-                         <div className="flex items-center gap-1.5">
-                             <Database className="w-4 h-4 text-amber-500"/>
-                             <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">MCA Config</p>
+                  <div className="bg-white rounded-[32px] shadow-lg shadow-slate-200/40 border border-slate-100 p-5 md:p-6 flex flex-col h-full group hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden">
+                     <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
+                     <div className="flex justify-between items-start mb-6 relative z-10">
+                         <div className="flex items-center gap-2">
+                             <div className="p-2 bg-blue-50 rounded-xl text-blue-500"><Database size={16}/></div>
+                             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">MCA Config</p>
                          </div>
                          {selectedMex.mcaPriority && selectedMex.mcaPriority !== '-' && (
-                             <span className="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[9px] font-black uppercase shadow-sm border border-amber-200">
+                             <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md text-[9px] font-black uppercase shadow-sm border border-blue-100">
                                 {selectedMex.mcaPriority}
                              </span>
                          )}
                      </div>
-                     <div className="flex flex-col gap-1.5 mt-auto pt-3 border-t border-slate-100">
-                         <div className="flex justify-between items-center">
-                            <span className="text-[10px] text-slate-400 font-bold">Status</span>
-                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase border ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
-                               {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'Eligible' : 'Not Eligible'}
-                            </span>
+                     <div className="relative z-10 mb-4">
+                         <span className="text-2xl md:text-3xl font-black text-blue-600 tracking-tight leading-none block mb-1">{formatCurrency(selectedMex.mcaAmount)}</span>
+                         <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Dana Cair</span>
+                     </div>
+                     <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
+                         <div className="flex-1 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col justify-center">
+                           <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5">Limit Tersedia</span>
+                           <span className="text-xs font-black text-slate-700 truncate">{selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}</span>
                          </div>
-                         <div className="flex justify-between items-center"><span className="text-[10px] text-slate-600 font-bold">Limit</span><span className="text-sm font-black text-slate-800">{selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}</span></div>
-                         <div className="flex justify-between items-center"><span className="text-[10px] text-amber-600 font-bold">Cair</span><span className="text-sm font-black text-amber-600">{formatCurrency(selectedMex.mcaAmount)}</span></div>
+                         <div className="flex items-center justify-center p-2">
+                           <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase border ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
+                               {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'Eligible' : 'Not Eligible'}
+                           </span>
+                         </div>
                      </div>
                   </div>
                </div>
 
                {/* RESTRUCTURED ANALYTICS CHARTS */}
                {selectedMex.history && selectedMex.history.length > 0 && (
-                   <div className="space-y-4">
+                   <div className="space-y-5 md:space-y-6">
                        
                        {/* ROW 1: 12-Month Review (Left) + Investment (Right) */}
-                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
                            {/* 12-Month Review */}
-                           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 flex flex-col">
-                                <div className="flex justify-between items-start md:items-center mb-4 gap-2">
+                           <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-5 md:p-6 flex flex-col h-[400px] md:h-[480px]">
+                                <div className="flex justify-between items-start md:items-center mb-6 gap-2">
                                    <div>
-                                      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">12-Month Review <span className="text-slate-400 font-medium normal-case block md:inline mt-0.5 md:mt-0">(Basket Size, Net Sales & MI)</span></h3>
+                                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="text-blue-500 w-5 h-5"/> 12-Month Review</h3>
                                    </div>
                                    {selectedMex.lastUpdate && (
-                                       <div className="flex flex-col text-right justify-center bg-green-50 px-2.5 py-1.5 md:px-3 md:py-1.5 rounded-lg border border-green-200 shadow-sm shrink-0">
-                                           <span className="text-[8px] md:text-[9px] text-green-700 font-bold uppercase tracking-widest mb-1.5">Data Update</span>
-                                           <span className="text-[10px] md:text-xs font-black text-slate-900 leading-none">{selectedMex.lastUpdate}</span>
+                                       <div className="flex flex-col text-right justify-center bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100 shadow-sm shrink-0">
+                                           <span className="text-[8px] md:text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Last Update</span>
+                                           <span className="text-[10px] md:text-xs font-black text-slate-700 leading-none">{selectedMex.lastUpdate}</span>
                                        </div>
                                    )}
                                 </div>
-                                <div className="h-48 md:h-64 w-full mt-auto">
+                                <div className="flex-1 w-full">
                                     <ResponsiveContainer width="100%" height="100%">
-                                      <ComposedChart data={selectedMex.history.slice(-12)} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                                      <ComposedChart data={selectedMex.history.slice(-12)} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                        <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} />
-                                        <YAxis yAxisId="left" tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={45} />
-                                        <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={35} />
-                                        <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '11px', padding: '8px' }} formatter={(v, n) => [n.includes('%') ? `${v}%` : formatCurrency(v), n]} labelFormatter={formatMonth}/>
-                                        <Legend wrapperStyle={{ fontSize: '10px', paddingTop:'5px' }} />
+                                        <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} />
+                                        <YAxis yAxisId="left" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={60} />
+                                        <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fill: '#f97316', fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={40} />
+                                        <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [n.includes('%') ? `${v}%` : formatCurrency(v), n]} labelFormatter={formatMonth}/>
+                                        <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop:'15px' }} />
                                         
-                                        <Line yAxisId="left" type="monotone" dataKey="basket_size" name="Total Basket Size" stroke={COLORS.basketSize} strokeWidth={3} dot={{r:3, fill: '#ffffff', strokeWidth: 2}} activeDot={{r: 5}} />
-                                        <Bar yAxisId="left" dataKey="net_sales" stackId="a" name="Net Sales" fill={COLORS.netSales} maxBarSize={16} />
-                                        <Bar yAxisId="left" dataKey="total_investment" stackId="a" name="MI (Rp)" fill="#f43f5e" radius={[3,3,0,0]} maxBarSize={16} />
-                                        <Line yAxisId="right" type="monotone" dataKey="mi_percentage" name="MI %" stroke="#f97316" strokeWidth={2} dot={{r:3}} activeDot={{r: 5}} />
+                                        <Line yAxisId="left" type="monotone" dataKey="basket_size" name="Total Basket Size" stroke={COLORS.basketSize} strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r: 6}} />
+                                        <Bar yAxisId="left" dataKey="net_sales" stackId="a" name="Net Sales" fill={COLORS.netSales} maxBarSize={20} radius={[4,4,0,0]} />
+                                        <Bar yAxisId="left" dataKey="total_investment" stackId="a" name="MI (Rp)" fill="#f43f5e" radius={[4,4,0,0]} maxBarSize={20} />
+                                        <Line yAxisId="right" type="monotone" dataKey="mi_percentage" name="MI %" stroke="#f97316" strokeWidth={3} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r: 6}} />
                                       </ComposedChart>
                                     </ResponsiveContainer>
                                  </div>
                            </div>
 
                            {/* 3. MERCHANT INVESTMENT */}
-                           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 flex flex-col">
-                                <div className="flex justify-between items-start mb-4">
+                           <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-5 md:p-6 flex flex-col h-[400px] md:h-[480px]">
+                                <div className="flex justify-between items-start mb-6">
                                    <div className="flex items-center gap-2">
-                                      <Activity className="w-4 h-4 text-rose-500"/>
-                                      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Investment (MI)</h3>
+                                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><DollarSign className="text-rose-500 w-5 h-5"/> Investment (MI)</h3>
                                    </div>
-                                   <div className="bg-rose-50 px-2 py-0.5 rounded border border-rose-100 flex items-center gap-1">
-                                      <Percent className="w-3 h-3 text-rose-500"/>
-                                      <span className="text-[10px] font-bold text-rose-700" title="MI % dari Basket Size Bulan Terakhir">
+                                   <div className="bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-100 flex items-center gap-1.5 shadow-sm">
+                                      <Percent className="w-3.5 h-3.5 text-rose-500"/>
+                                      <span className="text-[11px] font-black text-rose-700" title="MI % dari Basket Size Bulan Terakhir">
                                           {selectedMex.history[selectedMex.history.length-1].mi_percentage}%
                                       </span>
                                    </div>
                                 </div>
-                                <div className="h-48 md:h-64 w-full mt-auto">
+                                <div className="flex-1 w-full">
                                   <ResponsiveContainer width="100%" height="100%">
-                                      <BarChart data={selectedMex.history.slice(-12)} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                                      <BarChart data={selectedMex.history.slice(-12)} margin={{ top: 10, right: 0, left: -10, bottom: 0 }}>
                                           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                          <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} />
-                                          <YAxis tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={45} />
-                                          <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '10px', padding: '6px' }} formatter={(v) => formatCurrency(v)} labelFormatter={formatMonth}/>
+                                          <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} />
+                                          <YAxis tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={50} />
+                                          <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v) => formatCurrency(v)} labelFormatter={formatMonth}/>
                                           
-                                          <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} iconType="circle" />
+                                          <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop: '15px' }} iconType="circle" />
                                           
-                                          <Bar dataKey="mfp" stackId="a" name="Local Promo" fill="#3b82f6" />
-                                          <Bar dataKey="mfc" stackId="a" name="Harga Coret" fill="#22c55e" />
-                                          <Bar dataKey="cpo" stackId="a" name="GMS" fill="#f97316" />
-                                          <Bar dataKey="ads_total_hist" stackId="a" name="Iklan" fill="#ef4444" radius={[2,2,0,0]} />
+                                          <Bar dataKey="mfp" stackId="a" name="Local Promo" fill="#3b82f6" maxBarSize={28} />
+                                          <Bar dataKey="mfc" stackId="a" name="Harga Coret" fill="#22c55e" maxBarSize={28} />
+                                          <Bar dataKey="cpo" stackId="a" name="GMS" fill="#f97316" maxBarSize={28} />
+                                          <Bar dataKey="ads_total_hist" stackId="a" name="Iklan" fill="#ef4444" radius={[6,6,0,0]} maxBarSize={28} />
                                       </BarChart>
                                   </ResponsiveContainer>
                                 </div>
@@ -2189,49 +2214,49 @@ export default function App() {
                        </div>
 
                        {/* ROW 2: AOV & Orders (Left) + Promo Usage (Right) */}
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
                             {/* 1. AOV TREND */}
-                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5">
-                                <div className="flex items-center gap-2 mb-4">
-                                   <ShoppingBag className="w-4 h-4 text-indigo-500"/>
-                                   <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">AOV & Orders</h3>
+                            <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-5 md:p-6">
+                                <div className="flex items-center gap-2 mb-6">
+                                   <ShoppingBag className="w-5 h-5 text-indigo-500"/>
+                                   <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">AOV & Orders</h3>
                                 </div>
-                                <div className="h-44 w-full">
+                                <div className="h-56 md:h-[300px] w-full">
                                   <ResponsiveContainer width="100%" height="100%">
-                                      <ComposedChart data={selectedMex.history.slice(-12)} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                                      <ComposedChart data={selectedMex.history.slice(-12)} margin={{ top: 10, right: 0, left: -10, bottom: 0 }}>
                                           <defs>
                                               <linearGradient id="colorAov" x1="0" y1="0" x2="0" y2="1">
                                                   <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
                                                   <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                                               </linearGradient>
                                           </defs>
-                                          <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} />
-                                          <YAxis yAxisId="left" domain={['auto', 'auto']} tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={45} />
-                                          <YAxis yAxisId="right" orientation="right" tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} width={30} />
-                                          <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '10px', padding: '6px' }} formatter={(v, n) => [n.includes('Orders') ? v : formatCurrency(v), n]} labelFormatter={formatMonth}/>
-                                          <Area yAxisId="left" type="monotone" dataKey="aov" name="AOV" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorAov)" />
-                                          <Line yAxisId="right" type="monotone" dataKey="completed_orders" name="Completed Orders" stroke="#10b981" strokeWidth={2} dot={{r:2}} activeDot={{r:4}} />
+                                          <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} />
+                                          <YAxis yAxisId="left" domain={['auto', 'auto']} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={45} />
+                                          <YAxis yAxisId="right" orientation="right" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} width={30} />
+                                          <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [n.includes('Orders') ? v : formatCurrency(v), n]} labelFormatter={formatMonth}/>
+                                          <Area yAxisId="left" type="monotone" dataKey="aov" name="AOV" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorAov)" />
+                                          <Line yAxisId="right" type="monotone" dataKey="completed_orders" name="Completed Orders" stroke="#10b981" strokeWidth={3} dot={{r:3}} activeDot={{r:5}} />
                                       </ComposedChart>
                                   </ResponsiveContainer>
                                 </div>
                             </div>
 
                             {/* 2. ORDER WITH CAMPAIGN % */}
-                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5">
-                                <div className="flex items-start gap-2 mb-4">
-                                   <Target className="w-4 h-4 text-teal-500 mt-0.5 shrink-0"/>
-                                   <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide leading-tight">
-                                       Promo Usage <span className="text-[10px] text-slate-400 font-medium normal-case tracking-normal block mt-0.5">(Gms & Cofund Only)</span>
+                            <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-5 md:p-6">
+                                <div className="flex items-start gap-2 mb-6">
+                                   <Target className="w-5 h-5 text-teal-500 shrink-0"/>
+                                   <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-tight">
+                                       Promo Usage <span className="text-[10px] text-slate-400 font-bold normal-case tracking-normal block mt-0.5">(Gms & Cofund Only)</span>
                                    </h3>
                                 </div>
-                                <div className="h-44 w-full">
+                                <div className="h-56 md:h-[300px] w-full">
                                   <ResponsiveContainer width="100%" height="100%">
-                                      <LineChart data={selectedMex.history.slice(-12)} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                      <LineChart data={selectedMex.history.slice(-12)} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                                           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                          <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} />
-                                          <YAxis domain={[0, 100]} tick={{ fill: COLORS.slate500, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={35} />
-                                          <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '10px', padding: '6px' }} formatter={(v) => `${v}%`} labelFormatter={formatMonth}/>
-                                          <Line type="monotone" dataKey="promo_order_pct" name="% Promo Usage" stroke="#14b8a6" strokeWidth={2} dot={{r:2}} activeDot={{r:4}} />
+                                          <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} />
+                                          <YAxis domain={[0, 100]} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={35} />
+                                          <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v) => `${v}%`} labelFormatter={formatMonth}/>
+                                          <Line type="monotone" dataKey="promo_order_pct" name="% Promo Usage" stroke="#14b8a6" strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r:6}} />
                                       </LineChart>
                                   </ResponsiveContainer>
                                 </div>
@@ -2241,66 +2266,52 @@ export default function App() {
                )}
 
                {/* NEW: CONTACT DETAILS AT THE BOTTOM */}
-               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 mt-4">
-                  <div className="flex items-center gap-2 mb-3 pb-3 border-b border-slate-100">
-                     <Info className="w-4 h-4 text-indigo-500"/>
-                     <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Contact Details</h3>
+               <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-5 md:p-8 mt-6">
+                  <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
+                     <Info className="w-5 h-5 text-indigo-500"/>
+                     <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Informasi Kontak & Lokasi</h3>
                   </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-                      {/* Address */}
-                      <div className="bg-slate-50 p-2.5 md:p-3 rounded-lg border border-slate-100 flex gap-2.5 h-full">
-                         <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5"/>
-                         <div className="flex flex-col min-w-0 flex-1">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Address</span>
-                            <div className="text-xs text-slate-800 font-medium max-h-12 overflow-y-auto custom-scrollbar break-words leading-snug">
-                               {selectedMex.city ? `${selectedMex.address}, ${selectedMex.city}` : '-'}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+
+                      {/* Contact Box */}
+                      <div className="bg-gradient-to-br from-slate-50 to-white p-4 md:p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center gap-4">
+                         <div className="flex items-start gap-3">
+                            <Phone className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/>
+                            <div className="flex flex-col">
+                               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Phone Number</span>
+                               <span className="text-sm md:text-base font-black text-slate-800">{selectedMex.phone || '-'}</span>
+                            </div>
+                         </div>
+                         <div className="flex items-start gap-3">
+                            <Mail className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/>
+                            <div className="flex flex-col">
+                               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Email Address</span>
+                               <span className="text-sm font-bold text-indigo-600 break-all">{selectedMex.email || '-'}</span>
                             </div>
                          </div>
                       </div>
 
-                      {/* Map Links */}
-                      <div className="bg-slate-50 p-2.5 md:p-3 rounded-lg border border-slate-100 flex gap-2.5 h-full">
-                         <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5"/>
-                         <div className="flex flex-col min-w-0 flex-1">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Location Maps</span>
-                            <div className="text-xs font-medium max-h-12 overflow-y-auto custom-scrollbar">
-                               {(selectedMex.latitude || selectedMex.longitude) ? (
-                                 <a 
-                                    href={`https://maps.google.com/?q=${selectedMex.latitude},${selectedMex.longitude}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="font-mono text-indigo-600 hover:text-indigo-800 transition-colors flex items-start gap-1 break-all"
-                                    title="Buka di Google Maps"
-                                 >
-                                    {selectedMex.latitude || '-'}, {selectedMex.longitude || '-'}
-                                    <ExternalLink className="w-3 h-3 opacity-70 shrink-0 mt-0.5" />
-                                 </a>
-                               ) : <span className="text-slate-400">-</span>}
+                      {/* Address Box */}
+                      <div className="bg-gradient-to-br from-slate-50 to-white p-4 md:p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center gap-4 lg:col-span-2">
+                         <div className="flex items-start gap-3">
+                            <MapPin className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/>
+                            <div className="flex flex-col">
+                               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Address</span>
+                               <span className="text-sm font-semibold text-slate-700 leading-relaxed">{selectedMex.city ? `${selectedMex.address}, ${selectedMex.city}` : '-'}</span>
                             </div>
                          </div>
-                      </div>
-
-                      {/* Phone */}
-                      <div className="bg-slate-50 p-2.5 md:p-3 rounded-lg border border-slate-100 flex gap-2.5 h-full">
-                         <Phone className="w-4 h-4 text-slate-400 shrink-0 mt-0.5"/>
-                         <div className="flex flex-col min-w-0 flex-1">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Phone Number</span>
-                            <div className="text-xs text-slate-800 font-medium max-h-12 overflow-y-auto custom-scrollbar break-words">
-                               {selectedMex.phone || '-'}
+                         {(selectedMex.latitude || selectedMex.longitude) && (
+                            <div className="flex items-start gap-3">
+                               <ExternalLink className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/>
+                               <div className="flex flex-col">
+                                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Maps Coords</span>
+                                  <a href={`https://maps.google.com/?q=${selectedMex.latitude},${selectedMex.longitude}`} target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-blue-500 hover:text-blue-700 transition-colors font-bold break-all">
+                                      {selectedMex.latitude}, {selectedMex.longitude}
+                                  </a>
+                               </div>
                             </div>
-                         </div>
-                      </div>
-
-                      {/* Email */}
-                      <div className="bg-slate-50 p-2.5 md:p-3 rounded-lg border border-slate-100 flex gap-2.5 h-full">
-                         <Mail className="w-4 h-4 text-slate-400 shrink-0 mt-0.5"/>
-                         <div className="flex flex-col min-w-0 flex-1">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Email Address</span>
-                            <div className="text-xs text-slate-800 font-medium max-h-12 overflow-y-auto custom-scrollbar break-all">
-                               {selectedMex.email || '-'}
-                            </div>
-                         </div>
+                         )}
                       </div>
                   </div>
                </div>
@@ -2313,10 +2324,11 @@ export default function App() {
       <style dangerouslySetInnerHTML={{__html: `
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .pb-safe { padding-bottom: max(2rem, env(safe-area-inset-bottom)); }
         * { font-feature-settings: "tnum" on, "lnum" on; }
         
         @keyframes float-down { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(2.5px); } }
