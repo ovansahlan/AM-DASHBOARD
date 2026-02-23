@@ -1701,13 +1701,13 @@ export default function App() {
                             <span className="text-[10px] font-black text-[#00B14F] uppercase tracking-widest">Projected Runrate</span>
                         </div>
                         <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
-                          <div className="flex-1 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex flex-col justify-center">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Last Month</span>
-                            <span className="text-xs font-black text-slate-600 truncate">{formatCurrency(kpi?.lm || 0)}</span>
+                          <div className="flex-1 min-w-0 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase mb-0.5 truncate">Last Month</span>
+                            <span className="text-xs font-black text-slate-600 truncate" title={formatCurrency(kpi?.lm || 0)}>{formatCurrency(kpi?.lm || 0)}</span>
                           </div>
-                          <div className="flex-1 bg-emerald-50 p-2.5 rounded-2xl border border-emerald-100 flex flex-col justify-center">
-                            <span className="text-[9px] font-bold text-slate-500 uppercase mb-0.5">MTD Sales</span>
-                            <span className="text-xs font-black text-slate-800 truncate">{formatCurrency(kpi?.mtd || 0)}</span>
+                          <div className="flex-1 min-w-0 bg-emerald-50 p-2.5 rounded-2xl border border-emerald-100 flex flex-col justify-center">
+                            <span className="text-[9px] font-bold text-slate-500 uppercase mb-0.5 truncate">MTD Sales</span>
+                            <span className="text-xs font-black text-slate-800 truncate" title={formatCurrency(kpi?.mtd || 0)}>{formatCurrency(kpi?.mtd || 0)}</span>
                           </div>
                         </div>
                       </div>
@@ -1726,13 +1726,13 @@ export default function App() {
                             <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Projected Cost</span>
                         </div>
                         <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
-                          <div className="flex-1 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex flex-col justify-center">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Last Month</span>
-                            <span className="text-xs font-black text-slate-600 truncate">{formatCurrency(kpi?.adsLm || 0)}</span>
+                          <div className="flex-1 min-w-0 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase mb-0.5 truncate">Last Month</span>
+                            <span className="text-xs font-black text-slate-600 truncate" title={formatCurrency(kpi?.adsLm || 0)}>{formatCurrency(kpi?.adsLm || 0)}</span>
                           </div>
-                          <div className="flex-1 bg-rose-50 p-2.5 rounded-2xl border border-rose-100 flex flex-col justify-center">
-                            <span className="text-[9px] font-bold text-rose-500 uppercase mb-0.5">MTD Ads</span>
-                            <span className="text-xs font-black text-slate-800 truncate">{formatCurrency(kpi?.adsMtd || 0)}</span>
+                          <div className="flex-1 min-w-0 bg-rose-50 p-2.5 rounded-2xl border border-rose-100 flex flex-col justify-center">
+                            <span className="text-[9px] font-bold text-rose-500 uppercase mb-0.5 truncate">MTD Ads</span>
+                            <span className="text-xs font-black text-slate-800 truncate" title={formatCurrency(kpi?.adsMtd || 0)}>{formatCurrency(kpi?.adsMtd || 0)}</span>
                           </div>
                         </div>
                       </div>
@@ -1751,13 +1751,13 @@ export default function App() {
                             <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Total Disbursed</span>
                         </div>
                         <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
-                          <div className="flex-1 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex flex-col justify-center">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Eligibility</span>
-                            <span className="text-xs font-black text-slate-600 truncate">{formatCurrency(kpi?.mcaEli || 0)}</span>
+                          <div className="flex-1 min-w-0 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase mb-0.5 truncate">Eligibility</span>
+                            <span className="text-xs font-black text-slate-600 truncate" title={formatCurrency(kpi?.mcaEli || 0)}>{formatCurrency(kpi?.mcaEli || 0)}</span>
                           </div>
-                          <div className="w-16 bg-amber-50 p-2.5 rounded-2xl border border-amber-100 flex flex-col items-center justify-center shrink-0">
-                            <span className="text-[9px] font-bold text-amber-600 uppercase mb-0.5">Toko</span>
-                            <span className="text-xs font-black text-amber-700 truncate">{kpi?.mcaDisCount || 0}</span>
+                          <div className="w-16 min-w-0 bg-amber-50 p-2.5 rounded-2xl border border-amber-100 flex flex-col items-center justify-center shrink-0">
+                            <span className="text-[9px] font-bold text-amber-600 uppercase mb-0.5 truncate max-w-full">Toko</span>
+                            <span className="text-xs font-black text-amber-700 truncate max-w-full" title={kpi?.mcaDisCount || 0}>{kpi?.mcaDisCount || 0}</span>
                           </div>
                         </div>
                       </div>
@@ -1776,13 +1776,13 @@ export default function App() {
                             <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Total Points</span>
                         </div>
                         <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
-                          <div className="flex-1 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex flex-col justify-center">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Joiners</span>
-                            <span className="text-xs font-black text-slate-600 truncate">{kpi?.joiners || 0} Toko</span>
+                          <div className="flex-1 min-w-0 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase mb-0.5 truncate">Joiners</span>
+                            <span className="text-xs font-black text-slate-600 truncate" title={`${kpi?.joiners || 0} Toko`}>{kpi?.joiners || 0} Toko</span>
                           </div>
-                          <div className="flex-1 bg-indigo-50 p-2.5 rounded-2xl border border-indigo-100 flex flex-col justify-center">
-                            <span className="text-[9px] font-bold text-indigo-500 uppercase mb-0.5">Avg Pts</span>
-                            <span className="text-xs font-black text-indigo-700 truncate">{kpi?.avgPtsPerJoiner || 0}</span>
+                          <div className="flex-1 min-w-0 bg-indigo-50 p-2.5 rounded-2xl border border-indigo-100 flex flex-col justify-center">
+                            <span className="text-[9px] font-bold text-indigo-500 uppercase mb-0.5 truncate">Avg Pts</span>
+                            <span className="text-xs font-black text-indigo-700 truncate" title={kpi?.avgPtsPerJoiner || 0}>{kpi?.avgPtsPerJoiner || 0}</span>
                           </div>
                         </div>
                       </div>
@@ -1801,13 +1801,13 @@ export default function App() {
                             <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Total Managed</span>
                         </div>
                         <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
-                          <div className="flex-1 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex flex-col justify-center">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Inactive</span>
-                            <span className="text-xs font-black text-slate-500 truncate">{kpi?.inactiveMex || 0}</span>
+                          <div className="flex-1 min-w-0 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase mb-0.5 truncate">Inactive</span>
+                            <span className="text-xs font-black text-slate-500 truncate" title={kpi?.inactiveMex || 0}>{kpi?.inactiveMex || 0}</span>
                           </div>
-                          <div className="flex-1 bg-blue-50 p-2.5 rounded-2xl border border-blue-100 flex flex-col justify-center">
-                            <span className="text-[9px] font-bold text-blue-500 uppercase mb-0.5">Active</span>
-                            <span className="text-xs font-black text-blue-700 truncate">{kpi?.activeMex || 0}</span>
+                          <div className="flex-1 min-w-0 bg-blue-50 p-2.5 rounded-2xl border border-blue-100 flex flex-col justify-center">
+                            <span className="text-[9px] font-bold text-blue-500 uppercase mb-0.5 truncate">Active</span>
+                            <span className="text-xs font-black text-blue-700 truncate" title={kpi?.activeMex || 0}>{kpi?.activeMex || 0}</span>
                           </div>
                         </div>
                       </div>
@@ -2053,13 +2053,13 @@ export default function App() {
                          <span className="text-[10px] font-black text-[#00B14F] uppercase tracking-widest">Projected Runrate</span>
                      </div>
                      <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
-                         <div className="flex-1 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col justify-center">
-                           <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5">Last Month</span>
-                           <span className="text-xs font-black text-slate-600 truncate">{formatCurrency(selectedMex.lmBs)}</span>
+                         <div className="flex-1 min-w-0 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col justify-center">
+                           <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5 truncate">Last Month</span>
+                           <span className="text-xs font-black text-slate-600 truncate" title={formatCurrency(selectedMex.lmBs)}>{formatCurrency(selectedMex.lmBs)}</span>
                          </div>
-                         <div className="flex-1 bg-emerald-50 p-2 rounded-xl border border-emerald-100 flex flex-col justify-center">
-                           <span className="text-[9px] text-slate-500 font-bold uppercase mb-0.5">MTD Sales</span>
-                           <span className="text-xs font-black text-slate-800 truncate">{formatCurrency(selectedMex.mtdBs)}</span>
+                         <div className="flex-1 min-w-0 bg-emerald-50 p-2 rounded-xl border border-emerald-100 flex flex-col justify-center">
+                           <span className="text-[9px] text-slate-500 font-bold uppercase mb-0.5 truncate">MTD Sales</span>
+                           <span className="text-xs font-black text-slate-800 truncate" title={formatCurrency(selectedMex.mtdBs)}>{formatCurrency(selectedMex.mtdBs)}</span>
                          </div>
                      </div>
                   </div>
@@ -2080,7 +2080,7 @@ export default function App() {
                          <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Campaign Points</span>
                      </div>
                      <div className="mt-auto pt-4 border-t border-slate-50 relative z-10">
-                         <span className="text-[9px] text-slate-400 font-bold uppercase block mb-1">Active List:</span>
+                         <span className="text-[9px] text-slate-400 font-bold uppercase block mb-1 truncate">Active List:</span>
                          {renderMerchantCampaigns(selectedMex.campaigns)}
                      </div>
                   </div>
@@ -2099,13 +2099,13 @@ export default function App() {
                          <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Ads Spend (MTD)</span>
                      </div>
                      <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
-                         <div className="flex-1 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col justify-center">
-                           <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5">Promo (MI)</span>
-                           <span className="text-xs font-black text-slate-700 truncate">{formatCurrency(selectedMex.miMtd)}</span>
+                         <div className="flex-1 min-w-0 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col justify-center">
+                           <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5 truncate">Promo (MI)</span>
+                           <span className="text-xs font-black text-slate-700 truncate" title={formatCurrency(selectedMex.miMtd)}>{formatCurrency(selectedMex.miMtd)}</span>
                          </div>
-                         <div className="w-16 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col items-center justify-center shrink-0">
-                           <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5">Komisi</span>
-                           <span className="text-xs font-black text-slate-800 truncate">{selectedMex.commission || '-'}</span>
+                         <div className="w-16 min-w-0 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col items-center justify-center shrink-0">
+                           <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5 truncate max-w-full">Komisi</span>
+                           <span className="text-xs font-black text-slate-800 truncate max-w-full" title={selectedMex.commission || '-'}>{selectedMex.commission || '-'}</span>
                          </div>
                      </div>
                   </div>
@@ -2129,12 +2129,12 @@ export default function App() {
                          <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Dana Cair</span>
                      </div>
                      <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
-                         <div className="flex-1 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col justify-center">
-                           <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5">Limit Tersedia</span>
-                           <span className="text-xs font-black text-slate-700 truncate">{selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}</span>
+                         <div className="flex-1 min-w-0 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col justify-center">
+                           <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5 truncate">Limit Tersedia</span>
+                           <span className="text-xs font-black text-slate-700 truncate" title={selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}>{selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}</span>
                          </div>
-                         <div className="flex items-center justify-center p-2">
-                           <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase border ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
+                         <div className="flex items-center justify-center p-2 min-w-0 shrink-0">
+                           <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase border truncate ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
                                {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'Eligible' : 'Not Eligible'}
                            </span>
                          </div>
@@ -2280,7 +2280,20 @@ export default function App() {
                             <Phone className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/>
                             <div className="flex flex-col">
                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Phone Number</span>
-                               <span className="text-sm md:text-base font-black text-slate-800">{selectedMex.phone || '-'}</span>
+                               {selectedMex.phone && selectedMex.phone !== '-' ? (
+                                  <a 
+                                     href={`https://wa.me/${selectedMex.phone.replace(/\D/g, '')}`}
+                                     target="_blank"
+                                     rel="noopener noreferrer" 
+                                     className="text-sm md:text-base font-black text-slate-800 hover:text-[#00B14F] transition-colors flex items-center gap-1.5 group"
+                                     title="Buka Chat WhatsApp"
+                                  >
+                                     {selectedMex.phone}
+                                     <ExternalLink className="w-3 h-3 text-[#00B14F] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                  </a>
+                               ) : (
+                                  <span className="text-sm md:text-base font-black text-slate-800">-</span>
+                               )}
                             </div>
                          </div>
                          <div className="flex items-start gap-3">
