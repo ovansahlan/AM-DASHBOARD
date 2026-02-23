@@ -10,23 +10,6 @@ import {
   ShoppingCart, Check, ArrowRight, Settings, List, Tags, Ticket, ChevronDown, Plus, MousePointer, Eye, RefreshCw, BarChart2
 } from 'lucide-react';
 
-// --- FIREBASE IMPORTS ---
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, collection, getDocs, setDoc, doc, writeBatch, onSnapshot } from 'firebase/firestore';
-
-// --- FIREBASE INITIALIZATION ---
-let app, auth, db, appId;
-try {
-  const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-  appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
-} catch (e) {
-  console.error("Firebase init failed:", e);
-}
-
 // ============================================================================
 // UTILS & CONSTANTS (DASHBOARD)
 // ============================================================================
@@ -171,7 +154,7 @@ const SimKpiCard = ({ title, value, sub, valueColor = "text-slate-800", isClicka
 );
 
 // ============================================================================
-// KOMPONEN: TAB MERCHANT SIMULATOR (TERINTEGRASI)
+// KOMPONEN: TAB MERCHANT SIMULATOR
 // ============================================================================
 const MerchantSimulator = () => {
   const [page, setPage] = useState('calc'); 
@@ -891,7 +874,6 @@ const MerchantSimulator = () => {
 };
 
 export default function App() {
-  const [user, setUser] = useState(null);
   const [data, setData] = useState([]);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isForceUpload, setIsForceUpload] = useState(false);
@@ -909,92 +891,39 @@ export default function App() {
   
   const [activeTab, setActiveTab] = useState('overview'); 
 
-  // --- FIREBASE AUTH & REALTIME SYNC ---
+  // --- MEMUAT DATA DARI LOCAL STORAGE (VERSI OFFLINE) ---
   useEffect(() => {
-    if (!auth) {
-        setIsInitializing(false);
-        return;
-    }
-    const initAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
+    const loadLocalData = () => {
+        try {
+            const saved = localStorage.getItem('am_dashboard_data');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed && parsed.length > 0) {
+                    parsed.sort((a, b) => a.name.localeCompare(b.name));
+                    setData(parsed);
+                    setIsForceUpload(false);
+                }
+            }
+        } catch (e) {
+            console.error("Gagal memuat data lokal", e);
         }
-      } catch (e) {
-         console.error("Auth error", e);
-         setIsInitializing(false);
-      }
+        setIsInitializing(false);
     };
-    initAuth();
-    
-    const unsubscribe = onAuthStateChanged(auth, setUser);
-    return () => unsubscribe();
+    loadLocalData();
   }, []);
 
-  useEffect(() => {
-    if (!user || !db) {
-        if(user === null && !auth) setIsInitializing(false);
-        return;
-    }
-    const unsubscribe = onSnapshot(
-        collection(db, 'artifacts', appId, 'users', user.uid, 'merchants'),
-        (snapshot) => {
-            const savedData = [];
-            snapshot.forEach(doc => savedData.push(doc.data()));
-            
-            if (savedData.length > 0) {
-                savedData.sort((a, b) => a.name.localeCompare(b.name));
-                setData(savedData);
-                setIsForceUpload(false);
-            } else {
-                setData([]);
-            }
-            setIsInitializing(false);
-        },
-        (error) => {
-            console.error("Firestore sync error", error);
-            setIsInitializing(false);
-        }
-    );
-    return () => unsubscribe();
-  }, [user]);
-
-  // --- SIMPAN KE CLOUD ---
-  const saveToCloud = async (finalData) => {
-      if (!user || !db) return;
+  // --- SIMPAN KE LOCAL STORAGE ---
+  const saveToLocal = async (finalData) => {
       setLoading(true);
       try {
-          const existingDocs = await getDocs(collection(db, 'artifacts', appId, 'users', user.uid, 'merchants'));
-          let batch = writeBatch(db);
-          let count = 0;
-          
-          const commitAndReset = async () => {
-              await batch.commit();
-              batch = writeBatch(db);
-              count = 0;
-          };
-
-          for (const d of existingDocs.docs) {
-              batch.delete(d.ref);
-              count++;
-              if (count >= 400) await commitAndReset();
-          }
-
-          for (const merchant of finalData) {
-              const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'merchants', merchant.id);
-              batch.set(docRef, merchant);
-              count++;
-              if (count >= 400) await commitAndReset();
-          }
-
-          if (count > 0) {
-              await batch.commit();
-          }
+          // Simulasi loading sejenak agar terlihat prosesnya
+          await new Promise(resolve => setTimeout(resolve, 500));
+          localStorage.setItem('am_dashboard_data', JSON.stringify(finalData));
+          setData(finalData);
+          setIsForceUpload(false);
       } catch (e) {
           console.error("Save error", e);
-          setErrorMsg("Gagal menyimpan ke Cloud: " + e.message);
+          setErrorMsg("Gagal menyimpan ke Memori Browser: " + e.message);
       }
       setLoading(false);
   };
@@ -1176,8 +1105,8 @@ export default function App() {
             return merchant;
         });
 
-        // Simpan hasil parse ke Cloud
-        await saveToCloud(finalData);
+        // Simpan hasil parse ke Local Storage
+        await saveToLocal(finalData);
 
     } catch (err) {
         console.error(err);
@@ -1298,7 +1227,7 @@ export default function App() {
           };
         });
         
-        saveToCloud(genData); 
+        saveToLocal(genData); 
      }, 600); 
   };
 
@@ -1383,7 +1312,7 @@ export default function App() {
        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
          <div className="text-center animate-pulse flex flex-col items-center">
             <Activity className="w-12 h-12 text-[#00B14F] mb-4" />
-            <h2 className="text-sm font-bold text-slate-500 uppercase tracking-widest">Menghubungkan ke Cloud...</h2>
+            <h2 className="text-sm font-bold text-slate-500 uppercase tracking-widest">Memuat Dashboard...</h2>
          </div>
        </div>
      )
@@ -1421,7 +1350,7 @@ export default function App() {
           </div>
 
           <button onClick={handleProcessFiles} disabled={loading || !fileMaster} className={`w-full py-3.5 bg-slate-800 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 mb-4 text-sm hover:bg-slate-900 shadow-md ${!fileMaster ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}>
-            {loading ? <Activity className="w-5 h-5 animate-spin" /> : <UploadCloud className="w-5 h-5" />} {loading ? 'Memproses Data ke Cloud...' : 'Simpan & Proses Dashboard'}
+            {loading ? <Activity className="w-5 h-5 animate-spin" /> : <UploadCloud className="w-5 h-5" />} {loading ? 'Memproses Data...' : 'Simpan & Proses Dashboard'}
           </button>
           
           <button onClick={loadDemo} disabled={loading} className="w-full py-3 bg-transparent text-slate-500 hover:text-slate-800 font-bold transition-all flex items-center justify-center gap-2 text-sm border border-slate-200 rounded-xl hover:bg-slate-50">
