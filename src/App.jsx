@@ -47,6 +47,26 @@ const COLORS = {
   basketSize: '#3b82f6' 
 };
 
+// Fungsi Penentu Klasifikasi Campaign
+const getMerchantSegment = (campaignsStr) => {
+  const c = campaignsStr ? String(campaignsStr).trim().toLowerCase() : '';
+  if (!c || c === '-' || c === '0' || c.includes('no campaign')) return '0 Invest';
+  
+  const camps = c.split(/[|,]/).map(x => x.trim()).filter(Boolean);
+  let hasGMS = false, hasBoosterPlus = false, hasLocal = false;
+  
+  camps.forEach(camp => {
+    if (camp.includes('gms')) hasGMS = true;
+    else if (camp.includes('booster+')) hasBoosterPlus = true;
+    else hasLocal = true;
+  });
+  
+  if (hasBoosterPlus) return 'Booster+';
+  if (hasGMS && hasLocal) return 'GMS & Local';
+  if (hasGMS && !hasLocal) return 'GMS Only';
+  return 'Local Only';
+};
+
 // ============================================================================
 // UTILS: INDEXEDDB BROWSER STORAGE (Anti-Quota Exceeded)
 // ============================================================================
@@ -933,6 +953,7 @@ export default function App() {
   const [selectedPriority, setSelectedPriority] = useState('All');
   
   const [activeTab, setActiveTab] = useState('overview'); 
+  const [activeSegmentModal, setActiveSegmentModal] = useState(null);
 
   // --- MENAMBAHKAN FAVICON (ICON TAB BROWSER) ---
   useEffect(() => {
@@ -1306,36 +1327,23 @@ export default function App() {
     const counts = {};
 
     activeData.forEach(d => {
-      const c = d.campaigns ? String(d.campaigns).trim().toLowerCase() : '';
-      if (!c || c === '-' || c === '0' || c.includes('no campaign')) {
+      const segment = getMerchantSegment(d.campaigns);
+      
+      if (segment === '0 Invest') {
         zeroInvest++;
       } else {
         joiners++;
+        const c = d.campaigns ? String(d.campaigns).trim().toLowerCase() : '';
         const camps = c.split(/[|,]/).map(x => x.trim()).filter(Boolean);
-        
-        let hasGMS = false;
-        let hasBoosterPlus = false;
-        let hasLocal = false;
-
         camps.forEach(camp => {
           counts[camp] = (counts[camp] || 0) + 1;
-          
-          if (camp.includes('gms')) hasGMS = true;
-          else if (camp.includes('booster+')) hasBoosterPlus = true;
-          else hasLocal = true;
         });
-
-        // Logika klasifikasi baru:
-        // Jika ada Booster+, langsung masuk klasifikasi Booster+
-        if (hasBoosterPlus) {
-          boosterPlus++;
-        } else if (hasGMS) {
-          if (hasLocal) gmsLocal++;
-          else gmsOnly++;
-        } else if (hasLocal) {
-          localOnly++;
-        }
       }
+
+      if (segment === 'Booster+') boosterPlus++;
+      else if (segment === 'GMS & Local') gmsLocal++;
+      else if (segment === 'GMS Only') gmsOnly++;
+      else if (segment === 'Local Only') localOnly++;
     });
 
     const classification = [
@@ -1354,6 +1362,13 @@ export default function App() {
     };
   }, [activeData]);
 
+  // Menyiapkan daftar merchant khusus untuk modal segmen yang diklik
+  const filteredSegmentMerchants = useMemo(() => {
+     if (!activeSegmentModal) return [];
+     return activeData.filter(m => getMerchantSegment(m.campaigns) === activeSegmentModal)
+                      .sort((a, b) => b.mtdBs - a.mtdBs); // Urutkan berdasar MTD Sales terbesar
+  }, [activeData, activeSegmentModal]);
+
   const kpi = useMemo(() => {
     if (!activeData.length) return null;
     let activeMex = 0; let inactiveMex = 0;
@@ -1370,7 +1385,6 @@ export default function App() {
 
   const chartsData = useMemo(() => {
     const mtd = [...activeData].sort((a, b) => b.mtdBs - a.mtdBs).slice(0, 10);
-    // Ubah .slice(0, 5) menjadi .slice(0, 10)
     const ads = [...activeData].sort((a, b) => b.adsLM - a.adsLM).slice(0, 10);
     let g = 0, d = 0, s = 0;
     activeData.forEach(x => { if (x.rrBs > x.lmBs * 1.05) g++; else if (x.rrBs < x.lmBs * 0.95) d++; else s++; });
@@ -1466,8 +1480,58 @@ export default function App() {
 
   // --- RENDER DASHBOARD UTAMA ---
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans overflow-hidden">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans overflow-hidden relative">
       
+      {/* ========================================================= */}
+      {/* MODAL DAFTAR MERCHANT PER SEGMEN CAMPAIGN */}
+      {/* ========================================================= */}
+      {activeSegmentModal && (
+        <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setActiveSegmentModal(null)} />
+          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
+            
+            <div className="flex justify-between items-center p-4 md:p-5 border-b border-slate-100 shrink-0">
+               <div>
+                  <h3 className="font-black text-lg text-slate-800 flex items-center gap-2">
+                     <Target className="w-5 h-5 text-[#00B14F]"/>
+                     Segmen: <span className="text-[#00B14F]">{activeSegmentModal}</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">Daftar {filteredSegmentMerchants.length} merchant dalam kategori ini</p>
+               </div>
+               <button onClick={() => setActiveSegmentModal(null)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={18}/></button>
+            </div>
+            
+            <div className="flex-1 overflow-auto p-4 custom-scrollbar bg-slate-50/50">
+               {filteredSegmentMerchants.length === 0 ? (
+                 <div className="flex flex-col items-center justify-center h-40 text-slate-400">
+                    <Store className="w-8 h-8 mb-2 opacity-30" />
+                    <p className="text-xs font-bold">Tidak ada merchant di segmen ini.</p>
+                 </div>
+               ) : (
+                 <div className="grid grid-cols-1 gap-2">
+                    {filteredSegmentMerchants.map((mex) => (
+                       <div key={mex.id} onClick={() => { setSelectedMex(mex); setActiveSegmentModal(null); setActiveTab('overview'); }} className="flex justify-between items-center p-3.5 bg-white border border-slate-200 rounded-xl hover:border-[#00B14F] hover:shadow-md cursor-pointer transition-all group">
+                          <div className="min-w-0 pr-4">
+                             <p className="font-bold text-sm text-slate-800 group-hover:text-[#00B14F] truncate">{mex.name}</p>
+                             <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[10px] text-slate-400 font-mono bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">{mex.id}</span>
+                                <span className="text-[10px] text-slate-500 font-medium truncate">• {mex.amName}</span>
+                             </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                             <p className="font-black text-sm text-slate-700">{formatCurrency(mex.mtdBs)}</p>
+                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">MTD Sales</p>
+                          </div>
+                       </div>
+                    ))}
+                 </div>
+               )}
+            </div>
+
+          </div>
+        </div>
+      )}
+
       {/* ELEGAN & MODERN HEADER */}
       <header className="bg-white/90 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-40 shadow-sm flex flex-col shrink-0 transition-all">
         <div className="flex items-center justify-between px-4 md:px-6 h-16 md:h-20 gap-4 md:gap-6">
@@ -1787,12 +1851,21 @@ export default function App() {
                         
                         <div className="flex-1 w-full overflow-hidden mt-2">
                           <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={campaignStats.classification} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
+                            <BarChart 
+                                data={campaignStats.classification} 
+                                layout="vertical" 
+                                margin={{ top: 0, right: 30, left: 0, bottom: 0 }}
+                                onClick={(state) => {
+                                  if (state && state.activePayload && state.activePayload.length > 0) {
+                                    setActiveSegmentModal(state.activePayload[0].payload.name);
+                                  }
+                                }}
+                            >
                               <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
                               <XAxis type="number" hide />
                               <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} width={75} />
                               <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border:'1px solid #e2e8f0', fontSize: '11px', padding: '6px' }} />
-                              <Bar dataKey="count" name="Total Merchant" radius={[0, 4, 4, 0]} barSize={22}>
+                              <Bar dataKey="count" name="Total Merchant" radius={[0, 4, 4, 0]} barSize={22} cursor="pointer">
                                 {campaignStats.classification.map((entry, index) => (
                                   <Cell key={`cell-${index}`} fill={entry.fill} />
                                 ))}
