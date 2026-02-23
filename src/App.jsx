@@ -1514,8 +1514,7 @@ export default function App() {
                           <div className="min-w-0 pr-4">
                              <p className="font-bold text-sm text-slate-800 group-hover:text-[#00B14F] truncate">{mex.name}</p>
                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[10px] text-slate-400 font-mono bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">{mex.id}</span>
-                                <span className="text-[10px] text-slate-500 font-medium truncate">• {mex.amName}</span>
+                                {renderMerchantCampaigns(mex.campaigns)}
                              </div>
                           </div>
                           <div className="text-right shrink-0">
@@ -2042,7 +2041,7 @@ export default function App() {
                                    </div>
                                    {selectedMex.lastUpdate && (
                                        <div className="flex flex-col text-right justify-center bg-green-50 px-2.5 py-1.5 md:px-3 md:py-1.5 rounded-lg border border-green-200 shadow-sm shrink-0">
-                                           <span className="text-[8px] md:text-[9px] text-green-700 font-bold uppercase tracking-widest leading-none mb-1">Data Update</span>
+                                           <span className="text-[8px] md:text-[9px] text-green-700 font-bold uppercase tracking-widest mb-1.5">Data Update</span>
                                            <span className="text-[10px] md:text-xs font-black text-slate-900 leading-none">{selectedMex.lastUpdate}</span>
                                        </div>
                                    )}
