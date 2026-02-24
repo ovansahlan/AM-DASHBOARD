@@ -16,9 +16,18 @@ import {
 const cleanNumber = (val) => {
   if (val === null || val === undefined || val === '') return 0;
   if (typeof val === 'number') return val;
-  const str = String(val).replace(/[▲▼%,]/g, '').trim();
-  const num = parseFloat(str);
-  return isNaN(num) ? 0 : num;
+  
+  // STRATEGI ANTI-BUG MOBILE:
+  // Hapus semua titik, koma, huruf, dan spasi. Hanya sisakan angka murni.
+  // Ini mencegah 1.000.000 terbaca sebagai 1 oleh browser.
+  const str = String(val).trim();
+  const isNegative = str.startsWith('-');
+  const onlyDigits = str.replace(/[^0-9]/g, '');
+  
+  if (!onlyDigits) return 0;
+  
+  const num = parseInt(onlyDigits, 10);
+  return isNegative ? -num : num;
 };
 
 const formatCurrency = (val) => {
@@ -1078,13 +1087,19 @@ export default function App() {
 
   // --- PARSERS ---
   const parseCSVString = (str) => {
+    // AUTO-DETECT CSV DELIMITER (Mencegah error dari file HP yang pakai Titik Koma ';')
+    const firstLine = str.split('\n')[0] || '';
+    const commaCount = (firstLine.match(/,/g) || []).length;
+    const semicolonCount = (firstLine.match(/;/g) || []).length;
+    const delimiter = semicolonCount > commaCount ? ';' : ',';
+
     const arr = []; let quote = false; let row = 0, col = 0;
     for (let c = 0; c < str.length; c++) {
       let cc = str[c], nc = str[c+1];
       arr[row] = arr[row] || []; arr[row][col] = arr[row][col] || '';
       if (cc === '"' && quote && nc === '"') { arr[row][col] += cc; ++c; continue; }
       if (cc === '"') { quote = !quote; continue; }
-      if (cc === ',' && !quote) { ++col; continue; }
+      if (cc === delimiter && !quote) { ++col; continue; }
       if (cc === '\r' && nc === '\n' && !quote) { ++row; col = 0; ++c; continue; }
       if ((cc === '\n' || cc === '\r') && !quote) { ++row; col = 0; continue; }
       arr[row][col] += cc;
@@ -1140,15 +1155,27 @@ export default function App() {
           let prioVal = (prioHeader && obj[prioHeader]) ? String(obj[prioHeader]).trim() : '-';
           if (!prioVal || prioVal === '') prioVal = '-';
           
+          // KALKULASI MANUAL TREND: Menghindari error persentase (misal: 15% terbaca 0.15 dari HP)
+          const lmBsVal = cleanNumber(vals[lmBIdx]);
+          const mtdBsVal = cleanNumber(obj['MTD (BS)'] || obj['MTD\n(BS)']);
+          const rrBsVal = cleanNumber(obj['RR (BS)'] || obj['RR\n(BS)']);
+          
+          let calcRrVsLm = 0;
+          if (lmBsVal > 0) {
+              calcRrVsLm = ((rrBsVal - lmBsVal) / lmBsVal) * 100;
+          } else if (rrBsVal > 0) {
+              calcRrVsLm = 100;
+          }
+          
           parsedDataMap.set(mexId, {
             id: mexId,
             name: obj['Mex Name'],
             amName: obj['AM Name'] || 'Unassigned',
             ownerName: vals[10] !== undefined && String(vals[10]).trim() !== '' ? String(vals[10]).trim() : '-',
-            lmBs: cleanNumber(vals[lmBIdx]),
-            mtdBs: cleanNumber(obj['MTD (BS)'] || obj['MTD\n(BS)']),
-            rrBs: cleanNumber(obj['RR (BS)'] || obj['RR\n(BS)']),
-            rrVsLm: cleanNumber(obj['% RR vs LM (BS)'] || obj['% RR vs LM\n(BS)']),
+            lmBs: lmBsVal,
+            mtdBs: mtdBsVal,
+            rrBs: rrBsVal,
+            rrVsLm: calcRrVsLm,
             miMtd: cleanNumber(obj['MTD (MI)'] || obj['MTD\n(MI)']),
             adsLM: cleanNumber(vals[lmAIdx]),
             adsTotal: cleanNumber(obj['Total MTD (Ads)'] || obj['Total MTD\n(Ads)']),
