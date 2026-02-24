@@ -1160,6 +1160,7 @@ export default function App() {
             mcaWlLimit: cleanNumber(obj['MCA WL']),
             mcaWlClass: obj['MCA WL Classification'] || '-Not in WL',
             mcaPriority: prioVal,
+            mcaDropOff: obj['Drop Off Screen'] && String(obj['Drop Off Screen']).trim().toUpperCase() !== 'FALSE' ? String(obj['Drop Off Screen']).trim() : '-',
             disbursedDate: obj['Disbursed date'],
             zeusStatus: obj['Zeus'],
             joinDate: obj['Join Date'],
@@ -1297,6 +1298,7 @@ export default function App() {
           
           const pRoll = Math.random();
           const mcaPriority = mcaLimit > 0 ? (pRoll > 0.7 ? 'P1' : pRoll > 0.3 ? 'P2' : 'P3') : '-';
+          const dropOffScenarios = ['-', '-', '-', 'Term & Condition', 'KYC Verification', 'Review Plan'];
 
           let assignedCampaigns = [];
           const campaignRoll = Math.random();
@@ -1370,6 +1372,7 @@ export default function App() {
             mcaWlLimit: mcaLimit, 
             mcaWlClass: mcaLimit > 0 ? 'Repeat' : '-Not in WL',
             mcaPriority: mcaPriority,
+            mcaDropOff: dropOffScenarios[Math.floor(Math.random() * dropOffScenarios.length)],
             disbursedDate: mca > 0 ? `15-Feb-26` : '',
             zeusStatus: Math.random() > 0.15 ? 'ACTIVE' : 'INACTIVE',
             joinDate: `12-Jan-22`,
@@ -2373,15 +2376,24 @@ export default function App() {
                          <span className="text-2xl md:text-3xl font-black text-blue-600 tracking-tight leading-none block mb-1">{formatCurrency(selectedMex.mcaAmount)}</span>
                          <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Dana Cair</span>
                      </div>
-                     <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
-                         <div className="flex-1 min-w-0 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col justify-center">
-                           <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5 truncate">Limit Tersedia</span>
-                           <span className="text-xs font-black text-slate-700 truncate" title={selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}>{selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}</span>
-                         </div>
-                         <div className="flex items-center justify-center p-2 min-w-0 shrink-0">
-                           <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase border truncate ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
-                               {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'Eligible' : 'Not Eligible'}
-                           </span>
+                     
+                     <div className="mt-auto relative z-10 flex flex-col">
+                         {selectedMex.mcaDropOff && selectedMex.mcaDropOff !== '-' && selectedMex.mcaDropOff !== '0' && (
+                            <div className="mb-3 inline-flex items-center gap-1.5 bg-rose-50 text-rose-600 border border-rose-100/50 px-2 py-1 rounded-lg w-fit shadow-sm max-w-full">
+                               <AlertCircle size={12} className="shrink-0" />
+                               <span className="text-[9px] font-bold truncate">Drop Off: {selectedMex.mcaDropOff}</span>
+                            </div>
+                         )}
+                         <div className="flex gap-2 pt-4 border-t border-slate-50">
+                             <div className="flex-1 min-w-0 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col justify-center">
+                               <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5 truncate">Limit Tersedia</span>
+                               <span className="text-xs font-black text-slate-700 truncate" title={selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}>{selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}</span>
+                             </div>
+                             <div className="flex items-center justify-center p-2 min-w-0 shrink-0">
+                               <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase border truncate ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
+                                   {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'Eligible' : 'Not Eligible'}
+                               </span>
+                             </div>
                          </div>
                      </div>
                   </div>
