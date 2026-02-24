@@ -968,6 +968,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('overview'); 
   const [activeSegmentModal, setActiveSegmentModal] = useState(null);
   const [showWaModal, setShowWaModal] = useState(false);
+  const [showMcaModal, setShowMcaModal] = useState(false);
 
   // --- LOGIKA TEMPLATE WHATSAPP ---
   const handleSendWA = (templateType) => {
@@ -1385,9 +1386,8 @@ export default function App() {
   const activeData = useMemo(() => {
      let filtered = data;
      if (selectedAM !== 'All') filtered = filtered.filter(d => d.amName === selectedAM);
-     if (selectedPriority !== 'All') filtered = filtered.filter(d => d.mcaPriority === selectedPriority);
      return filtered;
-  }, [data, selectedAM, selectedPriority]);
+  }, [data, selectedAM]);
 
   const campaignStats = useMemo(() => {
     let zeroInvest = 0, gmsOnly = 0, gmsLocal = 0, boosterPlus = 0, localOnly = 0;
@@ -1437,16 +1437,26 @@ export default function App() {
                       .sort((a, b) => b.mtdBs - a.mtdBs); 
   }, [activeData, activeSegmentModal]);
 
+  // Menyiapkan daftar merchant yang melakukan pencairan MCA di bulan Februari
+  const disbursedMerchants = useMemo(() => {
+     return activeData.filter(m => m.mcaAmount > 0 && String(m.disbursedDate).toLowerCase().includes('feb')).sort((a, b) => b.mcaAmount - a.mcaAmount);
+  }, [activeData]);
+
   const kpi = useMemo(() => {
     if (!activeData.length) return null;
     let activeMex = 0; let inactiveMex = 0;
     activeData.forEach(d => { if (d.zeusStatus && d.zeusStatus.toUpperCase() === 'ACTIVE') { activeMex++; } else { inactiveMex++; } });
     const totalPts = activeData.reduce((a, c) => a + (c.campaignPoint || 0), 0);
 
+    // Filter spesifik untuk data pencairan di bulan Februari
+    const disbursedFeb = activeData.filter(c => c.mcaAmount > 0 && String(c.disbursedDate).toLowerCase().includes('feb'));
+
     return {
       lm: activeData.reduce((a, c) => a + c.lmBs, 0), rr: activeData.reduce((a, c) => a + c.rrBs, 0), mtd: activeData.reduce((a, c) => a + c.mtdBs, 0),
       adsLm: activeData.reduce((a, c) => a + c.adsLM, 0), adsMtd: activeData.reduce((a, c) => a + c.adsTotal, 0), adsRr: activeData.reduce((a, c) => a + c.adsRR, 0),
-      mcaDis: activeData.reduce((a, c) => a + (String(c.disbursedDate).includes('Feb') ? c.mcaAmount : 0), 0), mcaDisCount: activeData.filter(c => c.mcaAmount > 0).length, mcaEli: activeData.reduce((a, c) => a + (c.mcaWlLimit > 0 && !c.mcaWlClass.includes('Not') ? c.mcaWlLimit : 0), 0),
+      mcaDis: disbursedFeb.reduce((a, c) => a + c.mcaAmount, 0), 
+      mcaDisCount: disbursedFeb.length, 
+      mcaEli: activeData.reduce((a, c) => a + (c.mcaWlLimit > 0 && !c.mcaWlClass.includes('Not') ? c.mcaWlLimit : 0), 0),
       joiners: campaignStats.joiners, totalMex: activeData.length, activeMex, inactiveMex, totalPoints: totalPts, activeCampCount: campaignStats.list.length, avgPtsPerJoiner: campaignStats.joiners > 0 ? Math.round(totalPts / campaignStats.joiners) : 0
     };
   }, [activeData, campaignStats]);
@@ -1462,8 +1472,12 @@ export default function App() {
 
   const filtered = useMemo(() => {
     const s = searchTerm.toLowerCase();
-    return activeData.filter(d => d.name.toLowerCase().includes(s) || d.id.toLowerCase().includes(s));
-  }, [activeData, searchTerm]);
+    return activeData.filter(d => {
+        const matchSearch = d.name.toLowerCase().includes(s) || d.id.toLowerCase().includes(s);
+        const matchPriority = selectedPriority === 'All' || d.mcaPriority === selectedPriority;
+        return matchSearch && matchPriority;
+    });
+  }, [activeData, searchTerm, selectedPriority]);
 
   const handleSearchChange = (e) => {
     const val = e.target.value; setSearchTerm(val);
@@ -1657,9 +1671,64 @@ export default function App() {
                                 {renderMerchantCampaigns(mex.campaigns)}
                              </div>
                           </div>
-                          <div className="text-right shrink-0">
+                          <div className="text-right shrink-0 flex flex-col items-end">
                              <p className="font-black text-sm md:text-base text-slate-800">{formatCurrency(mex.mtdBs)}</p>
-                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">MTD Sales</p>
+                             <div className="flex items-center gap-1.5 mt-1">
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">MTD Sales</p>
+                                <span className={`flex items-center gap-0.5 px-1 py-0.5 rounded-md text-[8px] font-black border ${mex.campaignPoint > 0 ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-slate-50 text-slate-400 border-slate-200'}`} title="Campaign Points">
+                                   <Award size={10} /> {mex.campaignPoint || 0}
+                                </span>
+                             </div>
+                          </div>
+                       </div>
+                    ))}
+                 </div>
+               )}
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL DAFTAR MERCHANT PENCAIRAN MCA */}
+      {/* ========================================================= */}
+      {showMcaModal && (
+        <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowMcaModal(false)} />
+          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200 overflow-hidden">
+            
+            <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10">
+               <div>
+                  <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
+                     <Database className="w-5 h-5 text-amber-500"/>
+                     Merchant Pencairan MCA
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-1">Daftar {disbursedMerchants.length} merchant yang telah mencairkan dana</p>
+               </div>
+               <button onClick={() => setShowMcaModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
+            </div>
+            
+            <div className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar bg-[#f8fafc]">
+               {disbursedMerchants.length === 0 ? (
+                 <div className="flex flex-col items-center justify-center h-48 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
+                    <Store className="w-10 h-10 mb-3 opacity-30" />
+                    <p className="text-xs font-bold uppercase tracking-widest">Belum ada pencairan</p>
+                 </div>
+               ) : (
+                 <div className="grid grid-cols-1 gap-3">
+                    {disbursedMerchants.map((mex) => (
+                       <div key={mex.id} onClick={() => { setSelectedMex(mex); setShowMcaModal(false); setActiveTab('overview'); }} className="flex justify-between items-center p-4 bg-white border border-slate-200 rounded-2xl hover:border-amber-400 hover:shadow-lg hover:shadow-amber-500/10 cursor-pointer transition-all duration-300 group">
+                          <div className="min-w-0 pr-4">
+                             <p className="font-bold text-sm md:text-base text-slate-800 group-hover:text-amber-600 truncate transition-colors">{mex.name}</p>
+                             <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[9px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded uppercase tracking-widest flex items-center gap-1"><Users size={10} /> {mex.amName}</span>
+                                {mex.disbursedDate && <span className="text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded uppercase tracking-widest">{mex.disbursedDate}</span>}
+                             </div>
+                          </div>
+                          <div className="text-right shrink-0 flex flex-col items-end">
+                             <p className="font-black text-sm md:text-base text-amber-600">{formatCurrency(mex.mcaAmount)}</p>
+                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Telah Cair</p>
                           </div>
                        </div>
                     ))}
@@ -1743,12 +1812,6 @@ export default function App() {
                    
                    <select value={selectedAM} onChange={(e) => { setSelectedAM(e.target.value); setSelectedMex(null); }} className="bg-transparent text-slate-200 hover:text-white text-xs font-bold focus:outline-none w-20 sm:w-28 cursor-pointer appearance-none truncate">
                       {amOptions.map(am => <option key={am} value={am} className="text-slate-900">{am}</option>)}
-                   </select>
-                   
-                   <div className="w-px h-5 bg-slate-600 mx-2 md:mx-3"></div>
-                   
-                   <select value={selectedPriority} onChange={(e) => { setSelectedPriority(e.target.value); setSelectedMex(null); }} className="bg-transparent text-amber-400 hover:text-amber-300 text-xs font-bold focus:outline-none w-16 sm:w-24 cursor-pointer appearance-none text-right sm:text-left pr-1">
-                      {priorityOptions.map(p => <option key={p} value={p} className="text-slate-900">{p === 'All' ? 'All Prio' : p}</option>)}
                    </select>
                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block ml-1" />
                </div>
@@ -1867,13 +1930,15 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* MCA Disbursed Card */}
-                      <div className="bg-white p-5 md:p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col h-full relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
+                      {/* MCA Disbursed Card (CLICKABLE) */}
+                      <div onClick={() => setShowMcaModal(true)} className="bg-white p-5 md:p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col h-full relative overflow-hidden group hover:-translate-y-1 hover:border-amber-400 cursor-pointer transition-all duration-300">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-amber-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
                         <div className="flex justify-between items-start mb-6 relative z-10">
                           <div className="flex items-center gap-2">
-                             <div className="p-2 bg-amber-50 rounded-xl text-amber-500"><Database size={18} /></div>
-                             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">MCA Config</p>
+                             <div className="p-2 bg-amber-50 rounded-xl text-amber-500 group-hover:bg-amber-100 transition-colors"><Database size={18} /></div>
+                             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                                MCA Config <MousePointer size={12} className="text-slate-300 group-hover:text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5"/>
+                             </p>
                           </div>
                         </div>
                         <div className="relative z-10 mb-4">
@@ -2072,9 +2137,23 @@ export default function App() {
               {/* ========================================================= */}
               {activeTab === 'data' && (
                 <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden animate-in fade-in duration-500 flex flex-col h-[80vh]">
-                  <div className="p-4 md:p-5 border-b border-slate-100 flex justify-between items-center bg-[#f8fafc] shrink-0">
+                  <div className="p-4 md:p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#f8fafc] shrink-0">
                     <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Table className="w-5 h-5 text-indigo-500"/> Master Data Directory</h3>
-                    <div className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-lg text-xs font-black shadow-sm">Records: {filtered.length}</div>
+                    
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        {/* Priority Filter inside Master Data */}
+                        <div className="flex items-center bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm flex-1 sm:flex-none hover:border-indigo-400 transition-colors focus-within:ring-2 focus-within:ring-indigo-100">
+                           <Filter className="w-3.5 h-3.5 text-slate-400 mr-2" />
+                           <select value={selectedPriority} onChange={(e) => { setSelectedPriority(e.target.value); setSelectedMex(null); }} className="bg-transparent text-slate-700 text-xs font-bold focus:outline-none w-full sm:w-32 cursor-pointer appearance-none">
+                              {priorityOptions.map(p => <option key={p} value={p}>{p === 'All' ? 'Semua Priority' : `Priority: ${p}`}</option>)}
+                           </select>
+                           <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1 pointer-events-none" />
+                        </div>
+                        
+                        <div className="bg-indigo-100 text-indigo-700 px-3 py-2 rounded-xl text-xs font-black shadow-sm shrink-0">
+                          {filtered.length} Toko
+                        </div>
+                    </div>
                   </div>
                   
                   <div className="overflow-auto flex-1 custom-scrollbar">
