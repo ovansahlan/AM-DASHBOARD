@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo, Fragment } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, 
-  ComposedChart, Line, Cell, AreaChart, Area, LineChart, LabelList
+  ComposedChart, Line, Cell, AreaChart, Area, LineChart, LabelList, PieChart, Pie
 } from 'recharts';
 import { 
   UploadCloud, TrendingUp, Database, Filter, Megaphone,
   Search, CheckCircle, AlertCircle, DollarSign, Activity, X,
   Store, ArrowUpRight, ArrowDownRight, Minus, Users, Info, ArrowLeft, Zap, MapPin, Phone, Mail, Award, LayoutDashboard, Table, ShoppingBag, Target, Percent, ExternalLink, Calculator,
-  ShoppingCart, Check, ArrowRight, Settings, List, Tags, Ticket, ChevronDown, Plus, MousePointer, Eye, RefreshCw, BarChart2, FileText, MessageCircle
+  ShoppingCart, Check, ArrowRight, Settings, List, Tags, Ticket, ChevronDown, Plus, MousePointer, Eye, RefreshCw, BarChart2, FileText, MessageCircle, Clock
 } from 'lucide-react';
 
 // ============================================================================
@@ -962,6 +962,7 @@ export default function App() {
   const [data, setData] = useState([]);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isForceUpload, setIsForceUpload] = useState(false);
+  const [globalLastUpdate, setGlobalLastUpdate] = useState('');
   
   const [fileMaster, setFileMaster] = useState(null);
   const [fileHistory, setFileHistory] = useState(null);
@@ -1062,6 +1063,10 @@ export default function App() {
                 saved.sort((a, b) => a.name.localeCompare(b.name));
                 setData(saved);
                 setIsForceUpload(false);
+                
+                // Load tanggal MTD terakhir jika ada
+                const savedUpdate = localStorage.getItem('am_dashboard_last_update');
+                if (savedUpdate) setGlobalLastUpdate(savedUpdate);
             }
         } catch (e) {
             console.error("Gagal memuat data lokal", e);
@@ -1110,6 +1115,28 @@ export default function App() {
   const parseAndSave = async (masterText, histText) => {
     try {
         const masterLines = parseCSVString(masterText);
+        
+        // MENGAMBIL GLOBAL LAST UPDATE DARI BARIS 1 (Kolom AT, AU, & AV)
+        const firstRow = masterLines[0] || [];
+        let extractedDate = '';
+        let extractedMonth = '';
+        if (String(firstRow[45]).trim().toUpperCase() === 'MTD') {
+            extractedDate = String(firstRow[46]).trim(); // Ambil angka sebelahnya (23)
+            extractedMonth = String(firstRow[47]).trim(); // Ambil nama bulan (Febuari) dari kolom AV
+        } else {
+            // Fallback: Cari posisi 'MTD' yang paling akhir jika kolom bergeser
+            const fallbackIdx = firstRow.lastIndexOf('MTD');
+            if (fallbackIdx !== -1) {
+                extractedDate = String(firstRow[fallbackIdx + 1]).trim();
+                extractedMonth = String(firstRow[fallbackIdx + 2]).trim();
+            }
+        }
+        
+        if (extractedDate) {
+            const updateStr = `${extractedDate} ${extractedMonth || 'Feb'}`.trim();
+            localStorage.setItem('am_dashboard_last_update', updateStr);
+            setGlobalLastUpdate(updateStr);
+        }
         
         let masterHeaderIdx = -1; let masterRawHeaders = [];
         for (let i = 0; i < Math.min(20, masterLines.length); i++) {
@@ -1199,7 +1226,7 @@ export default function App() {
             email: obj['Email zeus'],
             latitude: obj['Latitude'] || obj['Lat'] || (vals[14] !== undefined ? String(vals[14]).trim() : ''), 
             longitude: obj['Longitude'] || obj['Long'] || obj['Lng'] || (vals[15] !== undefined ? String(vals[15]).trim() : ''),
-            lastUpdate: '',
+            lastUpdate: '', // Dikembalikan kosong, akan diisi oleh history
             campaignPoint: cleanNumber(pointHeader ? obj[pointHeader] : 0), 
             history: [] 
           });
@@ -1232,6 +1259,7 @@ export default function App() {
                     const mexId = String(vals[hMexIdx]).trim();
                     
                     if (parsedDataMap.has(mexId)) {
+                        // MENGEMBALIKAN LOGIKA LAST UPDATE HISTORIS
                         if (vals[0] && String(vals[0]).trim() !== '') {
                             parsedDataMap.get(mexId).lastUpdate = String(vals[0]).trim();
                         }
@@ -1784,16 +1812,16 @@ export default function App() {
 
       {/* ELEGAN & MODERN HEADER */}
       <header className="sticky top-0 z-40 transition-all pt-4 pb-2 md:py-4 px-4 md:px-6">
-        <div className="flex items-center justify-between gap-4 md:gap-6 bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-3xl p-3 md:p-4 shadow-2xl shadow-black/20">
+        <div className="flex items-center justify-between gap-3 md:gap-4 lg:gap-6 bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-3xl p-3 md:p-4 shadow-2xl shadow-black/20">
           
           {/* 1. Left Section: Logo & Desktop Tabs / Back Button */}
-          <div className="flex items-center gap-4 md:gap-6 shrink-0">
+          <div className="flex items-center gap-3 lg:gap-6 shrink-0">
              {/* Logo */}
              <div className="flex items-center gap-3 cursor-pointer group" onClick={() => { setSelectedMex(null); setActiveTab('overview'); setSearchTerm(''); }}>
-               <div className="w-10 h-10 bg-gradient-to-br from-[#00B14F] to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-105 transition-transform duration-300">
-                 <Activity className="w-5 h-5 text-white" />
+               <div className="w-9 h-9 md:w-10 md:h-10 bg-gradient-to-br from-[#00B14F] to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-105 transition-transform duration-300 shrink-0">
+                 <Activity className="w-4 h-4 md:w-5 md:h-5 text-white" />
                </div>
-               <h1 className="text-xl md:text-2xl font-black text-white tracking-tight hidden lg:block drop-shadow-sm">
+               <h1 className="text-xl md:text-2xl font-black text-white tracking-tight hidden xl:block drop-shadow-sm whitespace-nowrap">
                  AM DASHBOARD <span className="text-emerald-400 ml-0.5">PRO</span>
                </h1>
              </div>
@@ -1801,15 +1829,15 @@ export default function App() {
              {/* TABS NAVIGATION (Desktop) */}
              {!selectedMex && (
                <Fragment>
-                 <div className="hidden md:block w-px h-8 bg-slate-700/50 mx-1"></div>
-                 <div className="hidden md:flex bg-slate-950/50 p-1.5 rounded-2xl shrink-0 border border-white/5">
-                     <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'overview' ? 'bg-[#00B14F] text-white shadow-md shadow-emerald-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                 <div className="hidden lg:block w-px h-8 bg-slate-700/50 mx-1"></div>
+                 <div className="hidden lg:flex bg-slate-950/50 p-1.5 rounded-2xl shrink-0 border border-white/5">
+                     <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`px-4 xl:px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'overview' ? 'bg-[#00B14F] text-white shadow-md shadow-emerald-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
                          <LayoutDashboard className="w-4 h-4" /> Overview
                      </button>
-                     <button onClick={() => setActiveTab('data')} className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'data' ? 'bg-[#00B14F] text-white shadow-md shadow-emerald-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                     <button onClick={() => setActiveTab('data')} className={`px-4 xl:px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'data' ? 'bg-[#00B14F] text-white shadow-md shadow-emerald-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
                          <Table className="w-4 h-4" /> Master Data
                      </button>
-                     <button onClick={() => setActiveTab('simulator')} className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'simulator' ? 'bg-[#00B14F] text-white shadow-md shadow-emerald-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                     <button onClick={() => setActiveTab('simulator')} className={`px-4 xl:px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'simulator' ? 'bg-[#00B14F] text-white shadow-md shadow-emerald-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
                          <Calculator className="w-4 h-4" /> Simulator
                      </button>
                  </div>
@@ -1818,27 +1846,27 @@ export default function App() {
 
              {/* Back Button for Detail View */}
              {selectedMex && (
-                 <button onClick={() => setSelectedMex(null)} className="group flex items-center gap-2 text-slate-300 hover:text-white font-bold text-xs md:text-sm transition-all px-4 py-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-700 border border-white/10 ml-2">
-                    <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform"/> Kembali
+                 <button onClick={() => setSelectedMex(null)} className="group flex items-center gap-2 text-slate-300 hover:text-white font-bold text-xs md:text-sm transition-all px-3 md:px-4 py-2 md:py-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-700 border border-white/10 ml-1 md:ml-2">
+                    <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform"/> <span className="hidden sm:inline">Kembali</span>
                  </button>
              )}
           </div>
           
           {/* 2. Center Section: Global Search Bar */}
           {!selectedMex && activeTab !== 'simulator' && (
-            <div className="flex-1 max-w-md mx-auto relative group hidden md:block animate-in fade-in zoom-in-95">
-               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+            <div className="flex-1 min-w-[120px] max-w-md relative group hidden md:block px-2 lg:px-4">
+               <div className="absolute inset-y-0 left-5 lg:left-7 flex items-center pointer-events-none">
                    <Search className="w-4 h-4 text-slate-400 group-focus-within:text-emerald-400 transition-colors" />
                </div>
                <input 
                    type="text" 
                    value={searchTerm} 
                    onChange={handleSearchChange} 
-                   placeholder="Cari nama atau ID merchant..." 
-                   className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl pl-11 pr-10 py-3 text-sm text-white font-semibold placeholder:text-slate-400 focus:outline-none focus:bg-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-inner" 
+                   placeholder="Cari nama atau ID..." 
+                   className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl pl-10 pr-10 py-2.5 lg:py-3 text-xs lg:text-sm text-white font-semibold placeholder:text-slate-400 focus:outline-none focus:bg-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-inner" 
                />
                {searchTerm && (
-                   <button onClick={() => setSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-xl transition-colors">
+                   <button onClick={() => setSearchTerm('')} className="absolute right-4 lg:right-6 top-1/2 -translate-y-1/2 p-1.5 lg:p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-xl transition-colors">
                        <X className="w-4 h-4" />
                    </button>
                )}
@@ -1847,37 +1875,37 @@ export default function App() {
 
           {/* 3. Right Section: Filters & Actions */}
           {!selectedMex && activeTab !== 'simulator' && (
-            <div className="flex items-center gap-3 shrink-0 ml-auto md:ml-0 animate-in fade-in">
+            <div className="flex items-center gap-2 lg:gap-3 shrink-0">
                {/* Filters Pill */}
-               <div className="flex items-center bg-slate-800/80 border border-slate-700 rounded-2xl px-3 py-2.5 md:py-3 shadow-inner hover:border-slate-500 transition-colors">
-                   <Filter className="w-3.5 h-3.5 md:w-4 md:h-4 text-emerald-400 hidden sm:block mr-2" />
+               <div className="flex items-center bg-slate-800/80 border border-slate-700 rounded-xl lg:rounded-2xl px-2.5 lg:px-3 py-2 lg:py-2.5 shadow-inner hover:border-slate-500 transition-colors shrink-0">
+                   <Filter className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-emerald-400 hidden sm:block mr-1.5 lg:mr-2" />
                    
-                   <select value={selectedAM} onChange={(e) => { setSelectedAM(e.target.value); setSelectedMex(null); }} className="bg-transparent text-slate-200 hover:text-white text-xs font-bold focus:outline-none w-20 sm:w-28 cursor-pointer appearance-none truncate">
+                   <select value={selectedAM} onChange={(e) => { setSelectedAM(e.target.value); setSelectedMex(null); }} className="bg-transparent text-slate-200 hover:text-white text-[11px] lg:text-xs font-bold focus:outline-none w-[70px] sm:w-[90px] lg:w-28 cursor-pointer appearance-none truncate">
                       {amOptions.map(am => <option key={am} value={am} className="text-slate-900">{am}</option>)}
                    </select>
-                   <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block ml-1" />
+                   <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block ml-1 shrink-0" />
                </div>
 
                {/* UPDATE DATA BUTTON */}
-               <button onClick={() => setIsForceUpload(true)} className="group flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 w-10 h-10 md:w-auto md:px-4 md:h-11 rounded-2xl font-bold text-xs transition-all shadow-lg shadow-black/20">
-                   <RefreshCw className="w-4 h-4 md:mr-2 group-hover:rotate-180 transition-transform duration-500" /> 
-                   <span className="hidden md:block">Update</span>
+               <button onClick={() => setIsForceUpload(true)} className="group flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 w-9 h-9 sm:w-auto sm:px-3 lg:px-4 sm:h-9 lg:h-10 rounded-xl lg:rounded-2xl font-bold text-[11px] lg:text-xs transition-all shadow-lg shadow-black/20 shrink-0">
+                   <RefreshCw className="w-3.5 h-3.5 lg:w-4 lg:h-4 sm:mr-1.5 lg:mr-2 group-hover:rotate-180 transition-transform duration-500" /> 
+                   <span className="hidden sm:block">Update</span>
                </button>
             </div>
           )}
 
           {/* AM Info for Detail View */}
           {selectedMex && (
-            <div className="flex items-center gap-2 bg-slate-800/80 border border-slate-700 rounded-2xl px-3 md:px-4 py-2 md:py-2.5 shadow-inner ml-auto animate-in fade-in shrink-0">
-               <Users className="w-3.5 h-3.5 md:w-4 md:h-4 text-emerald-400" />
-               <span className="text-slate-300 text-[10px] md:text-xs font-bold tracking-widest uppercase">AM <span className="text-white ml-1 md:ml-2">{selectedMex.amName}</span></span>
+            <div className="flex items-center gap-1.5 lg:gap-2 bg-slate-800/80 border border-slate-700 rounded-xl lg:rounded-2xl px-2.5 lg:px-4 py-2 lg:py-2.5 shadow-inner ml-auto animate-in fade-in shrink-0">
+               <Users className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-emerald-400" />
+               <span className="text-slate-300 text-[9px] lg:text-[10px] font-bold tracking-widest uppercase">AM <span className="text-white ml-1 lg:ml-2">{selectedMex.amName}</span></span>
             </div>
           )}
         </div>
 
         {/* TABS NAVIGATION (Mobile - Floating below header) */}
         {!selectedMex && (
-          <div className="md:hidden flex justify-center mt-3 animate-in fade-in slide-in-from-top-2 relative z-40">
+          <div className="lg:hidden flex justify-center mt-3 animate-in fade-in slide-in-from-top-2 relative z-40">
              <div className="flex bg-slate-900/90 backdrop-blur-xl p-1.5 rounded-2xl border border-white/10 shadow-2xl">
                 <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 ${activeTab === 'overview' ? 'bg-[#00B14F] text-white shadow-md' : 'text-slate-400 hover:text-white'}`}>
                     <LayoutDashboard className="w-3.5 h-3.5" /> Overview
@@ -2062,8 +2090,14 @@ export default function App() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6 mt-6">
                       {/* Top 10 MTD */}
                       <div className="lg:col-span-2 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-full">
-                        <div className="flex justify-between items-center mb-8 shrink-0 min-h-[44px]">
-                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="text-[#00B14F] w-5 h-5"/> Top 10 Merchants <span className="text-slate-400 font-bold normal-case text-xs bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">(MTD Sales)</span></h3>
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8 shrink-0 min-h-[44px]">
+                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="text-[#00B14F] w-5 h-5"/> Top 10 Merchants <span className="text-slate-400 font-bold normal-case text-xs bg-slate-50 px-2 py-1 rounded-lg border border-slate-100 hidden sm:inline-block">(MTD Sales)</span></h3>
+                            
+                            {globalLastUpdate && (
+                                <div className="bg-slate-50 border border-slate-200 text-slate-500 px-3 py-1.5 rounded-xl text-[10px] md:text-xs font-black tracking-widest flex items-center gap-1.5 shadow-sm w-fit">
+                                   <Clock size={14} className="text-[#00B14F]" /> LAST UPDATE : <span className="text-slate-800">{globalLastUpdate}</span>
+                                </div>
+                            )}
                         </div>
                         <div className="h-[280px] md:h-[360px] w-full mt-auto">
                           <ResponsiveContainer width="100%" height="100%">
@@ -2071,11 +2105,30 @@ export default function App() {
                               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                               <XAxis dataKey="name" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => v.substring(0, 6)+'.'} height={20} dy={5} />
                               <YAxis tick={{ fill: COLORS.slate400, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={65} />
-                              <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v) => formatCurrency(v)} />
+                              <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, name) => [formatCurrency(v), name]} />
                               <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold', width: '100%', left: 0, display: 'flex', justifyContent: 'center' }} iconType="circle"/>
                               <Bar dataKey="lmBs" name="LM Sales" fill={COLORS.lastMonth} radius={[6,6,0,0]} maxBarSize={28} cursor="pointer" />
                               <Bar dataKey="mtdBs" name="MTD Sales" fill={COLORS.primary} radius={[6,6,0,0]} maxBarSize={28} cursor="pointer" />
-                              <Line type="monotone" dataKey="rrBs" name="Runrate" stroke={COLORS.growth} strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r: 6}} cursor="pointer" />
+                              <Line type="monotone" dataKey="rrBs" name="Runrate" stroke={COLORS.growth} strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r: 6}} cursor="pointer">
+                                  {/* Label Trend Kustom di atas titik Runrate */}
+                                  <LabelList 
+                                      dataKey="rrVsLm" 
+                                      position="top" 
+                                      offset={12}
+                                      content={(props) => {
+                                          const { x, y, value } = props;
+                                          if (value === undefined || value === null) return null;
+                                          const numVal = parseFloat(value);
+                                          const isPositive = numVal >= 0;
+                                          const fill = isPositive ? '#10b981' : '#ef4444';
+                                          return (
+                                              <text x={x} y={y - 12} fill={fill} fontSize={10} fontWeight="900" textAnchor="middle">
+                                                  {isPositive ? '+' : ''}{numVal.toFixed(0)}%
+                                              </text>
+                                          );
+                                      }}
+                                  />
+                              </Line>
                             </ComposedChart>
                           </ResponsiveContainer>
                         </div>
@@ -2141,36 +2194,92 @@ export default function App() {
                               <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold', width: '100%', left: 0, display: 'flex', justifyContent: 'center' }} iconType="circle" />
                               <Bar dataKey="adsLM" name="Ads LM" fill="#c084fc" radius={[6,6,0,0]} maxBarSize={32} cursor="pointer" />
                               <Bar dataKey="adsTotal" name="Ads MTD" fill="#fb923c" radius={[6,6,0,0]} maxBarSize={32} cursor="pointer" />
-                              <Line type="monotone" dataKey="adsRR" name="Ads RR" stroke="#2dd4bf" strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r: 6}} cursor="pointer" />
+                              <Line type="monotone" dataKey="adsRR" name="Ads RR" stroke="#2dd4bf" strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r: 6}} cursor="pointer">
+                                 {/* Label Trend Ads Kustom */}
+                                 <LabelList 
+                                      dataKey="adsTotal" 
+                                      position="top" 
+                                      offset={12}
+                                      content={(props) => {
+                                          const { x, y, index } = props;
+                                          const item = chartsData.ads[index];
+                                          if (!item) return null;
+                                          
+                                          let adsTrend = 0;
+                                          if (item.adsLM > 0) {
+                                              adsTrend = ((item.adsRR - item.adsLM) / item.adsLM) * 100;
+                                          } else if (item.adsRR > 0) {
+                                              adsTrend = 100;
+                                          }
+                                          
+                                          const isPositive = adsTrend >= 0;
+                                          // Warna untuk Ads: Naik (merah karena biaya naik), Turun (hijau karena hemat)
+                                          const fill = isPositive ? '#ef4444' : '#10b981'; 
+                                          
+                                          return (
+                                              <text x={x} y={y - 12} fill={fill} fontSize={10} fontWeight="900" textAnchor="middle">
+                                                  {isPositive ? '+' : ''}{adsTrend.toFixed(0)}%
+                                              </text>
+                                          );
+                                      }}
+                                  />
+                              </Line>
                             </ComposedChart>
                           </ResponsiveContainer>
                         </div>
                       </div>
 
                       {/* Portfolio Health */}
-                      <div className="bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col justify-center h-full relative overflow-hidden">
+                      <div className="bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col justify-between h-full relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none"></div>
-                        <div className="flex justify-between items-end mb-8 relative z-10 shrink-0 min-h-[44px]">
+                        
+                        <div className="flex justify-between items-end mb-4 relative z-10 shrink-0 min-h-[44px]">
                             <div>
                                 <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Activity className="text-blue-500 w-5 h-5"/> Portfolio Health</h3>
-                                <p className="text-[11px] font-bold text-slate-500 mt-1">Growth vs LM</p>
-                            </div>
-                            <div className="text-right">
-                                <span className="text-2xl md:text-3xl font-black text-[#00B14F] leading-none drop-shadow-sm">{chartsData.health[0].percentage}%</span>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Growing</p>
+                                <p className="text-[11px] font-bold text-slate-500 mt-1">Trend vs Last Month</p>
                             </div>
                         </div>
-                        <div className="flex h-5 md:h-6 w-full rounded-full overflow-hidden bg-slate-100 shadow-inner mb-8 relative z-10">
-                            {chartsData.health.map((h, i) => (
-                                <div key={i} style={{ width: `${h.percentage}%`, backgroundColor: h.color }} className="h-full border-r-2 border-white/40 hover:brightness-110 transition-all cursor-pointer" title={`${h.name}: ${h.percentage}%`} />
-                            ))}
+
+                        {/* Donut Chart Area */}
+                        <div className="flex-1 w-full relative min-h-[180px] my-2">
+                           <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                <Pie
+                                  data={chartsData.health}
+                                  cx="50%"
+                                  cy="50%"
+                                  innerRadius="65%"
+                                  outerRadius="90%"
+                                  paddingAngle={5}
+                                  dataKey="count"
+                                  stroke="none"
+                                >
+                                  {chartsData.health.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} cursor="pointer" className="hover:opacity-80 transition-opacity" />
+                                  ))}
+                                </Pie>
+                                <RechartsTooltip 
+                                    cursor={{fill: '#f8fafc'}} 
+                                    contentStyle={{ borderRadius: '12px', border:'none', padding: '10px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                    formatter={(value, name, props) => [`${value} Toko (${props.payload.percentage}%)`, name]}
+                                />
+                              </PieChart>
+                           </ResponsiveContainer>
+                           
+                           {/* Center Label (Growing %) */}
+                           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                              <span className="text-3xl font-black text-[#00B14F] leading-none drop-shadow-sm">{chartsData.health[0].percentage}%</span>
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Growing</span>
+                           </div>
                         </div>
-                        <div className="space-y-4 relative z-10 mt-auto">
+
+                        {/* Legend / Breakdown List */}
+                        <div className="grid grid-cols-1 gap-2.5 relative z-10 mt-4 shrink-0">
                             {chartsData.health.map((h, i) => (
                                 <div key={i} className="flex items-center justify-between text-sm bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
                                     <div className="flex items-center gap-3">
                                         <div className="w-3.5 h-3.5 rounded-md shadow-sm" style={{ backgroundColor: h.color }} />
-                                        <span className="font-bold text-slate-700">{h.name}</span>
+                                        <span className="font-bold text-slate-700 text-xs">{h.name}</span>
                                     </div>
                                     <span className="font-black text-slate-900 bg-white px-2 py-0.5 rounded-md shadow-sm border border-slate-100">{h.count} <span className="text-[10px] text-slate-400 font-bold ml-1.5">({h.percentage}%)</span></span>
                                 </div>
@@ -2352,6 +2461,21 @@ export default function App() {
                              <div className="p-2 bg-rose-50 rounded-xl text-rose-500"><Megaphone size={16}/></div>
                              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Marketing</p>
                          </div>
+                         {(() => {
+                            let adsTrend = 0;
+                            if (selectedMex.adsLM > 0) {
+                                adsTrend = ((selectedMex.adsRR - selectedMex.adsLM) / selectedMex.adsLM) * 100;
+                            } else if (selectedMex.adsRR > 0) {
+                                adsTrend = 100;
+                            }
+                            const isAdsUp = adsTrend > 0;
+                            return (
+                                <div className={`flex items-center gap-0.5 text-[10px] font-black px-2 py-0.5 rounded-lg border ${!isAdsUp ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
+                                   {isAdsUp ? <ArrowUpRight className="w-3 h-3"/> : <ArrowDownRight className="w-3 h-3"/>}
+                                   {Math.abs(adsTrend).toFixed(1)}%
+                                </div>
+                            );
+                         })()}
                      </div>
                      <div className="relative z-10 mb-3">
                          <span className="text-2xl md:text-3xl font-black text-rose-500 tracking-tight leading-none block mb-1">{formatCurrency(selectedMex.adsTotal)}</span>
@@ -2375,8 +2499,8 @@ export default function App() {
 
                      <div className="flex gap-2 mt-auto pt-3 border-t border-slate-50 relative z-10">
                          <div className="flex-1 min-w-0 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col justify-center">
-                           <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5 truncate">Promo (MI)</span>
-                           <span className="text-xs font-black text-slate-700 truncate" title={formatCurrency(selectedMex.miMtd)}>{formatCurrency(selectedMex.miMtd)}</span>
+                           <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5 truncate">LM Ads</span>
+                           <span className="text-xs font-black text-slate-700 truncate" title={formatCurrency(selectedMex.adsLM)}>{formatCurrency(selectedMex.adsLM)}</span>
                          </div>
                          <div className="w-16 min-w-0 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col items-center justify-center shrink-0">
                            <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5 truncate max-w-full">Komisi</span>
