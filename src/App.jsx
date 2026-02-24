@@ -979,6 +979,7 @@ export default function App() {
   const [activeSegmentModal, setActiveSegmentModal] = useState(null);
   const [showWaModal, setShowWaModal] = useState(false);
   const [showMcaModal, setShowMcaModal] = useState(false);
+  const [showCompareModal, setShowCompareModal] = useState(false);
 
   // --- LOGIKA TEMPLATE WHATSAPP ---
   const handleSendWA = (templateType) => {
@@ -1810,6 +1811,98 @@ export default function App() {
         </div>
       )}
 
+      {/* ========================================================= */}
+      {/* MODAL PERBANDINGAN 3 BULAN TERAKHIR */}
+      {/* ========================================================= */}
+      {showCompareModal && selectedMex && (
+        <div className="fixed inset-0 z-[7500] flex items-center justify-center p-4 sm:p-6">
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowCompareModal(false)} />
+            <div className="relative w-full max-w-4xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200 overflow-hidden">
+                <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10">
+                    <div>
+                        <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
+                           <BarChart2 className="w-5 h-5 text-indigo-500"/>
+                           3-Month Performance Review
+                        </h3>
+                        <p className="text-xs text-slate-500 font-medium mt-1">Perbandingan tren historis <strong className="text-slate-700">{selectedMex.name}</strong></p>
+                    </div>
+                    <button onClick={() => setShowCompareModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
+                </div>
+
+                <div className="flex-1 overflow-auto p-4 md:p-6 bg-[#f8fafc] custom-scrollbar">
+                    {selectedMex.history && selectedMex.history.length > 0 ? (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
+                            {selectedMex.history.slice(-3).map((hist, idx) => {
+                                const origIdx = selectedMex.history.findIndex(h => h.month === hist.month);
+                                const prev = origIdx > 0 ? selectedMex.history[origIdx - 1] : null;
+
+                                const getGrowth = (curr, prv) => {
+                                    if (!prv) return null;
+                                    return ((curr - prv) / prv) * 100;
+                                };
+
+                                const renderMetric = (label, val, prevVal, isCurrency=false, isReverseColor=false, suffix='') => {
+                                    const growth = getGrowth(val, prevVal);
+                                    let colorClass = 'text-slate-400';
+                                    let Arrow = null;
+                                    if (growth !== null) {
+                                        if (growth > 0) {
+                                            colorClass = isReverseColor ? 'text-rose-500' : 'text-[#00B14F]';
+                                            Arrow = ArrowUpRight;
+                                        } else if (growth < 0) {
+                                            colorClass = isReverseColor ? 'text-[#00B14F]' : 'text-rose-500';
+                                            Arrow = ArrowDownRight;
+                                        }
+                                    }
+                                    return (
+                                        <div className="flex justify-between items-end py-3 border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors px-1">
+                                            <span className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">{label}</span>
+                                            <div className="text-right">
+                                                <div className="font-black text-sm md:text-base text-slate-800">
+                                                    {isCurrency ? formatCurrency(val) : val}{suffix}
+                                                </div>
+                                                {growth !== null && (
+                                                    <div className={`flex items-center justify-end gap-0.5 text-[10px] font-black ${colorClass} mt-0.5`}>
+                                                        {Arrow && <Arrow size={12}/>}
+                                                        {Math.abs(growth).toFixed(1)}%
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                };
+
+                                return (
+                                    <div key={idx} className="bg-white rounded-3xl p-5 md:p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-indigo-300 transition-colors">
+                                        <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full opacity-50 -mr-4 -mt-4 transition-transform duration-500 group-hover:scale-110"></div>
+                                        <div className="mb-6 relative z-10">
+                                            <span className="inline-block bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest border border-indigo-200 shadow-sm">
+                                                {formatMonth(hist.month)}
+                                            </span>
+                                        </div>
+                                        <div className="relative z-10 flex flex-col">
+                                            {renderMetric('Omset / Sales', hist.basket_size, prev?.basket_size, true)}
+                                            {renderMetric('Total Orders', hist.completed_orders, prev?.completed_orders)}
+                                            {renderMetric('AOV', hist.aov, prev?.aov, true)}
+                                            {renderMetric('Promo Usage', hist.promo_order_pct, prev?.promo_order_pct, false, false, '%')}
+                                            {renderMetric('Total Invest', hist.total_investment, prev?.total_investment, true, true)}
+                                            {renderMetric('Ads Spend', hist.ads_total_hist, prev?.ads_total_hist, true, true)}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-48 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
+                            <Activity className="w-10 h-10 mb-3 opacity-30" />
+                            <p className="text-xs font-bold uppercase tracking-widest">Tidak ada data historis</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+      )}
+
       {/* ELEGAN & MODERN HEADER */}
       <header className="sticky top-0 z-40 transition-all pt-4 pb-2 md:py-4 px-4 md:px-6">
         <div className="flex items-center justify-between gap-3 md:gap-4 lg:gap-6 bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-3xl p-3 md:p-4 shadow-2xl shadow-black/20">
@@ -2385,9 +2478,9 @@ export default function App() {
             <div className="animate-in slide-in-from-right-8 duration-500 space-y-5 md:space-y-6 pb-12">
 
                {/* Profile Header */}
-               <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
+               <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none"></div>
-                  <div className="relative z-10">
+                  <div className="relative z-10 w-full lg:w-auto">
                      <div className="flex items-center gap-3 mb-1.5">
                         <h2 className="text-2xl md:text-3xl font-black text-slate-900 leading-tight tracking-tight">{selectedMex.name}</h2>
                         <span className={`hidden md:inline-flex px-3 py-1 rounded-lg text-[10px] font-black border uppercase tracking-widest ${selectedMex.zeusStatus === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>{selectedMex.zeusStatus}</span>
@@ -2398,7 +2491,17 @@ export default function App() {
                         <span className="text-slate-700 font-bold uppercase tracking-wider text-xs flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-slate-400" /> Owner: <span className="text-slate-900">{selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Tidak Diketahui'}</span></span>
                      </div>
                   </div>
-                  <span className={`md:hidden inline-flex px-3 py-1 rounded-lg text-[10px] font-black border uppercase tracking-widest ${selectedMex.zeusStatus === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>{selectedMex.zeusStatus}</span>
+                  
+                  {/* Action Buttons (Right side on desktop, bottom on mobile) */}
+                  <div className="relative z-10 shrink-0 w-full lg:w-auto flex items-center justify-start lg:justify-end gap-3 mt-2 lg:mt-0 pt-4 lg:pt-0 border-t border-slate-100 lg:border-none">
+                      <span className={`md:hidden inline-flex px-3 py-1 rounded-lg text-[10px] font-black border uppercase tracking-widest ${selectedMex.zeusStatus === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>{selectedMex.zeusStatus}</span>
+                      
+                      {selectedMex.history && selectedMex.history.length > 0 && (
+                          <button onClick={() => setShowCompareModal(true)} className="flex-1 lg:flex-none bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border border-indigo-200 shadow-sm group">
+                             <BarChart2 size={16} className="group-hover:scale-110 transition-transform" /> Compare 3 Bln
+                          </button>
+                      )}
+                  </div>
                </div>
 
                {/* NEW TOP KPI CARDS (PROPORTIONAL 4-COLS) DIBAWAH HEADER */}
