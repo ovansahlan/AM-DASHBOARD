@@ -2009,20 +2009,20 @@ export default function App() {
                     </div>
 
                     {/* CHARTS ROW 1 */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6 mt-6">
                       {/* Top 10 MTD */}
-                      <div className="lg:col-span-2 bg-white p-5 md:p-6 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100">
-                        <div className="flex justify-between items-center mb-6">
+                      <div className="lg:col-span-2 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-full">
+                        <div className="flex justify-between items-center mb-8 shrink-0 min-h-[44px]">
                             <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="text-[#00B14F] w-5 h-5"/> Top 10 Merchants <span className="text-slate-400 font-bold normal-case text-xs bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">(MTD Sales)</span></h3>
                         </div>
-                        <div className="h-64 md:h-80 w-full">
+                        <div className="h-[280px] md:h-[360px] w-full mt-auto">
                           <ResponsiveContainer width="100%" height="100%">
-                            <ComposedChart data={chartsData.mtd} onClick={onChartClick} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <ComposedChart data={chartsData.mtd} onClick={onChartClick} margin={{ top: 20, right: 10, left: 0, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                              <XAxis dataKey="name" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => v.substring(0, 6)+'.'} />
-                              <YAxis tick={{ fill: COLORS.slate400, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={60} />
+                              <XAxis dataKey="name" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => v.substring(0, 6)+'.'} height={20} dy={5} />
+                              <YAxis tick={{ fill: COLORS.slate400, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={65} />
                               <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v) => formatCurrency(v)} />
-                              <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop:'10px' }} iconType="circle"/>
+                              <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold', width: '100%', left: 0, display: 'flex', justifyContent: 'center' }} iconType="circle"/>
                               <Bar dataKey="lmBs" name="LM Sales" fill={COLORS.lastMonth} radius={[6,6,0,0]} maxBarSize={28} cursor="pointer" />
                               <Bar dataKey="mtdBs" name="MTD Sales" fill={COLORS.primary} radius={[6,6,0,0]} maxBarSize={28} cursor="pointer" />
                               <Line type="monotone" dataKey="rrBs" name="Runrate" stroke={COLORS.growth} strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r: 6}} cursor="pointer" />
@@ -2032,20 +2032,20 @@ export default function App() {
                       </div>
 
                       {/* Campaign Segmentation Chart */}
-                      <div className="bg-white p-5 md:p-6 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-[400px] lg:h-full lg:max-h-[450px]">
-                        <div className="flex justify-between items-center mb-6 shrink-0">
+                      <div className="bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-full">
+                        <div className="flex justify-between items-center mb-8 shrink-0 min-h-[44px]">
                             <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Target className="text-indigo-500 w-5 h-5"/> Campaign Segment</h3>
                             <span className="bg-indigo-50 text-indigo-700 font-black text-[10px] md:text-xs px-2.5 py-1 rounded-lg border border-indigo-100">
                                 {(( (kpi?.joiners || 0) / Math.max(1, (kpi?.joiners || 0) + campaignStats.zeroInvest)) * 100).toFixed(0)}% Rate
                             </span>
                         </div>
                         
-                        <div className="flex-1 w-full overflow-hidden">
+                        <div className="h-[250px] md:h-[320px] w-full mt-auto overflow-hidden">
                           <ResponsiveContainer width="100%" height="100%">
                             <BarChart 
                                 data={campaignStats.classification} 
                                 layout="vertical" 
-                                margin={{ top: 0, right: 40, left: 0, bottom: 0 }}
+                                margin={{ top: 10, right: 40, left: 0, bottom: 5 }}
                                 onClick={(state) => {
                                   if (state && state.activePayload && state.activePayload.length > 0) {
                                     setActiveSegmentModal(state.activePayload[0].payload.name);
@@ -2054,7 +2054,7 @@ export default function App() {
                             >
                               <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
                               <XAxis type="number" hide />
-                              <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: COLORS.slate500, fontSize: 11, fontWeight: 700 }} width={85} />
+                              <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: COLORS.slate500, fontSize: 11, fontWeight: 700 }} width={90} />
                               <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '12px', border:'none', padding: '10px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
                               <Bar 
                                 dataKey="count" 
@@ -2071,24 +2071,24 @@ export default function App() {
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
-                        <p className="text-[10px] font-bold text-slate-400 text-center mt-3 bg-slate-50 py-2 rounded-xl">*Klik bar grafik untuk detail merchant</p>
+                        <p className="text-[10px] font-bold text-slate-400 text-center mt-4 bg-slate-50 py-2 rounded-xl">*Klik bar grafik untuk detail merchant</p>
                       </div>
                     </div>
 
                     {/* CHARTS ROW 2 */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
-                      <div className="lg:col-span-2 bg-white p-5 md:p-6 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100">
-                        <div className="flex justify-between items-center mb-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6 mt-6">
+                      <div className="lg:col-span-2 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-full">
+                        <div className="flex justify-between items-center mb-8 shrink-0 min-h-[44px]">
                             <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Megaphone className="text-rose-500 w-5 h-5"/> Top 10 Ads Spender <span className="text-slate-400 font-bold normal-case text-xs bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">(vs LM & RR)</span></h3>
                         </div>
-                        <div className="h-56 md:h-72 w-full">
+                        <div className="h-[280px] md:h-[360px] w-full mt-auto">
                           <ResponsiveContainer width="100%" height="100%">
-                            <ComposedChart data={chartsData.ads} onClick={onChartClick} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <ComposedChart data={chartsData.ads} onClick={onChartClick} margin={{ top: 20, right: 10, left: 0, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                              <XAxis dataKey="name" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => v.substring(0, 8)+'.'} />
-                              <YAxis tick={{ fill: COLORS.slate400, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={60} />
+                              <XAxis dataKey="name" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => v.substring(0, 8)+'.'} height={20} dy={5} />
+                              <YAxis tick={{ fill: COLORS.slate400, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={65} />
                               <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding:'12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v) => formatCurrency(v)} />
-                              <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop:'10px' }} iconType="circle" />
+                              <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold', width: '100%', left: 0, display: 'flex', justifyContent: 'center' }} iconType="circle" />
                               <Bar dataKey="adsLM" name="Ads LM" fill="#c084fc" radius={[6,6,0,0]} maxBarSize={32} cursor="pointer" />
                               <Bar dataKey="adsTotal" name="Ads MTD" fill="#fb923c" radius={[6,6,0,0]} maxBarSize={32} cursor="pointer" />
                               <Line type="monotone" dataKey="adsRR" name="Ads RR" stroke="#2dd4bf" strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r: 6}} cursor="pointer" />
@@ -2098,9 +2098,9 @@ export default function App() {
                       </div>
 
                       {/* Portfolio Health */}
-                      <div className="bg-white p-5 md:p-6 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col justify-center h-[350px] lg:h-full lg:max-h-[400px] relative overflow-hidden">
+                      <div className="bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col justify-center h-full relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none"></div>
-                        <div className="flex justify-between items-end mb-6 relative z-10">
+                        <div className="flex justify-between items-end mb-8 relative z-10 shrink-0 min-h-[44px]">
                             <div>
                                 <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Activity className="text-blue-500 w-5 h-5"/> Portfolio Health</h3>
                                 <p className="text-[11px] font-bold text-slate-500 mt-1">Growth vs LM</p>
@@ -2115,7 +2115,7 @@ export default function App() {
                                 <div key={i} style={{ width: `${h.percentage}%`, backgroundColor: h.color }} className="h-full border-r-2 border-white/40 hover:brightness-110 transition-all cursor-pointer" title={`${h.name}: ${h.percentage}%`} />
                             ))}
                         </div>
-                        <div className="space-y-4 relative z-10">
+                        <div className="space-y-4 relative z-10 mt-auto">
                             {chartsData.health.map((h, i) => (
                                 <div key={i} className="flex items-center justify-between text-sm bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
                                     <div className="flex items-center gap-3">
@@ -2356,10 +2356,10 @@ export default function App() {
                    <div className="space-y-5 md:space-y-6">
                        
                        {/* ROW 1: 12-Month Review (Left) + Investment (Right) */}
-                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
+                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6 mt-2">
                            {/* 12-Month Review */}
-                           <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-5 md:p-6 flex flex-col h-[400px] md:h-[480px]">
-                                <div className="flex justify-between items-start md:items-center mb-6 gap-2">
+                           <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full">
+                                <div className="flex justify-between items-start md:items-center mb-8 gap-2 shrink-0 min-h-[44px]">
                                    <div>
                                       <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="text-blue-500 w-5 h-5"/> 12-Month Review</h3>
                                    </div>
@@ -2370,28 +2370,28 @@ export default function App() {
                                        </div>
                                    )}
                                 </div>
-                                <div className="flex-1 w-full">
+                                <div className="h-[280px] md:h-[360px] w-full mt-auto">
                                     <ResponsiveContainer width="100%" height="100%">
-                                      <ComposedChart data={selectedMex.history.slice(-12)} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                                      <ComposedChart data={selectedMex.history.slice(-12)} margin={{ top: 20, right: 10, left: 0, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                        <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} />
+                                        <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} height={20} dy={5} />
                                         <YAxis yAxisId="left" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={60} />
                                         <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fill: '#f97316', fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={40} />
                                         <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [n.includes('%') ? `${v}%` : formatCurrency(v), n]} labelFormatter={formatMonth}/>
-                                        <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop:'15px' }} />
+                                        <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold', width: '100%', left: 0, display: 'flex', justifyContent: 'center' }} />
                                         
-                                        <Line yAxisId="left" type="monotone" dataKey="basket_size" name="Total Basket Size" stroke={COLORS.basketSize} strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r: 6}} />
-                                        <Bar yAxisId="left" dataKey="net_sales" stackId="a" name="Net Sales" fill={COLORS.netSales} maxBarSize={20} radius={[4,4,0,0]} />
-                                        <Bar yAxisId="left" dataKey="total_investment" stackId="a" name="MI (Rp)" fill="#f43f5e" radius={[4,4,0,0]} maxBarSize={20} />
-                                        <Line yAxisId="right" type="monotone" dataKey="mi_percentage" name="MI %" stroke="#f97316" strokeWidth={3} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r: 6}} />
+                                        <Bar yAxisId="left" dataKey="net_sales" stackId="a" name="Net Sales" fill={COLORS.netSales} maxBarSize={28} radius={[4,4,0,0]} />
+                                        <Bar yAxisId="left" dataKey="total_investment" stackId="a" name="MI (Rp)" fill="#f43f5e" radius={[4,4,0,0]} maxBarSize={28} />
+                                        <Line yAxisId="right" type="monotone" dataKey="mi_percentage" name="MI %" stroke="#f97316" strokeWidth={2} strokeDasharray="4 4" dot={{r:3, fill: '#ffffff', strokeWidth: 2}} activeDot={{r: 5}} />
+                                        <Line yAxisId="left" type="monotone" dataKey="basket_size" name="Total Basket Size" stroke={COLORS.basketSize} strokeWidth={2} strokeDasharray="4 4" dot={{r:3, fill: '#ffffff', strokeWidth: 2}} activeDot={{r: 5}} />
                                       </ComposedChart>
                                     </ResponsiveContainer>
                                  </div>
                            </div>
 
                            {/* 3. MERCHANT INVESTMENT */}
-                           <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-5 md:p-6 flex flex-col h-[400px] md:h-[480px]">
-                                <div className="flex justify-between items-start mb-6">
+                           <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full">
+                                <div className="flex justify-between items-start mb-8 shrink-0 min-h-[44px]">
                                    <div className="flex items-center gap-2">
                                       <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><DollarSign className="text-rose-500 w-5 h-5"/> Investment (MI)</h3>
                                    </div>
@@ -2402,20 +2402,20 @@ export default function App() {
                                       </span>
                                    </div>
                                 </div>
-                                <div className="flex-1 w-full">
+                                <div className="h-[280px] md:h-[360px] w-full mt-auto">
                                   <ResponsiveContainer width="100%" height="100%">
-                                      <BarChart data={selectedMex.history.slice(-12)} margin={{ top: 10, right: 0, left: -10, bottom: 0 }}>
+                                      <BarChart data={selectedMex.history.slice(-12)} margin={{ top: 20, right: 45, left: -5, bottom: 5 }}>
                                           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                          <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} />
-                                          <YAxis tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={50} />
+                                          <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} height={20} dy={5} />
+                                          <YAxis tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={60} />
                                           <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v) => formatCurrency(v)} labelFormatter={formatMonth}/>
                                           
-                                          <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop: '15px' }} iconType="circle" />
+                                          <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold', width: '100%', left: 0, display: 'flex', justifyContent: 'center' }} iconType="circle" />
                                           
-                                          <Bar dataKey="mfp" stackId="a" name="Local Promo" fill="#3b82f6" maxBarSize={28} />
-                                          <Bar dataKey="mfc" stackId="a" name="Harga Coret" fill="#22c55e" maxBarSize={28} />
-                                          <Bar dataKey="cpo" stackId="a" name="GMS" fill="#f97316" maxBarSize={28} />
-                                          <Bar dataKey="ads_total_hist" stackId="a" name="Iklan" fill="#ef4444" radius={[6,6,0,0]} maxBarSize={28} />
+                                          <Bar dataKey="mfp" stackId="a" name="Local Promo" fill="#3b82f6" maxBarSize={32} />
+                                          <Bar dataKey="mfc" stackId="a" name="Harga Coret" fill="#22c55e" maxBarSize={32} />
+                                          <Bar dataKey="cpo" stackId="a" name="GMS" fill="#f97316" maxBarSize={32} />
+                                          <Bar dataKey="ads_total_hist" stackId="a" name="Iklan" fill="#ef4444" radius={[6,6,0,0]} maxBarSize={32} />
                                       </BarChart>
                                   </ResponsiveContainer>
                                 </div>
@@ -2423,21 +2423,23 @@ export default function App() {
                        </div>
 
                        {/* ROW 2: AOV & Orders (Left) + Promo Usage (Right) */}
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 mt-2">
                             {/* 1. ORDERS TREND */}
-                            <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-5 md:p-6">
-                                <div className="flex items-center gap-2 mb-6">
-                                   <ShoppingBag className="w-5 h-5 text-indigo-500"/>
-                                   <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Completed Orders</h3>
+                            <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full">
+                                <div className="flex items-start gap-2 mb-8 shrink-0 min-h-[44px]">
+                                   <ShoppingBag className="w-5 h-5 text-indigo-500 shrink-0"/>
+                                   <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-tight">
+                                       Completed Orders
+                                   </h3>
                                 </div>
-                                <div className="h-56 md:h-[300px] w-full">
+                                <div className="h-[280px] md:h-[360px] w-full mt-auto">
                                   <ResponsiveContainer width="100%" height="100%">
-                                      <BarChart data={selectedMex.history.slice(-12)} margin={{ top: 20, right: 45, left: -10, bottom: 0 }}>
+                                      <BarChart data={selectedMex.history.slice(-12)} margin={{ top: 30, right: 45, left: -5, bottom: 5 }}>
                                           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                           <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} height={20} dy={5} />
                                           <YAxis tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} width={45} />
                                           <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} labelFormatter={formatMonth}/>
-                                          <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop: '15px' }} iconType="circle" />
+                                          <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold', width: '100%', left: 0, display: 'flex', justifyContent: 'center' }} iconType="circle" />
                                           <Bar dataKey="completed_orders" name="Completed Orders" fill="#10b981" radius={[4,4,0,0]} maxBarSize={32}>
                                               <LabelList dataKey="completed_orders" position="top" offset={10} fontSize={10} fontWeight={800} fill="#10b981" />
                                           </Bar>
@@ -2447,16 +2449,16 @@ export default function App() {
                             </div>
 
                             {/* 2. AOV & PROMO USAGE */}
-                            <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-5 md:p-6">
-                                <div className="flex items-start gap-2 mb-6">
+                            <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full">
+                                <div className="flex items-start gap-2 mb-8 shrink-0 min-h-[44px]">
                                    <Target className="w-5 h-5 text-teal-500 shrink-0"/>
                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-tight">
                                        AOV & Promo Usage <span className="text-[10px] text-slate-400 font-bold normal-case tracking-normal block mt-0.5">(Gms & Cofund Only)</span>
                                    </h3>
                                 </div>
-                                <div className="h-56 md:h-[300px] w-full">
+                                <div className="h-[280px] md:h-[360px] w-full mt-auto">
                                   <ResponsiveContainer width="100%" height="100%">
-                                      <ComposedChart data={selectedMex.history.slice(-12)} margin={{ top: 20, right: 10, left: -10, bottom: 0 }}>
+                                      <ComposedChart data={selectedMex.history.slice(-12)} margin={{ top: 30, right: 10, left: -5, bottom: 5 }}>
                                           <defs>
                                               <linearGradient id="colorAov" x1="0" y1="0" x2="0" y2="1">
                                                   <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
@@ -2466,16 +2468,14 @@ export default function App() {
                                           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                           <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} height={20} dy={5} />
                                           <YAxis yAxisId="left" domain={['auto', 'auto']} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={45} />
-                                          <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={35} />
+                                          <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={40} />
                                           <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [n.includes('%') ? `${v}%` : formatCurrency(v), n]} labelFormatter={formatMonth}/>
-                                          <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop: '15px' }} iconType="circle" />
+                                          <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold', width: '100%', left: 0, display: 'flex', justifyContent: 'center' }} iconType="circle" />
                                           
                                           <Area yAxisId="left" type="monotone" dataKey="aov" name="AOV" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorAov)">
                                               <LabelList dataKey="aov" position="top" offset={10} fontSize={9} fontWeight={800} fill="#6366f1" formatter={(v) => `${(v/1000).toFixed(0)}K`} />
                                           </Area>
-                                          <Line yAxisId="right" type="monotone" dataKey="promo_order_pct" name="% Promo Usage" stroke="#14b8a6" strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r:6}}>
-                                              <LabelList dataKey="promo_order_pct" position="top" offset={12} fontSize={10} fontWeight={800} fill="#0f766e" formatter={(v) => `${v}%`} />
-                                          </Line>
+                                          <Line yAxisId="right" type="monotone" dataKey="promo_order_pct" name="% Promo Usage" stroke="#14b8a6" strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r:6}} />
                                       </ComposedChart>
                                   </ResponsiveContainer>
                                 </div>
