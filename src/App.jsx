@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, Fragment } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, 
-  ComposedChart, Line, Cell, AreaChart, Area, LineChart
+  ComposedChart, Line, Cell, AreaChart, Area, LineChart, LabelList
 } from 'recharts';
 import { 
   UploadCloud, TrendingUp, Database, Filter, Megaphone,
@@ -2424,49 +2424,59 @@ export default function App() {
 
                        {/* ROW 2: AOV & Orders (Left) + Promo Usage (Right) */}
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
-                            {/* 1. AOV TREND */}
+                            {/* 1. ORDERS TREND */}
                             <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-5 md:p-6">
                                 <div className="flex items-center gap-2 mb-6">
                                    <ShoppingBag className="w-5 h-5 text-indigo-500"/>
-                                   <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">AOV & Orders</h3>
+                                   <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Completed Orders</h3>
                                 </div>
                                 <div className="h-56 md:h-[300px] w-full">
                                   <ResponsiveContainer width="100%" height="100%">
-                                      <ComposedChart data={selectedMex.history.slice(-12)} margin={{ top: 10, right: 0, left: -10, bottom: 0 }}>
+                                      <BarChart data={selectedMex.history.slice(-12)} margin={{ top: 20, right: 45, left: -10, bottom: 0 }}>
+                                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                          <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} height={20} dy={5} />
+                                          <YAxis tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} width={45} />
+                                          <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} labelFormatter={formatMonth}/>
+                                          <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop: '15px' }} iconType="circle" />
+                                          <Bar dataKey="completed_orders" name="Completed Orders" fill="#10b981" radius={[4,4,0,0]} maxBarSize={32}>
+                                              <LabelList dataKey="completed_orders" position="top" offset={10} fontSize={10} fontWeight={800} fill="#10b981" />
+                                          </Bar>
+                                      </BarChart>
+                                  </ResponsiveContainer>
+                                </div>
+                            </div>
+
+                            {/* 2. AOV & PROMO USAGE */}
+                            <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-5 md:p-6">
+                                <div className="flex items-start gap-2 mb-6">
+                                   <Target className="w-5 h-5 text-teal-500 shrink-0"/>
+                                   <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-tight">
+                                       AOV & Promo Usage <span className="text-[10px] text-slate-400 font-bold normal-case tracking-normal block mt-0.5">(Gms & Cofund Only)</span>
+                                   </h3>
+                                </div>
+                                <div className="h-56 md:h-[300px] w-full">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                      <ComposedChart data={selectedMex.history.slice(-12)} margin={{ top: 20, right: 10, left: -10, bottom: 0 }}>
                                           <defs>
                                               <linearGradient id="colorAov" x1="0" y1="0" x2="0" y2="1">
                                                   <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
                                                   <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                                               </linearGradient>
                                           </defs>
-                                          <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} />
-                                          <YAxis yAxisId="left" domain={['auto', 'auto']} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={45} />
-                                          <YAxis yAxisId="right" orientation="right" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} width={30} />
-                                          <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [n.includes('Orders') ? v : formatCurrency(v), n]} labelFormatter={formatMonth}/>
-                                          <Area yAxisId="left" type="monotone" dataKey="aov" name="AOV" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorAov)" />
-                                          <Line yAxisId="right" type="monotone" dataKey="completed_orders" name="Completed Orders" stroke="#10b981" strokeWidth={3} dot={{r:3}} activeDot={{r:5}} />
-                                      </ComposedChart>
-                                  </ResponsiveContainer>
-                                </div>
-                            </div>
-
-                            {/* 2. ORDER WITH CAMPAIGN % */}
-                            <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-5 md:p-6">
-                                <div className="flex items-start gap-2 mb-6">
-                                   <Target className="w-5 h-5 text-teal-500 shrink-0"/>
-                                   <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-tight">
-                                       Promo Usage <span className="text-[10px] text-slate-400 font-bold normal-case tracking-normal block mt-0.5">(Gms & Cofund Only)</span>
-                                   </h3>
-                                </div>
-                                <div className="h-56 md:h-[300px] w-full">
-                                  <ResponsiveContainer width="100%" height="100%">
-                                      <LineChart data={selectedMex.history.slice(-12)} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                                           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                          <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} />
-                                          <YAxis domain={[0, 100]} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={35} />
-                                          <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v) => `${v}%`} labelFormatter={formatMonth}/>
-                                          <Line type="monotone" dataKey="promo_order_pct" name="% Promo Usage" stroke="#14b8a6" strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r:6}} />
-                                      </LineChart>
+                                          <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} height={20} dy={5} />
+                                          <YAxis yAxisId="left" domain={['auto', 'auto']} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={45} />
+                                          <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={35} />
+                                          <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [n.includes('%') ? `${v}%` : formatCurrency(v), n]} labelFormatter={formatMonth}/>
+                                          <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop: '15px' }} iconType="circle" />
+                                          
+                                          <Area yAxisId="left" type="monotone" dataKey="aov" name="AOV" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorAov)">
+                                              <LabelList dataKey="aov" position="top" offset={10} fontSize={9} fontWeight={800} fill="#6366f1" formatter={(v) => `${(v/1000).toFixed(0)}K`} />
+                                          </Area>
+                                          <Line yAxisId="right" type="monotone" dataKey="promo_order_pct" name="% Promo Usage" stroke="#14b8a6" strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r:6}}>
+                                              <LabelList dataKey="promo_order_pct" position="top" offset={12} fontSize={10} fontWeight={800} fill="#0f766e" formatter={(v) => `${v}%`} />
+                                          </Line>
+                                      </ComposedChart>
                                   </ResponsiveContainer>
                                 </div>
                             </div>
