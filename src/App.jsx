@@ -7,7 +7,7 @@ import {
   UploadCloud, TrendingUp, Database, Filter, Megaphone,
   Search, CheckCircle, AlertCircle, DollarSign, Activity, X,
   Store, ArrowUpRight, ArrowDownRight, Minus, Users, Info, ArrowLeft, Zap, MapPin, Phone, Mail, Award, LayoutDashboard, Table, ShoppingBag, Target, Percent, ExternalLink, Calculator,
-  ShoppingCart, Check, ArrowRight, Settings, List, Tags, Ticket, ChevronDown, Plus, MousePointer, Eye, RefreshCw, BarChart2, FileText
+  ShoppingCart, Check, ArrowRight, Settings, List, Tags, Ticket, ChevronDown, Plus, MousePointer, Eye, RefreshCw, BarChart2, FileText, MessageCircle
 } from 'lucide-react';
 
 // ============================================================================
@@ -967,6 +967,81 @@ export default function App() {
   
   const [activeTab, setActiveTab] = useState('overview'); 
   const [activeSegmentModal, setActiveSegmentModal] = useState(null);
+  const [showWaModal, setShowWaModal] = useState(false);
+
+  // --- LOGIKA TEMPLATE WHATSAPP ---
+  const handleSendWA = (templateType) => {
+      if (!selectedMex || !selectedMex.phone) return;
+      
+      const phone = selectedMex.phone.replace(/\D/g, ''); // Hapus semua karakter non-angka
+      const owner = selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Owner';
+      
+      // Mengambil nama AM dari data dan membersihkan spasi berlebih
+      const amFull = (selectedMex.amName || 'AM').trim();
+      const amFullLower = amFull.toLowerCase();
+      
+      let amShort = amFull.split(' ')[0]; // Fallback: ambil kata pertama jika tidak masuk mapping
+
+      // Mapping cerdas: Cek apakah nama mengandung keyword tertentu (tahan terhadap typo/perbedaan format di data real)
+      if (amFullLower.includes('novan')) {
+          amShort = 'Novan';
+      } else if (amFullLower.includes('reginaldo') || amFullLower.includes('aldo')) {
+          amShort = 'Aldo';
+      } else if (amFullLower.includes('dadan')) {
+          amShort = 'Dadan';
+      } else if (amFullLower.includes('hikam')) {
+          amShort = 'Hikam';
+      }
+
+      const mexName = selectedMex.name;
+      const mcaLimit = formatCurrency(selectedMex.mcaWlLimit);
+      
+      let templates = [];
+
+      switch(templateType) {
+          case 'promo':
+              templates = [
+                  `Halo kak ${owner}! Saya ${amShort} dari Grab. Ada program Promo spesial nih yang pas banget buat naikin orderan di ${mexName}. Boleh kita bahas via telpon kak?`,
+                  `Selamat pagi/siang kak ${owner}, saya ${amShort} (Grab). Khusus untuk ${mexName}, kita ada kuota promo eksklusif loh. Mau saya bantu jelaskan detailnya?`,
+                  `Halo kak ${owner}, dengan ${amShort} dari Grab. Yuk boost lagi penjualan ${mexName} pakai promo terbaru dari Grab! Kalau kakak berminat, boleh kita ngobrol sebentar?`,
+                  `Permisi kak ${owner}! Saya ${amShort} (Grab). Sayang banget nih kalau ${mexName} kelewatan campaign promo bulan ini. Ada waktu luang buat saya jelasin untungnya kak?`,
+                  `Halo kak ${owner}! ${amShort} dari Grab. Mau nawarin join promo nih buat ${mexName} biar makin ramai pembeli. Bisa telpon sebentar untuk detailnya kak?`
+              ];
+              break;
+          case 'mca':
+              templates = [
+                  `Halo kak ${owner}! Saya ${amShort} dari Grab. Kabar gembira, ${mexName} dapat limit pinjaman modal kerja (MCA) s.d *${mcaLimit}*! Yuk cairkan buat tambah modal, mau dibantu prosesnya kak?`,
+                  `Selamat kak ${owner}! Saya ${amShort} (Grab). Toko ${mexName} terpilih dapat fasilitas GrabModal (MCA) s.d *${mcaLimit}*. Prosesnya cepat lho kak, mau diskusi dulu?`,
+                  `Halo kak ${owner}, dengan ${amShort} dari Grab. ${mexName} lagi butuh tambahan modal? Kebetulan ada limit MCA s.d *${mcaLimit}* nih kak. Boleh kita telpon untuk rinciannya?`,
+                  `Permisi kak ${owner}, saya ${amShort} dari Grab. Cuma mau infoin kalau ${mexName} eligible dapat limit pinjaman *${mcaLimit}*. Sayang kalau nggak dimanfaatin kak, mau saya bantu aktivasi?`,
+                  `Halo kak ${owner}! ${amShort} dari Grab di sini. Mau ngabarin kalau ${mexName} punya limit GrabModal s.d *${mcaLimit}*. Cairnya gampang banget, minat buat ngobrol sebentar kak?`
+              ];
+              break;
+          case 'inactive':
+              templates = [
+                  `Halo kak ${owner}! Saya ${amShort} dari Grab. Saya cek ${mexName} lagi offline nih. Apakah ada kendala operasional atau di aplikasinya kak? Biar saya bantu.`,
+                  `Selamat siang kak ${owner}, saya ${amShort} (Grab). Notis ${mexName} belum aktif nih kak. Kalau ada masalah sama device/aplikasi, kabarin saya ya.`,
+                  `Halo kak ${owner}, dengan ${amShort} dari Grab. Sayang banget pesanan berpotensi miss karena ${mexName} lagi offline. Ada yang bisa saya bantu supaya toko online lagi kak?`,
+                  `Permisi kak ${owner}, saya ${amShort} dari Grab. ${mexName} statusnya offline terus nih belakangan ini. Apakah tokonya sedang libur atau ada kendala teknis kak?`,
+                  `Halo kak ${owner}! ${amShort} dari Grab. Mau make sure aja, ${mexName} lagi offline karena kendala resto/aplikasi nggak ya? Kalau butuh bantuan, saya siap support kak.`
+              ];
+              break;
+          default:
+              templates = [
+                  `Halo kak ${owner}, saya ${amShort} dari Grab. Boleh minta waktunya sebentar untuk ngobrolin performa ${mexName} belakangan ini?`,
+                  `Selamat siang kak ${owner}! Saya ${amShort} (AM Grab). Ingin diskusi sedikit tentang penjualan ${mexName}. Kapan sekiranya kakak ada waktu luang?`,
+                  `Halo kak ${owner}, dengan ${amShort} dari Grab. Saya lihat ada potensi nih untuk ${mexName}, boleh kita telepon sebentar kak?`,
+                  `Permisi kak ${owner}, saya ${amShort} (Grab). Mau update seputar performa toko ${mexName} nih kak, apakah berkenan untuk telpon hari ini?`,
+                  `Halo kak ${owner}! ${amShort} dari Grab di sini. Saya mau share insight performa ${mexName} bulan ini. Enaknya kita diskusi jam berapa ya kak?`
+              ];
+      }
+
+      // Pilih 1 template secara acak dari array
+      const randomText = templates[Math.floor(Math.random() * templates.length)];
+
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(randomText)}`, '_blank');
+      setShowWaModal(false);
+  };
 
   // --- MEMUAT DATA DARI LOCAL STORAGE (INDEXEDDB) ---
   useEffect(() => {
@@ -1204,7 +1279,7 @@ export default function App() {
   const loadDemo = () => { 
      setLoading(true); 
      setTimeout(() => { 
-        const amNames = ['Muhamad Novan', 'Reza Firmansyah', 'Sarah Amelia', 'Andi Pratama'];
+        const amNames = ['Muhamad Novan Nufulfattah Sahlan', 'Mohammad Reginaldo', 'Dadan Nurdiansyah', 'Saeful Hikam'];
         const possibleCampaigns = ['GMS Booster', 'GMS Cuan', 'Free Ongkir', 'WEEKENDFEST', 'Booster+'];
         const months = ['2025-01-01','2025-02-01','2025-03-01','2025-04-01','2025-05-01','2025-06-01','2025-07-01','2025-08-01','2025-09-01','2025-10-01','2025-11-01','2025-12-01','2026-01-01','2026-02-01'];
 
@@ -1491,6 +1566,61 @@ export default function App() {
          <div className="absolute top-[-50%] left-[-10%] w-[60%] h-[200%] bg-emerald-900/30 rounded-full blur-[120px] pointer-events-none"></div>
          <div className="absolute top-[0%] right-[-10%] w-[50%] h-[150%] bg-blue-900/20 rounded-full blur-[100px] pointer-events-none"></div>
       </div>
+
+      {/* ========================================================= */}
+      {/* MODAL TEMPLATE WHATSAPP */}
+      {/* ========================================================= */}
+      {showWaModal && selectedMex && (
+        <div className="fixed inset-0 z-[7000] flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowWaModal(false)} />
+          <div className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col animate-in zoom-in-95 duration-200 overflow-hidden">
+            
+            <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10">
+               <div>
+                  <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
+                     <MessageCircle className="w-5 h-5 text-[#00B14F]"/>
+                     Pesan WhatsApp
+                  </h3>
+                  <p className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 mt-1.5 inline-block">
+                     *Teks dipilih acak (Anti-Spam)
+                  </p>
+               </div>
+               <button onClick={() => setShowWaModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
+            </div>
+            
+            <div className="p-5 md:p-6 bg-[#f8fafc] space-y-3">
+               {/* Option General */}
+               <button onClick={() => handleSendWA('general')} className="w-full text-left p-4 bg-white border border-slate-200 hover:border-[#00B14F] hover:shadow-md rounded-2xl transition-all group">
+                   <p className="font-bold text-sm text-slate-800 group-hover:text-[#00B14F] mb-1">Review Performa (General)</p>
+                   <p className="text-xs text-slate-500 line-clamp-2">Ada 5 variasi pesan sapaan untuk diskusi performa secara umum dengan owner...</p>
+               </button>
+               
+               {/* Option Promo */}
+               <button onClick={() => handleSendWA('promo')} className="w-full text-left p-4 bg-white border border-slate-200 hover:border-[#00B14F] hover:shadow-md rounded-2xl transition-all group">
+                   <p className="font-bold text-sm text-slate-800 group-hover:text-[#00B14F] mb-1 flex items-center gap-1.5"><Zap size={14} className="text-amber-500"/> Penawaran Promo</p>
+                   <p className="text-xs text-slate-500 line-clamp-2">Ada 5 variasi pesan untuk mengajak merchant mengikuti program promo/campaign...</p>
+               </button>
+               
+               {/* Option MCA (Hanya muncul jika eligible) */}
+               {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') && (
+                   <button onClick={() => handleSendWA('mca')} className="w-full text-left p-4 bg-blue-50 border border-blue-200 hover:border-blue-500 hover:shadow-md rounded-2xl transition-all group">
+                       <p className="font-bold text-sm text-blue-800 group-hover:text-blue-600 mb-1 flex items-center gap-1.5"><Database size={14} className="text-blue-500"/> Info Limit MCA</p>
+                       <p className="text-xs text-blue-600/80 line-clamp-2">Ada 5 variasi pesan untuk menginfokan fasilitas pinjaman senilai {formatCurrency(selectedMex.mcaWlLimit)}...</p>
+                   </button>
+               )}
+               
+               {/* Option Inactive (Hanya muncul jika toko Inactive) */}
+               {selectedMex.zeusStatus !== 'ACTIVE' && (
+                   <button onClick={() => handleSendWA('inactive')} className="w-full text-left p-4 bg-rose-50 border border-rose-200 hover:border-rose-500 hover:shadow-md rounded-2xl transition-all group">
+                       <p className="font-bold text-sm text-rose-800 group-hover:text-rose-600 mb-1 flex items-center gap-1.5"><AlertCircle size={14} className="text-rose-500"/> Follow-up Toko Offline</p>
+                       <p className="text-xs text-rose-600/80 line-clamp-2">Ada 5 variasi sapaan untuk menanyakan kendala toko yang sedang inactive/offline...</p>
+                   </button>
+               )}
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* ========================================================= */}
       {/* MODAL DAFTAR MERCHANT PER SEGMEN CAMPAIGN */}
@@ -2281,16 +2411,14 @@ export default function App() {
                             <div className="flex flex-col">
                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Phone Number</span>
                                {selectedMex.phone && selectedMex.phone !== '-' ? (
-                                  <a 
-                                     href={`https://wa.me/${selectedMex.phone.replace(/\D/g, '')}`}
-                                     target="_blank"
-                                     rel="noopener noreferrer" 
-                                     className="text-sm md:text-base font-black text-slate-800 hover:text-[#00B14F] transition-colors flex items-center gap-1.5 group"
-                                     title="Buka Chat WhatsApp"
+                                  <button 
+                                     onClick={() => setShowWaModal(true)}
+                                     className="text-sm md:text-base font-black text-slate-800 hover:text-[#00B14F] transition-colors flex items-center gap-1.5 group cursor-pointer text-left"
+                                     title="Pilih Template Pesan WhatsApp"
                                   >
                                      {selectedMex.phone}
-                                     <ExternalLink className="w-3 h-3 text-[#00B14F] opacity-0 group-hover:opacity-100 transition-opacity" />
-                                  </a>
+                                     <MessageCircle className="w-3.5 h-3.5 text-[#00B14F] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                  </button>
                                ) : (
                                   <span className="text-sm md:text-base font-black text-slate-800">-</span>
                                )}
