@@ -1153,6 +1153,9 @@ export default function App() {
             adsLM: cleanNumber(vals[lmAIdx]),
             adsTotal: cleanNumber(obj['Total MTD (Ads)'] || obj['Total MTD\n(Ads)']),
             adsRR: cleanNumber(obj['RR (Ads)']),
+            adsMob: cleanNumber(obj['Ads Mobile'] || obj['Ads mobile'] || obj['MTD Ads Mobile'] || obj['Ads Mob']),
+            adsWeb: cleanNumber(obj['Ads Web'] || obj['Ads web'] || obj['MTD Ads Web']),
+            adsDir: cleanNumber(obj['Ads Direct'] || obj['Ads direct'] || obj['MTD Ads Direct'] || obj['Ads Dir']),
             mcaAmount: cleanNumber(obj['MCA Amount']),
             mcaWlLimit: cleanNumber(obj['MCA WL']),
             mcaWlClass: obj['MCA WL Classification'] || '-Not in WL',
@@ -1303,6 +1306,11 @@ export default function App() {
           else if (campaignRoll < 0.7) assignedCampaigns = [possibleCampaigns[1], possibleCampaigns[3]]; // GMS & Local
           else assignedCampaigns = [possibleCampaigns[2], possibleCampaigns[3]]; // Local Only
 
+          const adsTotalGenerated = Math.floor(Math.random() * 8000000);
+          const adsMobGenerated = Math.floor(adsTotalGenerated * 0.55);
+          const adsWebGenerated = Math.floor(adsTotalGenerated * 0.25);
+          const adsDirGenerated = adsTotalGenerated - adsMobGenerated - adsWebGenerated;
+
           let baseBs = Math.floor(Math.random() * 15000000) + 5000000;
           const history = months.map(m => {
               const trend = 1 + (Math.random() * 0.4 - 0.2); 
@@ -1353,7 +1361,11 @@ export default function App() {
             lmBs: lm, mtdBs: mtd, rrBs: rr, rrVsLm: ((rr - lm) / lm) * 100,
             miMtd: Math.floor(Math.random() * 5000000),
             adsLM: Math.floor(Math.random() * 12000000), 
-            adsTotal: Math.floor(Math.random() * 8000000), adsRR: Math.floor(Math.random() * 15000000),
+            adsTotal: adsTotalGenerated,
+            adsMob: adsMobGenerated,
+            adsWeb: adsWebGenerated,
+            adsDir: adsDirGenerated,
+            adsRR: Math.floor(Math.random() * 15000000),
             mcaAmount: mca, 
             mcaWlLimit: mcaLimit, 
             mcaWlClass: mcaLimit > 0 ? 'Repeat' : '-Not in WL',
@@ -2311,11 +2323,27 @@ export default function App() {
                              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Marketing</p>
                          </div>
                      </div>
-                     <div className="relative z-10 mb-4">
+                     <div className="relative z-10 mb-3">
                          <span className="text-2xl md:text-3xl font-black text-rose-500 tracking-tight leading-none block mb-1">{formatCurrency(selectedMex.adsTotal)}</span>
                          <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Ads Spend (MTD)</span>
                      </div>
-                     <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
+                     
+                     <div className="flex items-center justify-between bg-rose-50/60 rounded-xl p-2.5 mb-2 relative z-10 border border-rose-100/50 shadow-sm">
+                         <div className="text-center flex-1 min-w-0 border-r border-rose-100/60 last:border-0">
+                             <p className="text-[8px] font-bold text-rose-400 uppercase tracking-widest mb-0.5">Mobile</p>
+                             <p className="text-[10px] md:text-xs font-black text-rose-700 truncate px-1" title={formatCurrency(selectedMex.adsMob || 0)}>{formatCurrency(selectedMex.adsMob || 0)}</p>
+                         </div>
+                         <div className="text-center flex-1 min-w-0 border-r border-rose-100/60 last:border-0">
+                             <p className="text-[8px] font-bold text-rose-400 uppercase tracking-widest mb-0.5">Web</p>
+                             <p className="text-[10px] md:text-xs font-black text-rose-700 truncate px-1" title={formatCurrency(selectedMex.adsWeb || 0)}>{formatCurrency(selectedMex.adsWeb || 0)}</p>
+                         </div>
+                         <div className="text-center flex-1 min-w-0 last:border-0">
+                             <p className="text-[8px] font-bold text-rose-400 uppercase tracking-widest mb-0.5">Direct</p>
+                             <p className="text-[10px] md:text-xs font-black text-rose-700 truncate px-1" title={formatCurrency(selectedMex.adsDir || 0)}>{formatCurrency(selectedMex.adsDir || 0)}</p>
+                         </div>
+                     </div>
+
+                     <div className="flex gap-2 mt-auto pt-3 border-t border-slate-50 relative z-10">
                          <div className="flex-1 min-w-0 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col justify-center">
                            <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5 truncate">Promo (MI)</span>
                            <span className="text-xs font-black text-slate-700 truncate" title={formatCurrency(selectedMex.miMtd)}>{formatCurrency(selectedMex.miMtd)}</span>
