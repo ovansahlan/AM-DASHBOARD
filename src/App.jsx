@@ -1823,6 +1823,14 @@ export default function App() {
                </button>
             </div>
           )}
+
+          {/* AM Info for Detail View */}
+          {selectedMex && (
+            <div className="flex items-center gap-2 bg-slate-800/80 border border-slate-700 rounded-2xl px-3 md:px-4 py-2 md:py-2.5 shadow-inner ml-auto animate-in fade-in shrink-0">
+               <Users className="w-3.5 h-3.5 md:w-4 md:h-4 text-emerald-400" />
+               <span className="text-slate-300 text-[10px] md:text-xs font-bold tracking-widest uppercase">AM <span className="text-white ml-1 md:ml-2">{selectedMex.amName}</span></span>
+            </div>
+          )}
         </div>
 
         {/* TABS NAVIGATION (Mobile - Floating below header) */}
@@ -2236,7 +2244,7 @@ export default function App() {
                      <div className="flex items-center gap-3 text-sm text-slate-600 font-medium">
                         <span className="font-mono bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-xs font-bold">{selectedMex.id}</span>
                         <span className="text-slate-400">•</span>
-                        <span className="text-slate-700 font-bold uppercase tracking-wider text-xs"><Users className="w-3.5 h-3.5 inline mr-1 text-slate-400" /> {selectedMex.amName}</span>
+                        <span className="text-slate-700 font-bold uppercase tracking-wider text-xs flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-slate-400" /> Owner: <span className="text-slate-900">{selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Tidak Diketahui'}</span></span>
                      </div>
                   </div>
                   <span className={`md:hidden inline-flex px-3 py-1 rounded-lg text-[10px] font-black border uppercase tracking-widest ${selectedMex.zeusStatus === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>{selectedMex.zeusStatus}</span>
