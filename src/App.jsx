@@ -1024,7 +1024,7 @@ export default function App() {
       if (!selectedMex || !selectedMex.phone) return;
       
       const phone = selectedMex.phone.replace(/\D/g, ''); // Hapus semua karakter non-angka
-      const owner = selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Owner';
+      const owner = selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Mitra Grab';
       
       // Mengambil nama AM dari data dan membersihkan spasi berlebih
       const amFull = (selectedMex.amName || 'AM').trim();
@@ -1044,45 +1044,69 @@ export default function App() {
       }
 
       const mexName = selectedMex.name;
-      const mcaLimit = formatCurrency(selectedMex.mcaWlLimit);
       
+      // FORMATTER KHUSUS WA: Menggunakan kata "Juta" agar tidak salah sangka "Miliar"
+      let mcaLimit = '';
+      if (selectedMex.mcaWlLimit >= 1000000) {
+          const valJuta = selectedMex.mcaWlLimit / 1000000;
+          // Jika bulat (misal 15) tampilkan 15. Jika desimal (misal 1.5) tampilkan 1,5
+          mcaLimit = `Rp ${Number.isInteger(valJuta) ? valJuta : valJuta.toFixed(1).replace('.', ',')} Juta`;
+      } else {
+          // Format ribuan biasa pakai titik (misal: Rp 500.000)
+          mcaLimit = `Rp ${fNum(selectedMex.mcaWlLimit)}`;
+      }
+
       let templates = [];
 
       switch(templateType) {
           case 'promo':
               templates = [
-                  `Halo kak ${owner}! Saya ${amShort} dari Grab. Ada program Promo spesial nih yang pas banget buat naikin orderan di ${mexName}. Boleh kita bahas via telpon kak?`,
-                  `Selamat pagi/siang kak ${owner}, saya ${amShort} (Grab). Khusus untuk ${mexName}, kita ada kuota promo eksklusif loh. Mau saya bantu jelaskan detailnya?`,
-                  `Halo kak ${owner}, dengan ${amShort} dari Grab. Yuk boost lagi penjualan ${mexName} pakai promo terbaru dari Grab! Kalau kakak berminat, boleh kita ngobrol sebentar?`,
-                  `Permisi kak ${owner}! Saya ${amShort} (Grab). Sayang banget nih kalau ${mexName} kelewatan campaign promo bulan ini. Ada waktu luang buat saya jelasin untungnya kak?`,
-                  `Halo kak ${owner}! ${amShort} dari Grab. Mau nawarin join promo nih buat ${mexName} biar makin ramai pembeli. Bisa telpon sebentar untuk detailnya kak?`
+                  `Halo kak ${owner}! Saya ${amShort} dari Grab.\n\nAda program Promo spesial nih yang pas banget buat naikin orderan di *${mexName}*. Boleh kita bahas via telpon kak?`,
+                  `Selamat pagi/siang kak ${owner}, saya ${amShort} (Grab).\n\nKhusus untuk *${mexName}*, kita ada kuota promo eksklusif loh. Mau saya bantu jelaskan detailnya?`,
+                  `Halo kak ${owner}, dengan ${amShort} dari Grab.\n\nYuk boost lagi penjualan *${mexName}* pakai promo terbaru dari Grab! Kalau kakak berminat, boleh kita ngobrol sebentar?`,
+                  `Permisi kak ${owner}! Saya ${amShort} (Grab).\n\nSayang banget nih kalau *${mexName}* kelewatan campaign promo bulan ini. Ada waktu luang buat saya jelasin untungnya kak?`,
+                  `Halo kak ${owner}! ${amShort} dari Grab.\n\nMau nawarin join promo nih buat *${mexName}* biar makin ramai pembeli. Bisa telpon sebentar untuk detailnya kak?`
               ];
               break;
           case 'mca':
               templates = [
-                  `Halo kak ${owner}! Saya ${amShort} dari Grab. Kabar gembira, ${mexName} dapat limit pinjaman modal kerja (MCA) s.d *${mcaLimit}*! Yuk cairkan buat tambah modal, mau dibantu prosesnya kak?`,
-                  `Selamat kak ${owner}! Saya ${amShort} (Grab). Toko ${mexName} terpilih dapat fasilitas GrabModal (MCA) s.d *${mcaLimit}*. Prosesnya cepat lho kak, mau diskusi dulu?`,
-                  `Halo kak ${owner}, dengan ${amShort} dari Grab. ${mexName} lagi butuh tambahan modal? Kebetulan ada limit MCA s.d *${mcaLimit}* nih kak. Boleh kita telpon untuk rinciannya?`,
-                  `Permisi kak ${owner}, saya ${amShort} dari Grab. Cuma mau infoin kalau ${mexName} eligible dapat limit pinjaman *${mcaLimit}*. Sayang kalau nggak dimanfaatin kak, mau saya bantu aktivasi?`,
-                  `Halo kak ${owner}! ${amShort} dari Grab di sini. Mau ngabarin kalau ${mexName} punya limit GrabModal s.d *${mcaLimit}*. Cairnya gampang banget, minat buat ngobrol sebentar kak?`
+                  `Halo kak ${owner}!\nSaya ${amShort} dari Grab.\n\nRamadan dan Lebaran sering menjadi periode dengan potensi peningkatan penjualan.\n\nUntuk mendukung kesiapan usaha *${mexName}* di momen ini, tersedia program *Grab Modal Mantul* dengan detail:\n- Estimasi pendanaan hingga *${mcaLimit}*\n- Penyesuaian dengan evaluasi dan ketentuan yang berlaku.\n\nSilakan cek detail penawaran yang tersedia melalui aplikasi GrabMerchant ya kak!`,
+                  
+                  `Halo kak ${owner}!\nDengan ${amShort} dari Grab.\n\nMemasuki bulan Ramadan hingga Lebaran, banyak usaha mempersiapkan tambahan stok dan operasional.\n\nSaat ini tersedia program *Grab Modal Mantul* untuk *${mexName}* dengan:\n- Limit hingga *${mcaLimit}*\n- Menyesuaikan profil mitra.\n\nInformasi lengkap dapat dilihat langsung di aplikasi GrabMerchant ya kak.`,
+                  
+                  `Selamat siang kak ${owner}!\nSaya ${amShort} dari Grab.\n\nPeriode Ramadan dan Lebaran dapat menjadi momentum pertumbuhan usaha.\n\nUntuk mendukung kebutuhan *${mexName}*, tersedia program *Grab Modal Mantul*:\n- Estimasi pendanaan hingga *${mcaLimit}*\n- Nominal mengikuti hasil evaluasi sistem.\n\nSilakan cek ketersediaannya di aplikasi GrabMerchant sekarang juga.`,
+                  
+                  `Halo kak ${owner},\nSaya ${amShort} (Grab).\n\nMenjelang Lebaran, kesiapan stok dan kelancaran operasional *${mexName}* menjadi hal penting untuk mengoptimalkan peluang penjualan.\n\nProgram *Grab Modal Mantul* menyediakan opsi tambahan modal:\n- Hingga *${mcaLimit}* (sesuai ketentuan yang berlaku).\n\nSilakan cek detail penawaran melalui aplikasi GrabMerchant ya kak.`,
+                  
+                  `Halo kak ${owner},\n${amShort} dari Grab di sini.\n\nRamadan hingga Lebaran sering menjadi periode dengan aktivitas penjualan yang lebih tinggi.\n\nUntuk mendukung kelancaran usaha *${mexName}*, tersedia program *Grab Modal Mantul* dengan:\n- Estimasi pendanaan hingga *${mcaLimit}*\n\nSilakan melihat informasi lengkapnya langsung di aplikasi GrabMerchant kak.`,
+                  
+                  `Halo kak ${owner}!\nSaya ${amShort} dari Grab.\n\nDalam rangka menyambut Ramadan dan Lebaran, tersedia program *Grab Modal Mantul* yang dapat menjadi opsi tambahan modal usaha untuk *${mexName}*.\n\n- Estimasi nominal yang tersedia hingga *${mcaLimit}* (menyesuaikan hasil evaluasi).\n\nDetail dapat dicek langsung melalui aplikasi GrabMerchant ya kak.`,
+                  
+                  `Selamat siang kak ${owner}!\nDengan ${amShort} (AM Grab).\n\nMomen Ramadan dan Lebaran dapat menjadi peluang untuk meningkatkan performa usaha *${mexName}*.\n\nSaat ini tersedia program *Grab Modal Mantul* dengan:\n- Limit hingga *${mcaLimit}*\n\nUntuk mengetahui rincian penawaran pada akun Anda, silakan cek langsung di aplikasi GrabMerchant ya.`,
+                  
+                  `Halo kak ${owner}!\nSaya ${amShort} dari Grab.\n\nUntuk membantu persiapan usaha *${mexName}* menghadapi Ramadan dan Lebaran, tersedia program *Grab Modal Mantul*.\n\n- Estimasi pendanaan hingga *${mcaLimit}* (sesuai evaluasi sistem).\n\nKetersediaan penawaran dapat berbeda, silakan cek penawarannya melalui aplikasi GrabMerchant kak.`,
+                  
+                  `Halo kak ${owner}!\n${amShort} (Grab) di sini.\n\nRamadan dan Lebaran merupakan periode penting bagi banyak pelaku usaha.\n\nJika *${mexName}* membutuhkan tambahan modal untuk mendukung operasional, tersedia program *Grab Modal Mantul* dengan:\n- Nominal hingga *${mcaLimit}*\n\nDetail penawaran dan ketentuan dapat dilihat langsung di aplikasi GrabMerchant ya kak.`,
+                  
+                  `Yth. kak ${owner},\nSaya ${amShort} dari Grab.\n\nDalam menyambut periode Ramadan dan Lebaran, tersedia program *Grab Modal Mantul* sebagai opsi tambahan modal usaha untuk *${mexName}*.\n\n- Estimasi pendanaan yang tersedia hingga *${mcaLimit}* (sesuai hasil evaluasi akun).\n\nSilakan cek informasi lengkapnya melalui aplikasi GrabMerchant ya kak.`
               ];
               break;
           case 'inactive':
               templates = [
-                  `Halo kak ${owner}! Saya ${amShort} dari Grab. Saya cek ${mexName} lagi offline nih. Apakah ada kendala operasional atau di aplikasinya kak? Biar saya bantu.`,
-                  `Selamat siang kak ${owner}, saya ${amShort} (Grab). Notis ${mexName} belum aktif nih kak. Kalau ada masalah sama device/aplikasi, kabarin saya ya.`,
-                  `Halo kak ${owner}, dengan ${amShort} dari Grab. Sayang banget pesanan berpotensi miss karena ${mexName} lagi offline. Ada yang bisa saya bantu supaya toko online lagi kak?`,
-                  `Permisi kak ${owner}, saya ${amShort} dari Grab. ${mexName} statusnya offline terus nih belakangan ini. Apakah tokonya sedang libur atau ada kendala teknis kak?`,
-                  `Halo kak ${owner}! ${amShort} dari Grab. Mau make sure aja, ${mexName} lagi offline karena kendala resto/aplikasi nggak ya? Kalau butuh bantuan, saya siap support kak.`
+                  `Halo kak ${owner}! Saya ${amShort} dari Grab.\n\nSaya cek *${mexName}* lagi offline nih. Apakah ada kendala operasional atau di aplikasinya kak? Biar saya bantu.`,
+                  `Selamat siang kak ${owner}, saya ${amShort} (Grab).\n\nNotis *${mexName}* belum aktif nih kak. Kalau ada masalah sama device/aplikasi, kabarin saya ya.`,
+                  `Halo kak ${owner}, dengan ${amShort} dari Grab.\n\nSayang banget pesanan berpotensi miss karena *${mexName}* lagi offline. Ada yang bisa saya bantu supaya toko online lagi kak?`,
+                  `Permisi kak ${owner}, saya ${amShort} dari Grab.\n\n*${mexName}* statusnya offline terus nih belakangan ini. Apakah tokonya sedang libur atau ada kendala teknis kak?`,
+                  `Halo kak ${owner}! ${amShort} dari Grab.\n\nMau make sure aja, *${mexName}* lagi offline karena kendala resto/aplikasi nggak ya? Kalau butuh bantuan, saya siap support kak.`
               ];
               break;
           default:
               templates = [
-                  `Halo kak ${owner}, saya ${amShort} dari Grab. Boleh minta waktunya sebentar untuk ngobrolin performa ${mexName} belakangan ini?`,
-                  `Selamat siang kak ${owner}! Saya ${amShort} (AM Grab). Ingin diskusi sedikit tentang penjualan ${mexName}. Kapan sekiranya kakak ada waktu luang?`,
-                  `Halo kak ${owner}, dengan ${amShort} dari Grab. Saya lihat ada potensi nih untuk ${mexName}, boleh kita telepon sebentar kak?`,
-                  `Permisi kak ${owner}, saya ${amShort} (Grab). Mau update seputar performa toko ${mexName} nih kak, apakah berkenan untuk telpon hari ini?`,
-                  `Halo kak ${owner}! ${amShort} dari Grab di sini. Saya mau share insight performa ${mexName} bulan ini. Enaknya kita diskusi jam berapa ya kak?`
+                  `Halo kak ${owner}, saya ${amShort} dari Grab.\n\nBoleh minta waktunya sebentar untuk ngobrolin performa *${mexName}* belakangan ini?`,
+                  `Selamat siang kak ${owner}! Saya ${amShort} (AM Grab).\n\nIngin diskusi sedikit tentang penjualan *${mexName}*. Kapan sekiranya kakak ada waktu luang?`,
+                  `Halo kak ${owner}, dengan ${amShort} dari Grab.\n\nSaya lihat ada potensi nih untuk *${mexName}*, boleh kita telepon sebentar kak?`,
+                  `Permisi kak ${owner}, saya ${amShort} (Grab).\n\nMau update seputar performa toko *${mexName}* nih kak, apakah berkenan untuk telpon hari ini?`,
+                  `Halo kak ${owner}! ${amShort} dari Grab di sini.\n\nSaya mau share insight performa *${mexName}* bulan ini. Enaknya kita diskusi jam berapa ya kak?`
               ];
       }
 
@@ -1855,7 +1879,7 @@ export default function App() {
       {showCompareModal && selectedMex && (
         <div className="fixed inset-0 z-[7500] flex items-center justify-center p-4 sm:p-6">
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowCompareModal(false)} />
-            <div className="relative w-full max-w-4xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200 overflow-hidden">
+            <div className="relative w-full max-w-6xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 overflow-hidden">
                 <div className="flex justify-between items-start sm:items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10 flex-col sm:flex-row gap-4">
                     <div>
                         <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
@@ -1863,7 +1887,7 @@ export default function App() {
                            Custom Performance Review
                         </h3>
                         <p className="text-[11px] md:text-xs text-slate-500 font-medium mt-1">
-                           Bandingkan data historis <strong className="text-slate-700">{selectedMex.name}</strong> secara bebas
+                           Bandingkan data historis <strong className="text-slate-700">{selectedMex.name}</strong> secara komprehensif
                         </p>
                     </div>
                     <button onClick={() => setShowCompareModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors absolute sm:relative right-4 top-4 sm:right-0 sm:top-0"><X size={20}/></button>
@@ -1885,77 +1909,127 @@ export default function App() {
                             };
 
                             const getGrowth = (curr, prv) => {
-                                if (!prv) return null;
+                                if (!prv || prv === 0) return null;
                                 return ((curr - prv) / prv) * 100;
                             };
 
-                            const renderMetric = (label, val, prevVal, isCurrency=false, isReverseColor=false, suffix='') => {
-                                const growth = getGrowth(val, prevVal);
-                                let colorClass = 'text-slate-400';
-                                let Arrow = null;
-                                if (growth !== null) {
-                                    if (growth > 0) {
-                                        colorClass = isReverseColor ? 'text-rose-500' : 'text-[#00B14F]';
-                                        Arrow = ArrowUpRight;
-                                    } else if (growth < 0) {
-                                        colorClass = isReverseColor ? 'text-[#00B14F]' : 'text-rose-500';
-                                        Arrow = ArrowDownRight;
-                                    }
-                                }
+                            const renderGrowthBadge = (growth, isReverseColor = false) => {
+                                if (growth === null) return null;
+                                const isPositive = growth >= 0;
+                                const colorClass = isReverseColor 
+                                    ? (isPositive ? 'text-rose-600 bg-rose-50 border-rose-100' : 'text-[#00B14F] bg-emerald-50 border-emerald-100')
+                                    : (isPositive ? 'text-[#00B14F] bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100');
+                                const Arrow = isPositive ? ArrowUpRight : ArrowDownRight;
+                                
                                 return (
-                                    <div className="flex justify-between items-end py-3 border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors px-1">
-                                        <span className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">{label}</span>
-                                        <div className="text-right">
-                                            <div className="font-black text-sm md:text-base text-slate-800">
-                                                {val !== undefined && val !== null ? (isCurrency ? formatCurrency(val) : val) : '-'}{val !== undefined && val !== null ? suffix : ''}
-                                            </div>
-                                            {growth !== null && (
-                                                <div className={`flex items-center justify-end gap-0.5 text-[10px] font-black ${colorClass} mt-0.5`} title="vs Bulan Sebelumnya">
-                                                    {Arrow && <Arrow size={12}/>}
-                                                    {Math.abs(growth).toFixed(1)}%
-                                                </div>
-                                            )}
-                                        </div>
+                                    <div className={`flex items-center gap-0.5 text-[9px] font-black px-1.5 py-0.5 rounded-md border ${colorClass}`} title="MoM Growth">
+                                        <Arrow size={10} /> {Math.abs(growth).toFixed(1)}%
                                     </div>
                                 );
                             };
 
                             return (
-                                <div key={colIdx} className="bg-white rounded-3xl p-5 md:p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-indigo-300 transition-colors flex flex-col h-full">
-                                    <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full opacity-50 -mr-4 -mt-4 transition-transform duration-500 group-hover:scale-110 pointer-events-none"></div>
-                                    
-                                    {/* DROPDOWN SELECTOR UNTUK MASING-MASING KARTU */}
-                                    <div className="mb-6 relative z-10 w-full">
+                                <div key={colIdx} className="bg-white rounded-[28px] p-5 border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-200 transition-all flex flex-col h-full">
+                                    {/* DROPDOWN SELECTOR */}
+                                    <div className="mb-5 relative z-10 w-full">
                                         <div className="relative inline-block w-full">
                                             <select 
                                                 value={selectedMonthStr}
                                                 onChange={handleSelectChange}
-                                                className="appearance-none w-full text-[11px] md:text-xs font-black bg-indigo-100 border border-indigo-200 text-indigo-700 px-4 py-2.5 pr-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer shadow-sm transition-all hover:bg-indigo-200 uppercase tracking-widest"
+                                                className="appearance-none w-full text-xs font-black bg-slate-50 border border-slate-200 text-slate-700 px-4 py-3 pr-10 rounded-2xl focus:outline-none focus:bg-indigo-50 focus:border-indigo-300 focus:text-indigo-800 cursor-pointer shadow-sm transition-all uppercase tracking-widest text-center"
                                             >
                                                 <option value="">-- PILIH BULAN --</option>
                                                 {available.map((h, i) => (
                                                     <option key={i} value={h.month}>{formatMonth(h.month)}</option>
                                                 ))}
                                             </select>
-                                            <ChevronDown size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-indigo-500 pointer-events-none" />
+                                            <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                                         </div>
                                     </div>
 
                                     {hist ? (
-                                        <div className="relative z-10 flex flex-col mt-auto">
-                                            {renderMetric('Omset / Sales', hist.basket_size, prev?.basket_size, true)}
-                                            {renderMetric('Net Sales', hist.net_sales, prev?.net_sales, true)}
-                                            {renderMetric('Total Orders', hist.completed_orders, prev?.completed_orders)}
-                                            {renderMetric('AOV', hist.aov, prev?.aov, true)}
-                                            {renderMetric('Promo Usage', hist.promo_order_pct, prev?.promo_order_pct, false, false, '%')}
-                                            {renderMetric('Total Invest', hist.total_investment, prev?.total_investment, true, true)}
-                                            {renderMetric('MI/BS %', hist.mi_percentage, prev?.mi_percentage, false, true, '%')}
-                                            {renderMetric('Ads Spend', hist.ads_total_hist, prev?.ads_total_hist, true, true)}
+                                        <div className="relative z-10 flex flex-col mt-auto gap-4">
+                                            
+                                            {/* 1. HERO METRIC: Gross Sales */}
+                                            <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm relative overflow-hidden">
+                                                <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-100 rounded-bl-full opacity-50 -mr-2 -mt-2"></div>
+                                                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Activity size={12}/> Gross Sales</p>
+                                                <p className="text-2xl font-black text-slate-800 tracking-tight mb-2">{formatCurrency(hist.basket_size)}</p>
+                                                {renderGrowthBadge(getGrowth(hist.basket_size, prev?.basket_size))}
+                                            </div>
+
+                                            {/* 2. SECONDARY GRID: Net Sales, Orders, AOV */}
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col justify-between">
+                                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Net Sales</p>
+                                                    <p className="text-sm font-black text-slate-800 truncate" title={formatCurrency(hist.net_sales)}>{formatCurrency(hist.net_sales)}</p>
+                                                    <div className="mt-1">{renderGrowthBadge(getGrowth(hist.net_sales, prev?.net_sales))}</div>
+                                                </div>
+                                                <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col justify-between">
+                                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1"><ShoppingCart size={10}/> Orders</p>
+                                                    <p className="text-sm font-black text-slate-800 truncate">{fNum(hist.completed_orders)}</p>
+                                                    <div className="mt-1">{renderGrowthBadge(getGrowth(hist.completed_orders, prev?.completed_orders))}</div>
+                                                </div>
+                                                <div className="col-span-2 bg-slate-50 border border-slate-100 rounded-xl p-3 flex justify-between items-center">
+                                                    <div>
+                                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-0.5 flex items-center gap-1"><Target size={10}/> AOV</p>
+                                                        <p className="text-sm font-black text-slate-800">{formatCurrency(hist.aov)}</p>
+                                                    </div>
+                                                    <div>{renderGrowthBadge(getGrowth(hist.aov, prev?.aov))}</div>
+                                                </div>
+                                            </div>
+
+                                            {/* 3. PROGRESS BARS: Promo & MI Ratio */}
+                                            <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm space-y-4">
+                                                <div>
+                                                    <div className="flex justify-between items-end mb-1.5">
+                                                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1"><Percent size={10}/> Promo Usage</span>
+                                                        <div className="flex items-center gap-2">
+                                                            {renderGrowthBadge(getGrowth(hist.promo_order_pct, prev?.promo_order_pct), false)}
+                                                            <span className="text-xs font-black text-slate-800">{hist.promo_order_pct}%</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                                        <div className="bg-teal-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, hist.promo_order_pct)}%` }}></div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div className="flex justify-between items-end mb-1.5">
+                                                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1"><PieChart size={10}/> MI / BS %</span>
+                                                        <div className="flex items-center gap-2">
+                                                            {renderGrowthBadge(getGrowth(hist.mi_percentage, prev?.mi_percentage), true)}
+                                                            <span className="text-xs font-black text-slate-800">{hist.mi_percentage}%</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                                        <div className="bg-rose-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, hist.mi_percentage)}%` }}></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* 4. COST/INVESTMENT HIGHLIGHT */}
+                                            <div className="bg-rose-50/50 border border-rose-100 rounded-xl p-4 flex flex-col gap-3">
+                                                <div className="flex justify-between items-center pb-3 border-b border-rose-100/60">
+                                                    <div>
+                                                        <p className="text-[9px] font-bold text-rose-500 uppercase tracking-widest mb-0.5 flex items-center gap-1"><Zap size={10}/> Promo Invest</p>
+                                                        <p className="text-sm font-black text-rose-700">{formatCurrency(hist.total_investment)}</p>
+                                                    </div>
+                                                    {renderGrowthBadge(getGrowth(hist.total_investment, prev?.total_investment), true)}
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <div>
+                                                        <p className="text-[9px] font-bold text-rose-500 uppercase tracking-widest mb-0.5 flex items-center gap-1"><Megaphone size={10}/> Ads Spend</p>
+                                                        <p className="text-sm font-black text-rose-700">{formatCurrency(hist.ads_total_hist)}</p>
+                                                    </div>
+                                                    {renderGrowthBadge(getGrowth(hist.ads_total_hist, prev?.ads_total_hist), true)}
+                                                </div>
+                                            </div>
+
                                         </div>
                                     ) : (
-                                        <div className="relative z-10 flex flex-col items-center justify-center flex-1 text-slate-400 min-h-[150px]">
-                                            <Activity className="w-10 h-10 mb-3 opacity-30" />
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-center">Pilih bulan untuk<br/>menampilkan data</p>
+                                        <div className="relative z-10 flex flex-col items-center justify-center flex-1 text-slate-400 min-h-[250px] bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200">
+                                            <Activity className="w-10 h-10 mb-3 opacity-30 animate-pulse" />
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-center">Pilih bulan di atas<br/>untuk memuat metrik</p>
                                         </div>
                                     )}
                                 </div>
