@@ -1015,6 +1015,9 @@ export default function App() {
   const [showWaModal, setShowWaModal] = useState(false);
   const [showMcaModal, setShowMcaModal] = useState(false);
   const [showCompareModal, setShowCompareModal] = useState(false);
+  
+  // STATE BARU: Array untuk menampung 3 pilihan bulan secara mandiri
+  const [compareMonths, setCompareMonths] = useState(['', '', '']);
 
   // --- LOGIKA TEMPLATE WHATSAPP ---
   const handleSendWA = (templateType) => {
@@ -1853,86 +1856,112 @@ export default function App() {
         <div className="fixed inset-0 z-[7500] flex items-center justify-center p-4 sm:p-6">
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowCompareModal(false)} />
             <div className="relative w-full max-w-4xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200 overflow-hidden">
-                <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10">
+                <div className="flex justify-between items-start sm:items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10 flex-col sm:flex-row gap-4">
                     <div>
                         <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
                            <BarChart2 className="w-5 h-5 text-indigo-500"/>
-                           3-Month Performance Review
+                           Custom Performance Review
                         </h3>
-                        <p className="text-xs text-slate-500 font-medium mt-1">Perbandingan tren historis <strong className="text-slate-700">{selectedMex.name}</strong></p>
+                        <p className="text-[11px] md:text-xs text-slate-500 font-medium mt-1">
+                           Bandingkan data historis <strong className="text-slate-700">{selectedMex.name}</strong> secara bebas
+                        </p>
                     </div>
-                    <button onClick={() => setShowCompareModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
+                    <button onClick={() => setShowCompareModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors absolute sm:relative right-4 top-4 sm:right-0 sm:top-0"><X size={20}/></button>
                 </div>
 
                 <div className="flex-1 overflow-auto p-4 md:p-6 bg-[#f8fafc] custom-scrollbar">
-                    {selectedMex.history && selectedMex.history.length > 0 ? (
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
-                            {selectedMex.history.slice(-3).map((hist, idx) => {
-                                const origIdx = selectedMex.history.findIndex(h => h.month === hist.month);
-                                const prev = origIdx > 0 ? selectedMex.history[origIdx - 1] : null;
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
+                        {[0, 1, 2].map((colIdx) => {
+                            const available = selectedMex.history || [];
+                            const selectedMonthStr = compareMonths[colIdx];
+                            const hist = available.find(h => h.month === selectedMonthStr);
+                            const origIdx = available.findIndex(h => h.month === selectedMonthStr);
+                            const prev = origIdx > 0 ? available[origIdx - 1] : null;
 
-                                const getGrowth = (curr, prv) => {
-                                    if (!prv) return null;
-                                    return ((curr - prv) / prv) * 100;
-                                };
+                            const handleSelectChange = (e) => {
+                                const newArr = [...compareMonths];
+                                newArr[colIdx] = e.target.value;
+                                setCompareMonths(newArr);
+                            };
 
-                                const renderMetric = (label, val, prevVal, isCurrency=false, isReverseColor=false, suffix='') => {
-                                    const growth = getGrowth(val, prevVal);
-                                    let colorClass = 'text-slate-400';
-                                    let Arrow = null;
-                                    if (growth !== null) {
-                                        if (growth > 0) {
-                                            colorClass = isReverseColor ? 'text-rose-500' : 'text-[#00B14F]';
-                                            Arrow = ArrowUpRight;
-                                        } else if (growth < 0) {
-                                            colorClass = isReverseColor ? 'text-[#00B14F]' : 'text-rose-500';
-                                            Arrow = ArrowDownRight;
-                                        }
+                            const getGrowth = (curr, prv) => {
+                                if (!prv) return null;
+                                return ((curr - prv) / prv) * 100;
+                            };
+
+                            const renderMetric = (label, val, prevVal, isCurrency=false, isReverseColor=false, suffix='') => {
+                                const growth = getGrowth(val, prevVal);
+                                let colorClass = 'text-slate-400';
+                                let Arrow = null;
+                                if (growth !== null) {
+                                    if (growth > 0) {
+                                        colorClass = isReverseColor ? 'text-rose-500' : 'text-[#00B14F]';
+                                        Arrow = ArrowUpRight;
+                                    } else if (growth < 0) {
+                                        colorClass = isReverseColor ? 'text-[#00B14F]' : 'text-rose-500';
+                                        Arrow = ArrowDownRight;
                                     }
-                                    return (
-                                        <div className="flex justify-between items-end py-3 border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors px-1">
-                                            <span className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">{label}</span>
-                                            <div className="text-right">
-                                                <div className="font-black text-sm md:text-base text-slate-800">
-                                                    {isCurrency ? formatCurrency(val) : val}{suffix}
-                                                </div>
-                                                {growth !== null && (
-                                                    <div className={`flex items-center justify-end gap-0.5 text-[10px] font-black ${colorClass} mt-0.5`}>
-                                                        {Arrow && <Arrow size={12}/>}
-                                                        {Math.abs(growth).toFixed(1)}%
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                };
-
+                                }
                                 return (
-                                    <div key={idx} className="bg-white rounded-3xl p-5 md:p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-indigo-300 transition-colors">
-                                        <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full opacity-50 -mr-4 -mt-4 transition-transform duration-500 group-hover:scale-110"></div>
-                                        <div className="mb-6 relative z-10">
-                                            <span className="inline-block bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest border border-indigo-200 shadow-sm">
-                                                {formatMonth(hist.month)}
-                                            </span>
+                                    <div className="flex justify-between items-end py-3 border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors px-1">
+                                        <span className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">{label}</span>
+                                        <div className="text-right">
+                                            <div className="font-black text-sm md:text-base text-slate-800">
+                                                {val !== undefined && val !== null ? (isCurrency ? formatCurrency(val) : val) : '-'}{val !== undefined && val !== null ? suffix : ''}
+                                            </div>
+                                            {growth !== null && (
+                                                <div className={`flex items-center justify-end gap-0.5 text-[10px] font-black ${colorClass} mt-0.5`} title="vs Bulan Sebelumnya">
+                                                    {Arrow && <Arrow size={12}/>}
+                                                    {Math.abs(growth).toFixed(1)}%
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="relative z-10 flex flex-col">
+                                    </div>
+                                );
+                            };
+
+                            return (
+                                <div key={colIdx} className="bg-white rounded-3xl p-5 md:p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-indigo-300 transition-colors flex flex-col h-full">
+                                    <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full opacity-50 -mr-4 -mt-4 transition-transform duration-500 group-hover:scale-110 pointer-events-none"></div>
+                                    
+                                    {/* DROPDOWN SELECTOR UNTUK MASING-MASING KARTU */}
+                                    <div className="mb-6 relative z-10 w-full">
+                                        <div className="relative inline-block w-full">
+                                            <select 
+                                                value={selectedMonthStr}
+                                                onChange={handleSelectChange}
+                                                className="appearance-none w-full text-[11px] md:text-xs font-black bg-indigo-100 border border-indigo-200 text-indigo-700 px-4 py-2.5 pr-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer shadow-sm transition-all hover:bg-indigo-200 uppercase tracking-widest"
+                                            >
+                                                <option value="">-- PILIH BULAN --</option>
+                                                {available.map((h, i) => (
+                                                    <option key={i} value={h.month}>{formatMonth(h.month)}</option>
+                                                ))}
+                                            </select>
+                                            <ChevronDown size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-indigo-500 pointer-events-none" />
+                                        </div>
+                                    </div>
+
+                                    {hist ? (
+                                        <div className="relative z-10 flex flex-col mt-auto">
                                             {renderMetric('Omset / Sales', hist.basket_size, prev?.basket_size, true)}
+                                            {renderMetric('Net Sales', hist.net_sales, prev?.net_sales, true)}
                                             {renderMetric('Total Orders', hist.completed_orders, prev?.completed_orders)}
                                             {renderMetric('AOV', hist.aov, prev?.aov, true)}
                                             {renderMetric('Promo Usage', hist.promo_order_pct, prev?.promo_order_pct, false, false, '%')}
                                             {renderMetric('Total Invest', hist.total_investment, prev?.total_investment, true, true)}
+                                            {renderMetric('MI/BS %', hist.mi_percentage, prev?.mi_percentage, false, true, '%')}
                                             {renderMetric('Ads Spend', hist.ads_total_hist, prev?.ads_total_hist, true, true)}
                                         </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center h-48 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
-                            <Activity className="w-10 h-10 mb-3 opacity-30" />
-                            <p className="text-xs font-bold uppercase tracking-widest">Tidak ada data historis</p>
-                        </div>
-                    )}
+                                    ) : (
+                                        <div className="relative z-10 flex flex-col items-center justify-center flex-1 text-slate-400 min-h-[150px]">
+                                            <Activity className="w-10 h-10 mb-3 opacity-30" />
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-center">Pilih bulan untuk<br/>menampilkan data</p>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
         </div>
@@ -2532,7 +2561,20 @@ export default function App() {
                       <span className={`md:hidden inline-flex px-3 py-1 rounded-lg text-[10px] font-black border uppercase tracking-widest ${selectedMex.zeusStatus === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>{selectedMex.zeusStatus}</span>
                       
                       {selectedMex.history && selectedMex.history.length > 0 && (
-                          <button onClick={() => setShowCompareModal(true)} className="flex-1 lg:flex-none bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border border-indigo-200 shadow-sm group">
+                          <button 
+                             onClick={() => {
+                                 // Set default ke 3 bulan terakhir saat modal dibuka
+                                 const hist = selectedMex.history || [];
+                                 const defaultMonths = [
+                                     hist.length > 2 ? hist[hist.length - 3].month : '',
+                                     hist.length > 1 ? hist[hist.length - 2].month : '',
+                                     hist.length > 0 ? hist[hist.length - 1].month : ''
+                                 ];
+                                 setCompareMonths(defaultMonths);
+                                 setShowCompareModal(true);
+                             }} 
+                             className="flex-1 lg:flex-none bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border border-indigo-200 shadow-sm group"
+                          >
                              <BarChart2 size={16} className="group-hover:scale-110 transition-transform" /> Compare 3 Bln
                           </button>
                       )}
