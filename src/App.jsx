@@ -17,17 +17,52 @@ const cleanNumber = (val) => {
   if (val === null || val === undefined || val === '') return 0;
   if (typeof val === 'number') return val;
   
-  // STRATEGI ANTI-BUG MOBILE:
-  // Hapus semua titik, koma, huruf, dan spasi. Hanya sisakan angka murni.
-  // Ini mencegah 1.000.000 terbaca sebagai 1 oleh browser.
-  const str = String(val).trim();
-  const isNegative = str.startsWith('-');
-  const onlyDigits = str.replace(/[^0-9]/g, '');
+  // Hapus simbol panah, persen, dan spasi
+  let str = String(val).trim().replace(/[▲▼%\s]/g, ''); 
+  if (!str) return 0;
   
-  if (!onlyDigits) return 0;
+  // Hitung jumlah titik dan koma
+  const commaCount = (str.match(/,/g) || []).length;
+  const dotCount = (str.match(/\./g) || []).length;
   
-  const num = parseInt(onlyDigits, 10);
-  return isNegative ? -num : num;
+  if (commaCount > 0 && dotCount > 0) {
+     // Kasus 1: Punya koma dan titik (Misal: 1.000.000,50 atau 1,000,000.50)
+     if (str.lastIndexOf(',') > str.lastIndexOf('.')) {
+         // Koma ada di akhir -> Format Indonesia -> Koma jadi titik desimal
+         str = str.replace(/\./g, '').replace(',', '.');
+     } else {
+         // Titik ada di akhir -> Format Internasional -> Hapus koma
+         str = str.replace(/,/g, '');
+     }
+  } else if (commaCount > 0) {
+     // Kasus 2: Hanya punya Koma
+     if (commaCount > 1) {
+         str = str.replace(/,/g, ''); // Banyak koma pasti ribuan
+     } else {
+         const parts = str.split(',');
+         if (parts[1] && parts[1].length === 3) {
+             str = str.replace(',', ''); // Koma diikuti tepat 3 angka (misal 10,000) -> Ribuan
+         } else {
+             str = str.replace(',', '.'); // Jika tidak, pasti desimal (misal 1,5)
+         }
+     }
+  } else if (dotCount > 0) {
+     // Kasus 3: Hanya punya Titik
+     if (dotCount > 1) {
+         str = str.replace(/\./g, ''); // Banyak titik pasti ribuan (misal 1.000.000)
+     } else {
+         const parts = str.split('.');
+         if (parts[1] && parts[1].length === 3) {
+             str = str.replace(/\./g, ''); // Titik diikuti tepat 3 angka (misal 10.000) -> Ribuan
+         } 
+         // Jika bukan 3 angka, titik dibiarkan (misal 1.0) akan otomatis menjadi desimal!
+     }
+  }
+  
+  // Bersihkan sisa karakter aneh (selain angka, titik desimal, dan minus)
+  str = str.replace(/[^0-9.-]/g, '');
+  const num = parseFloat(str);
+  return isNaN(num) ? 0 : num;
 };
 
 const formatCurrency = (val) => {
