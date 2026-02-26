@@ -7,7 +7,7 @@ import {
   UploadCloud, TrendingUp, Database, Filter, Megaphone,
   Search, CheckCircle, AlertCircle, DollarSign, Activity, X,
   Store, ArrowUpRight, ArrowDownRight, Minus, Users, Info, ArrowLeft, Zap, MapPin, Phone, Smartphone, Mail, Award, LayoutDashboard, Table, ShoppingBag, Target, Percent, ExternalLink, Calculator,
-  ShoppingCart, Check, ArrowRight, Settings, List, Tags, Ticket, ChevronDown, Plus, MousePointer, Eye, RefreshCw, BarChart2, FileText, MessageCircle, Clock
+  ShoppingCart, Check, ArrowRight, Settings, List, Tags, Ticket, ChevronDown, Plus, MousePointer, Eye, RefreshCw, BarChart2, FileText, MessageCircle, Clock, ArrowUp, ArrowDown
 } from 'lucide-react';
 
 // ============================================================================
@@ -190,6 +190,9 @@ export default function App() {
   
   // STATE BARU: Array untuk menampung 3 pilihan bulan secara mandiri
   const [compareMonths, setCompareMonths] = useState(['', '', '']);
+
+  // STATE BARU: Konfigurasi sorting tabel Master Data
+  const [sortConfig, setSortConfig] = useState({ key: 'mtdBs', direction: 'desc' });
 
   // --- LOGIKA TEMPLATE WHATSAPP ---
   const handleSendWA = (templateType) => {
@@ -825,12 +828,49 @@ export default function App() {
 
   const filtered = useMemo(() => {
     const s = searchTerm.toLowerCase();
-    return activeData.filter(d => {
+    let result = activeData.filter(d => {
         const matchSearch = d.name.toLowerCase().includes(s) || d.id.toLowerCase().includes(s);
         const matchPriority = selectedPriority === 'All' || d.mcaPriority === selectedPriority;
         return matchSearch && matchPriority;
     });
-  }, [activeData, searchTerm, selectedPriority]);
+
+    if (sortConfig !== null) {
+      result.sort((a, b) => {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+
+        if (typeof aValue === 'string') {
+          aValue = aValue.toLowerCase();
+          bValue = bValue.toLowerCase();
+        }
+
+        if (sortConfig.key === 'campaigns') {
+            const aActive = a.campaigns && a.campaigns !== '-' && !a.campaigns.toLowerCase().includes('no campaign') ? 1 : 0;
+            const bActive = b.campaigns && b.campaigns !== '-' && !b.campaigns.toLowerCase().includes('no campaign') ? 1 : 0;
+            aValue = aActive;
+            bValue = bActive;
+        }
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return result;
+  }, [activeData, searchTerm, selectedPriority, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
 
   const handleSearchChange = (e) => {
     const val = e.target.value; setSearchTerm(val);
@@ -1653,7 +1693,7 @@ export default function App() {
           {!selectedMex && (
             <div className="flex items-center gap-2 lg:gap-3 shrink-0 ml-auto">
                {/* Filters Pill */}
-               <div className="flex items-center bg-slate-800/80 border border-slate-700 rounded-xl lg:rounded-2xl px-2.5 lg:px-3 py-2 lg:py-2.5 shadow-inner hover:border-slate-500 transition-colors shrink-0">
+               <div className="flex items-center bg-slate-800/80 border border-slate-700 rounded-xl lg:rounded-2xl px-2.5 lg:px-3 h-9 sm:h-10 lg:h-11 shadow-inner hover:border-slate-500 transition-colors shrink-0">
                    <Filter className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-emerald-400 hidden sm:block mr-1.5 lg:mr-2" />
                    
                    <select value={selectedAM} onChange={(e) => { setSelectedAM(e.target.value); setSelectedMex(null); }} className="bg-transparent text-slate-200 hover:text-white text-[11px] lg:text-xs font-bold focus:outline-none w-[70px] sm:w-[90px] lg:w-28 cursor-pointer appearance-none truncate">
@@ -1662,21 +1702,27 @@ export default function App() {
                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block ml-1 shrink-0" />
                </div>
 
-               {/* MINIMALIST LAST UPDATE */}
-               {globalLastUpdate && (
-                   <div className="flex flex-col items-end justify-center ml-1 md:ml-2 mr-0.5 md:mr-1">
-                       <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-0.5 hidden sm:block">Data Terakhir</span>
-                       <span className="text-[9px] lg:text-[11px] font-bold text-emerald-400 leading-none flex items-center gap-1">
-                           <Clock size={10} className="hidden sm:block" /> {globalLastUpdate}
-                       </span>
-                   </div>
-               )}
+               {/* LAST UPDATE & REFRESH COMBO BOX */}
+               <div className="flex items-center bg-slate-800/80 border border-slate-700 rounded-xl lg:rounded-2xl p-1 shadow-inner shrink-0 h-9 sm:h-10 lg:h-11">
+                   {globalLastUpdate && (
+                       <div className="flex flex-col justify-center px-2 lg:px-3">
+                           <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-0.5 hidden sm:block">Data Terakhir</span>
+                           <span className="text-[9px] lg:text-[10px] font-bold text-emerald-400 leading-none flex items-center gap-1">
+                               <Clock size={10} className="hidden sm:block" /> {globalLastUpdate}
+                           </span>
+                       </div>
+                   )}
+                   
+                   {globalLastUpdate && <div className="w-px h-5 bg-slate-700 mx-1 hidden sm:block"></div>}
 
-               {/* UPDATE DATA BUTTON */}
-               <button onClick={() => setIsForceUpload(true)} className="group flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 w-9 h-9 sm:w-auto sm:px-3 lg:px-4 sm:h-9 lg:h-10 rounded-xl lg:rounded-2xl font-bold text-[11px] lg:text-xs transition-all shadow-lg shadow-black/20 shrink-0">
-                   <RefreshCw className="w-3.5 h-3.5 lg:w-4 lg:h-4 sm:mr-1.5 lg:mr-2 group-hover:rotate-180 transition-transform duration-500" /> 
-                   <span className="hidden sm:block">Update</span>
-               </button>
+                   <button 
+                       onClick={() => setIsForceUpload(true)} 
+                       className="group flex items-center justify-center bg-slate-700/50 hover:bg-[#00B14F] text-slate-300 hover:text-white w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-lg lg:rounded-xl transition-all shadow-sm shrink-0"
+                       title="Update Data"
+                   >
+                       <RefreshCw className="w-3.5 h-3.5 lg:w-4 lg:h-4 group-hover:rotate-180 transition-transform duration-500" />
+                   </button>
+               </div>
             </div>
           )}
 
@@ -1705,14 +1751,14 @@ export default function App() {
       </header>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 overflow-y-auto relative w-full hide-scrollbar z-10 p-4 md:p-6 lg:p-8">
+      <main className="flex-1 overflow-y-auto relative w-full hide-scrollbar z-10 px-4 md:px-6 lg:px-8 pb-4 md:pb-6 lg:pb-8 pt-2 md:pt-4">
         <div className="max-w-[1400px] mx-auto pb-safe">
 
           {/* ========================================================= */}
           {/* GLOBAL SEARCH BAR (DIPINDAHKAN KE BAWAH HEADER) */}
           {/* ========================================================= */}
           {!selectedMex && (
-            <div className="mb-5 relative group z-20 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="mb-4 md:mb-5 relative group z-20 animate-in fade-in slide-in-from-top-4 duration-500">
                <div className="absolute inset-y-0 left-4 lg:left-5 flex items-center pointer-events-none">
                    <Search className="w-4 h-4 lg:w-5 lg:h-5 text-slate-400 group-focus-within:text-[#00B14F] transition-colors" />
                </div>
@@ -2186,27 +2232,45 @@ export default function App() {
                       <table className="w-full text-left text-sm relative">
                          <thead className="bg-white text-slate-400 text-[10px] font-black uppercase tracking-widest border-b-2 border-slate-100 sticky top-0 z-10">
                            <tr>
-                             <th className="px-5 py-4">Merchant</th>
-                             <th className="px-4 py-4 text-center hidden md:table-cell">Campaign</th>
-                             <th className="px-4 py-4 text-center">Trend vs LM</th>
-                             <th className="px-4 py-4 text-center hidden lg:table-cell">Priority</th>
-                             <th className="px-5 py-4 text-right">MTD Sales</th>
-                             <th className="px-5 py-4 text-center">Status</th>
+                             <th className="px-4 py-4 text-center w-12">No.</th>
+                             <th className="px-4 py-4 cursor-pointer hover:text-slate-700 transition-colors select-none group" onClick={() => requestSort('name')}>
+                               <div className="flex items-center gap-1">Merchant {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 text-[#00B14F]" /> : <ArrowDown className="w-3 h-3 text-[#00B14F]" />)}</div>
+                             </th>
+                             <th className="px-4 py-4 text-center hidden md:table-cell cursor-pointer hover:text-slate-700 transition-colors select-none group" onClick={() => requestSort('campaigns')}>
+                               <div className="flex items-center justify-center gap-1">Campaign {sortConfig.key === 'campaigns' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 text-[#00B14F]" /> : <ArrowDown className="w-3 h-3 text-[#00B14F]" />)}</div>
+                             </th>
+                             <th className="px-4 py-4 text-center cursor-pointer hover:text-slate-700 transition-colors select-none group" onClick={() => requestSort('rrVsLm')}>
+                               <div className="flex items-center justify-center gap-1">Trend vs LM {sortConfig.key === 'rrVsLm' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 text-[#00B14F]" /> : <ArrowDown className="w-3 h-3 text-[#00B14F]" />)}</div>
+                             </th>
+                             <th className="px-4 py-4 text-center hidden lg:table-cell cursor-pointer hover:text-slate-700 transition-colors select-none group" onClick={() => requestSort('mcaPriority')}>
+                               <div className="flex items-center justify-center gap-1">Priority {sortConfig.key === 'mcaPriority' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 text-[#00B14F]" /> : <ArrowDown className="w-3 h-3 text-[#00B14F]" />)}</div>
+                             </th>
+                             <th className="px-5 py-4 text-right cursor-pointer hover:text-slate-700 transition-colors select-none group" onClick={() => requestSort('mtdBs')}>
+                               <div className="flex items-center justify-end gap-1">MTD Sales {sortConfig.key === 'mtdBs' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 text-[#00B14F]" /> : <ArrowDown className="w-3 h-3 text-[#00B14F]" />)}</div>
+                             </th>
+                             <th className="px-5 py-4 text-center cursor-pointer hover:text-slate-700 transition-colors select-none group" onClick={() => requestSort('zeusStatus')}>
+                               <div className="flex items-center justify-center gap-1">Status {sortConfig.key === 'zeusStatus' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 text-[#00B14F]" /> : <ArrowDown className="w-3 h-3 text-[#00B14F]" />)}</div>
+                             </th>
                            </tr>
                          </thead>
                          <tbody className="divide-y divide-slate-50">
-                            {filtered.map((r) => (
+                            {filtered.map((r, index) => (
                               <tr key={r.id} onClick={() => setSelectedMex(r)} className="hover:bg-slate-50/80 transition-colors cursor-pointer group">
-                                <td className="px-5 py-3 w-1/3">
+                                <td className="px-4 py-3 text-center font-bold text-slate-400 text-xs">{index + 1}</td>
+                                <td className="px-4 py-3 min-w-[200px]">
                                   <p className="font-bold text-slate-800 text-xs md:text-sm group-hover:text-[#00B14F] truncate transition-colors">{r.name}</p>
                                   <div className="flex items-center gap-2 mt-0.5">
                                     <p className="text-[10px] text-slate-400 font-mono bg-slate-100 px-1.5 py-0.5 rounded">{r.id}</p>
                                   </div>
                                 </td>
                                 <td className="px-4 py-3 text-center hidden md:table-cell">
-                                  <span className={`text-[10px] font-bold ${r.campaigns && r.campaigns !== '-' && !r.campaigns.toLowerCase().includes('no campaign') ? 'text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100' : 'text-slate-400 bg-slate-50 px-2 py-1 rounded-md'}`}>
-                                    {r.campaigns && r.campaigns !== '-' && !r.campaigns.toLowerCase().includes('no campaign') ? 'Active' : '-'}
-                                  </span>
+                                  {r.campaigns && r.campaigns !== '-' && !r.campaigns.toLowerCase().includes('no campaign') ? (
+                                    <div className="inline-flex items-center justify-center bg-indigo-50 p-1 rounded-md border border-indigo-100 shadow-sm" title="Active Campaign">
+                                        <Check className="w-4 h-4 text-indigo-600" strokeWidth={3} />
+                                    </div>
+                                  ) : (
+                                    <span className="text-slate-300 font-bold">-</span>
+                                  )}
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-black shadow-sm ${r.rrBs > r.lmBs ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
@@ -2242,21 +2306,45 @@ export default function App() {
                <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none"></div>
                   <div className="relative z-10 w-full lg:w-auto">
-                     <div className="flex items-center gap-3 mb-1.5">
-                        <h2 className="text-2xl md:text-3xl font-black text-slate-900 leading-tight tracking-tight">{selectedMex.name}</h2>
-                        <span className={`hidden md:inline-flex px-3 py-1 rounded-lg text-[10px] font-black border uppercase tracking-widest ${selectedMex.zeusStatus === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>{selectedMex.zeusStatus}</span>
+                     <div className="flex items-center gap-3 md:gap-4 mb-2.5">
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-emerald-50 to-emerald-100 text-[#00B14F] rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-emerald-200 shadow-sm">
+                           <Store className="w-5 h-5 md:w-6 md:h-6" />
+                        </div>
+                        <h2 className="text-xl md:text-2xl font-black text-slate-900 leading-tight tracking-tight">{selectedMex.name}</h2>
                      </div>
-                     <div className="flex items-center gap-3 text-sm text-slate-600 font-medium">
-                        <span className="font-mono bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-xs font-bold">{selectedMex.id}</span>
+                     <div className="flex items-center gap-3 text-sm text-slate-600 font-medium ml-1 md:ml-[64px]">
+                        <div 
+                            className="flex items-center gap-1.5 cursor-help bg-slate-50 border border-slate-100 pl-1.5 pr-2.5 py-1 rounded-lg transition-colors hover:border-slate-200 shadow-sm" 
+                            title={selectedMex.zeusStatus === 'ACTIVE' ? 'Status: Aktif' : 'Status: Inactive'}
+                        >
+                            {selectedMex.zeusStatus === 'ACTIVE' ? (
+                                <CheckCircle className="w-4 h-4 text-[#00B14F]" />
+                            ) : (
+                                <AlertCircle className="w-4 h-4 text-slate-400" />
+                            )}
+                            <span className="font-mono text-slate-700 text-xs font-bold tracking-tight">{selectedMex.id}</span>
+                        </div>
                         <span className="text-slate-400">•</span>
                         <span className="text-slate-700 font-bold uppercase tracking-wider text-xs flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-slate-400" /> Owner: <span className="text-slate-900">{selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Tidak Diketahui'}</span></span>
                      </div>
                   </div>
                   
                   {/* Action Buttons (Right side on desktop, bottom on mobile) */}
-                  <div className="relative z-10 shrink-0 w-full lg:w-auto flex items-center justify-start lg:justify-end gap-3 mt-2 lg:mt-0 pt-4 lg:pt-0 border-t border-slate-100 lg:border-none">
-                      <span className={`md:hidden inline-flex px-3 py-1 rounded-lg text-[10px] font-black border uppercase tracking-widest ${selectedMex.zeusStatus === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>{selectedMex.zeusStatus}</span>
+                  <div className="relative z-10 shrink-0 w-full lg:w-auto flex flex-col sm:flex-row items-center justify-start lg:justify-end gap-3 mt-2 lg:mt-0 pt-4 lg:pt-0 border-t border-slate-100 lg:border-none">
                       
+                      {/* Tombol Hubungi WhatsApp */}
+                      <button 
+                         onClick={() => {
+                             if (selectedMex.phone && selectedMex.phone !== '-') setShowWaModal(true);
+                         }} 
+                         className={`w-full sm:w-auto px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-sm group ${selectedMex.phone && selectedMex.phone !== '-' ? 'bg-[#00B14F] hover:bg-emerald-600 text-white shadow-emerald-500/20' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}`}
+                         title={selectedMex.phone && selectedMex.phone !== '-' ? 'Hubungi via WhatsApp' : 'Nomor tidak tersedia'}
+                      >
+                         <MessageCircle size={16} className={selectedMex.phone && selectedMex.phone !== '-' ? "group-hover:scale-110 transition-transform" : ""} /> 
+                         {selectedMex.phone && selectedMex.phone !== '-' ? 'Hubungi' : 'No. HP Kosong'}
+                      </button>
+
+                      {/* Tombol Compare */}
                       {selectedMex.history && selectedMex.history.length > 0 && (
                           <button 
                              onClick={() => {
@@ -2270,9 +2358,9 @@ export default function App() {
                                  setCompareMonths(defaultMonths);
                                  setShowCompareModal(true);
                              }} 
-                             className="flex-1 lg:flex-none bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border border-indigo-200 shadow-sm group"
+                             className="w-full sm:w-auto bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border border-indigo-200 shadow-sm group"
                           >
-                             <BarChart2 size={16} className="group-hover:scale-110 transition-transform" /> Compare 3 Bln
+                             <BarChart2 size={16} className="group-hover:scale-110 transition-transform" /> Compare
                           </button>
                       )}
                   </div>
