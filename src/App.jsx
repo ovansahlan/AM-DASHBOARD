@@ -113,13 +113,13 @@ const getMerchantSegment = (campaignsStr) => {
 
 // Fungsi Penentu Warna Badge Priority
 const getPriorityBadgeClass = (prio) => {
-    if (!prio || prio === '-') return 'bg-slate-500 text-white border-slate-600 shadow-sm';
+    if (!prio || prio === '-') return 'bg-slate-500/[0.65] text-white border-slate-600/[0.65] shadow-sm backdrop-blur-sm';
     const p = String(prio).toUpperCase();
-    if (p.includes('P0')) return 'bg-rose-600 text-white border-rose-700 shadow-sm';
-    if (p.includes('P1')) return 'bg-amber-600 text-white border-amber-700 shadow-sm';
-    if (p.includes('P2')) return 'bg-blue-600 text-white border-blue-700 shadow-sm';
-    if (p.includes('P3')) return 'bg-emerald-600 text-white border-emerald-700 shadow-sm';
-    return 'bg-indigo-600 text-white border-indigo-700 shadow-sm';
+    if (p.includes('P0')) return 'bg-rose-600/[0.65] text-white border-rose-700/[0.65] shadow-sm backdrop-blur-sm';
+    if (p.includes('P1')) return 'bg-amber-600/[0.65] text-white border-amber-700/[0.65] shadow-sm backdrop-blur-sm';
+    if (p.includes('P2')) return 'bg-blue-600/[0.65] text-white border-blue-700/[0.65] shadow-sm backdrop-blur-sm';
+    if (p.includes('P3')) return 'bg-emerald-600/[0.65] text-white border-emerald-700/[0.65] shadow-sm backdrop-blur-sm';
+    return 'bg-indigo-600/[0.65] text-white border-indigo-700/[0.65] shadow-sm backdrop-blur-sm';
 };
 
 // Fungsi Cerdas Pemendek Nama AM
@@ -1148,9 +1148,9 @@ export default function App() {
                                 <p className={`font-bold text-sm md:text-base text-slate-800 truncate transition-colors ${isPending ? 'group-hover:text-blue-600' : 'group-hover:text-amber-600'}`}>{mex.name}</p>
                              </div>
                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[9px] font-black text-white bg-indigo-600 border border-indigo-700 px-1.5 py-0.5 rounded uppercase tracking-widest flex items-center gap-1 shadow-sm"><Users size={10} className="text-indigo-200" /> {getShortAMName(mex.amName)}</span>
+                                <span className="text-[9px] font-black text-white bg-indigo-600/[0.65] border border-indigo-700/[0.65] px-1.5 py-0.5 rounded uppercase tracking-widest flex items-center gap-1 shadow-sm backdrop-blur-sm"><Users size={10} className="text-indigo-100" /> {getShortAMName(mex.amName)}</span>
                                 {mex.disbursedDate && String(mex.disbursedDate).trim() !== '-' && (
-                                   <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-widest text-white shadow-sm ${isPending ? 'bg-blue-600 border-blue-700' : 'bg-amber-600 border-amber-700'}`}>{mex.disbursedDate}</span>
+                                   <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-widest text-white shadow-sm backdrop-blur-sm ${isPending ? 'bg-blue-600/[0.65] border-blue-700/[0.65]' : 'bg-amber-600/[0.65] border-amber-700/[0.65]'}`}>{mex.disbursedDate}</span>
                                 )}
                              </div>
                           </div>
@@ -1477,9 +1477,9 @@ export default function App() {
                                   <div className="min-w-0 pr-4 flex-1">
                                       <p className={`font-bold text-sm md:text-base text-slate-800 truncate transition-colors ${outletModalTab === 'inactive' ? 'group-hover:text-blue-600' : 'group-hover:text-rose-600'}`}>{mex.name}</p>
                                       <div className="flex flex-wrap items-center gap-2 mt-1">
-                                          <span className="text-[9px] font-black text-white bg-indigo-600 border border-indigo-700 px-1.5 py-0.5 rounded uppercase tracking-widest flex items-center gap-1 shadow-sm"><Users size={10} className="text-indigo-200" /> {getShortAMName(mex.amName)}</span>
+                                          <span className="text-[9px] font-black text-white bg-indigo-600/[0.65] border border-indigo-700/[0.65] px-1.5 py-0.5 rounded uppercase tracking-widest flex items-center gap-1 shadow-sm backdrop-blur-sm"><Users size={10} className="text-indigo-100" /> {getShortAMName(mex.amName)}</span>
                                           {outletModalTab === 'zerotrx' && (
-                                              <span className="text-[9px] font-bold text-white bg-slate-600 px-1.5 py-0.5 rounded border border-slate-700 uppercase tracking-widest shadow-sm" title="Omset Bulan Lalu">LM: {formatCurrency(mex.lmBs)}</span>
+                                              <span className="text-[9px] font-bold text-white bg-slate-600/[0.65] px-1.5 py-0.5 rounded border border-slate-700/[0.65] uppercase tracking-widest shadow-sm backdrop-blur-sm" title="Omset Bulan Lalu">LM: {formatCurrency(mex.lmBs)}</span>
                                           )}
                                       </div>
                                       {/* RENDER CAMPAIGN JIKA ADA (hideEmpty = true agar tidak muncul teks kosong) */}
