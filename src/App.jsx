@@ -1882,213 +1882,228 @@ export default function App() {
                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
                       
                       {/* Basketsize Card */}
-                      <div className="bg-white p-5 md:p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col h-full relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
-                        <div className="flex justify-between items-start gap-2 mb-5 relative z-10">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <div className="p-2 bg-emerald-50 rounded-xl text-[#00B14F] shrink-0"><Activity size={18} /></div>
-                            <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest truncate">Basketsize</p>
-                          </div>
-                          {/* HIGHLIGHT TREND: BASKETSIZE */}
-                          {(() => {
-                             let trend = 0;
-                             if (kpi?.lm > 0) trend = ((kpi.rr - kpi.lm) / kpi.lm) * 100;
-                             else if (kpi?.rr > 0) trend = 100;
-                             const isUp = trend >= 0;
-                             return (
-                                 <div className={`flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs font-black px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border-2 shadow-sm shrink-0 whitespace-nowrap ${isUp ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
-                                     {isUp ? <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4"/> : <ArrowDownRight className="w-3.5 h-3.5 sm:w-4 sm:h-4"/>}
-                                     {Math.abs(trend).toFixed(1)}%
-                                 </div>
-                             );
-                          })()}
-                        </div>
-                        <div className="relative z-10 flex flex-col gap-3 mb-2">
-                           <div className="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-100/60">
-                               <span className="text-[10px] font-black text-[#00B14F] uppercase tracking-widest block mb-1">MTD Sales</span>
-                               <span className="text-2xl xl:text-3xl font-black text-[#00B14F] tracking-tight leading-none block">{formatCurrency(kpi?.mtd || 0)}</span>
-                           </div>
-                           <div className="px-3">
-                               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Projected Runrate</span>
-                               <span className="text-2xl xl:text-3xl font-black text-emerald-900 tracking-tight leading-none block">{formatCurrency(kpi?.rr || 0)}</span>
-                           </div>
-                        </div>
-                        <div className="flex justify-between items-center mt-auto pt-4 border-t border-slate-50 relative z-10">
-                           <span className="text-[10px] font-bold text-slate-400 uppercase">Last Month</span>
-                           <span className="text-sm font-black text-slate-600">{formatCurrency(kpi?.lm || 0)}</span>
-                        </div>
+                      <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1 group h-full">
+                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500 dark:bg-emerald-400"></div>
+                         <Activity className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
+                         
+                         <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-5 pl-2 relative z-10">
+                             <div className="flex items-center gap-2 lg:gap-3">
+                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0"><Activity size={18} strokeWidth={2.5}/></div>
+                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Basketsize</p>
+                             </div>
+                             {(() => {
+                                 let trend = 0;
+                                 if (kpi?.lm > 0) trend = ((kpi.rr - kpi.lm) / kpi.lm) * 100;
+                                 else if (kpi?.rr > 0) trend = 100;
+                                 const isUp = trend >= 0;
+                                 return (
+                                     <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap ${isUp ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
+                                         {isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%
+                                     </div>
+                                 );
+                             })()}
+                         </div>
+                         
+                         <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
+                             <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">MTD Sales</p>
+                             <p className="text-2xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.mtd || 0)}</p>
+                             <div className="flex flex-wrap items-center gap-1.5 lg:gap-2 mb-1 lg:mb-2">
+                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Runrate:</span>
+                                 <span className="text-xs lg:text-sm font-black text-slate-800 dark:text-slate-200">{formatCurrency(kpi?.rr || 0)}</span>
+                             </div>
+                         </div>
+                         
+                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center pl-2 relative z-10">
+                             <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Last Month</span>
+                             <span className="text-[10px] lg:text-xs font-black text-slate-700 dark:text-slate-300">{formatCurrency(kpi?.lm || 0)}</span>
+                         </div>
                       </div>
 
                       {/* Merchant Invest Card (NOW CLICKABLE) */}
-                      <div onClick={() => setShowMiModal(true)} className="bg-white p-5 md:p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col h-full relative overflow-hidden group hover:-translate-y-1 hover:border-teal-400 cursor-pointer transition-all duration-300">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-teal-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
-                        <div className="flex justify-between items-start gap-2 mb-5 relative z-10">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <div className="p-2 bg-teal-50 rounded-xl text-teal-500 group-hover:bg-teal-100 transition-colors shrink-0"><DollarSign size={18} /></div>
-                            <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1 truncate">
-                               Merch. Invest <MousePointer size={12} className="text-slate-300 group-hover:text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 shrink-0"/>
-                            </p>
-                          </div>
-                          {/* HIGHLIGHT TREND: MERCHANT INVEST (Reverse Color) */}
-                          {(() => {
-                             let trend = 0;
-                             if (kpi?.miLm > 0) trend = ((kpi.miRr - kpi.miLm) / kpi.miLm) * 100;
-                             else if (kpi?.miRr > 0) trend = 100;
-                             const isUp = trend > 0;
-                             return (
-                                 <div className={`flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs font-black px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border-2 shadow-sm shrink-0 whitespace-nowrap ${!isUp ? 'text-teal-600 bg-teal-50 border-teal-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
-                                     {isUp ? <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4"/> : <ArrowDownRight className="w-3.5 h-3.5 sm:w-4 sm:h-4"/>}
-                                     {Math.abs(trend).toFixed(1)}%
-                                 </div>
-                             );
-                          })()}
-                        </div>
-                        <div className="relative z-10 flex flex-col gap-3 mb-2">
-                           <div className="bg-teal-50/60 p-3 rounded-2xl border border-teal-100/60">
-                               <div className="flex items-center gap-1.5 mb-1">
-                                   <span className="text-[10px] font-black text-teal-600 uppercase tracking-widest">MTD Invest</span>
-                                   <span className="text-[9px] font-bold bg-white text-teal-700 px-1.5 py-0.5 rounded-md border border-teal-200 leading-none">{kpi?.mtd ? ((kpi.miMtd / kpi.mtd) * 100).toFixed(1) : 0}%</span>
-                               </div>
-                               <span className="text-2xl xl:text-3xl font-black text-teal-600 tracking-tight leading-none block">{formatCurrency(kpi?.miMtd || 0)}</span>
-                           </div>
-                           <div className="px-3">
-                               <div className="flex items-center gap-1.5 mb-1">
-                                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Projected Cost</span>
-                                   <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md border border-slate-200 leading-none">{kpi?.rr ? ((kpi.miRr / kpi.rr) * 100).toFixed(1) : 0}%</span>
-                               </div>
-                               <span className="text-2xl xl:text-3xl font-black text-teal-900 tracking-tight leading-none block">{formatCurrency(kpi?.miRr || 0)}</span>
-                           </div>
-                        </div>
-                        <div className="flex justify-between items-center mt-auto pt-4 border-t border-slate-50 relative z-10">
-                           <span className="text-[10px] font-bold text-slate-400 uppercase">Last Month</span>
-                           <div className="flex items-center gap-1.5">
-                               <span className="text-sm font-black text-slate-600">{formatCurrency(kpi?.miLm || 0)}</span>
-                               <span className="text-[9px] font-bold text-slate-500 bg-white px-1.5 py-0.5 rounded-md border border-slate-200 leading-none">{kpi?.lm ? ((kpi.miLm / kpi.lm) * 100).toFixed(1) : 0}%</span>
-                           </div>
-                        </div>
+                      <div onClick={() => setShowMiModal(true)} className="cursor-pointer bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-teal-500/5 hover:-translate-y-1 group h-full">
+                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-teal-500 dark:bg-teal-400"></div>
+                         <DollarSign className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
+                         
+                         <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-5 pl-2 relative z-10">
+                             <div className="flex items-center gap-2 lg:gap-3">
+                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-teal-50 dark:bg-teal-500/10 text-teal-500 dark:text-teal-400 flex items-center justify-center shrink-0"><DollarSign size={18} strokeWidth={2.5}/></div>
+                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1 truncate">
+                                     Invest <MousePointer size={10} className="text-slate-300 group-hover:text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 shrink-0 hidden lg:block"/>
+                                 </p>
+                             </div>
+                             {(() => {
+                                 let trend = 0;
+                                 if (kpi?.miLm > 0) trend = ((kpi.miRr - kpi.miLm) / kpi.miLm) * 100;
+                                 else if (kpi?.miRr > 0) trend = 100;
+                                 const isUp = trend > 0;
+                                 return (
+                                     <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap ${!isUp ? 'bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
+                                         {isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%
+                                     </div>
+                                 );
+                             })()}
+                         </div>
+
+                         <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
+                             <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                                 <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest">MTD Invest</p>
+                                 <span className="text-[8px] lg:text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-teal-600 dark:text-teal-400 px-1.5 py-0.5 rounded-md leading-none">{kpi?.mtd ? ((kpi.miMtd / kpi.mtd) * 100).toFixed(1) : 0}%</span>
+                             </div>
+                             <p className="text-2xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.miMtd || 0)}</p>
+                             <div className="flex flex-wrap items-center gap-1.5 lg:gap-2 mb-1 lg:mb-2">
+                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Runrate:</span>
+                                 <span className="text-xs lg:text-sm font-black text-slate-800 dark:text-slate-200">{formatCurrency(kpi?.miRr || 0)}</span>
+                                 <span className="text-[8px] lg:text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded-md leading-none hidden lg:block">{kpi?.rr ? ((kpi.miRr / kpi.rr) * 100).toFixed(1) : 0}%</span>
+                             </div>
+                         </div>
+
+                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center pl-2 relative z-10">
+                             <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Last Month</span>
+                             <div className="flex items-center gap-1.5">
+                                 <span className="text-[10px] lg:text-xs font-black text-slate-700 dark:text-slate-300">{formatCurrency(kpi?.miLm || 0)}</span>
+                                 <span className="text-[8px] lg:text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded-md leading-none hidden sm:block">{kpi?.lm ? ((kpi.miLm / kpi.lm) * 100).toFixed(1) : 0}%</span>
+                             </div>
+                         </div>
                       </div>
 
                       {/* Ads Spend Card (NOW CLICKABLE) */}
-                      <div onClick={() => setShowAdsModal(true)} className="bg-white p-5 md:p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col h-full relative overflow-hidden group hover:-translate-y-1 hover:border-rose-400 cursor-pointer transition-all duration-300">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-rose-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
-                        <div className="flex justify-between items-start gap-2 mb-5 relative z-10">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <div className="p-2 bg-rose-50 rounded-xl text-rose-500 group-hover:bg-rose-100 transition-colors shrink-0"><Megaphone size={18} /></div>
-                            <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1 truncate">
-                               Ads Spend <MousePointer size={12} className="text-slate-300 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 shrink-0"/>
-                            </p>
-                          </div>
-                          {/* HIGHLIGHT TREND: ADS SPEND (Reverse Color) */}
-                          {(() => {
-                             let trend = 0;
-                             if (kpi?.adsLm > 0) trend = ((kpi.adsRr - kpi.adsLm) / kpi.adsLm) * 100;
-                             else if (kpi?.adsRr > 0) trend = 100;
-                             const isUp = trend > 0;
-                             return (
-                                 <div className={`flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs font-black px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border-2 shadow-sm shrink-0 whitespace-nowrap ${!isUp ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
-                                     {isUp ? <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4"/> : <ArrowDownRight className="w-3.5 h-3.5 sm:w-4 sm:h-4"/>}
-                                     {Math.abs(trend).toFixed(1)}%
-                                 </div>
-                             );
-                          })()}
-                        </div>
-                        <div className="relative z-10 flex flex-col gap-3 mb-2">
-                           <div className="bg-rose-50/60 p-3 rounded-2xl border border-rose-100/60">
-                               <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest block mb-1">MTD Ads</span>
-                               <span className="text-2xl xl:text-3xl font-black text-rose-600 tracking-tight leading-none block">{formatCurrency(kpi?.adsMtd || 0)}</span>
-                           </div>
-                           <div className="px-3">
-                               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Projected Cost</span>
-                               <span className="text-2xl xl:text-3xl font-black text-rose-900 tracking-tight leading-none block">{formatCurrency(kpi?.adsRr || 0)}</span>
-                           </div>
-                        </div>
-                        <div className="flex justify-between items-center mt-auto pt-4 border-t border-slate-50 relative z-10">
-                           <span className="text-[10px] font-bold text-slate-400 uppercase">Last Month</span>
-                           <span className="text-sm font-black text-slate-600">{formatCurrency(kpi?.adsLm || 0)}</span>
-                        </div>
+                      <div onClick={() => setShowAdsModal(true)} className="cursor-pointer bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-rose-500/5 hover:-translate-y-1 group h-full">
+                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500 dark:bg-rose-400"></div>
+                         <Megaphone className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
+                         
+                         <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-5 pl-2 relative z-10">
+                             <div className="flex items-center gap-2 lg:gap-3">
+                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-500 dark:text-rose-400 flex items-center justify-center shrink-0"><Megaphone size={18} strokeWidth={2.5}/></div>
+                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1 truncate">
+                                     Ads <MousePointer size={10} className="text-slate-300 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 shrink-0 hidden lg:block"/>
+                                 </p>
+                             </div>
+                             {(() => {
+                                 let trend = 0;
+                                 if (kpi?.adsLm > 0) trend = ((kpi.adsRr - kpi.adsLm) / kpi.adsLm) * 100;
+                                 else if (kpi?.adsRr > 0) trend = 100;
+                                 const isUp = trend > 0;
+                                 return (
+                                     <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap ${!isUp ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
+                                         {isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%
+                                     </div>
+                                 );
+                             })()}
+                         </div>
+
+                         <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
+                             <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">MTD Ads</p>
+                             <p className="text-2xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.adsMtd || 0)}</p>
+                             <div className="flex flex-wrap items-center gap-1.5 lg:gap-2 mb-1 lg:mb-2">
+                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Runrate:</span>
+                                 <span className="text-xs lg:text-sm font-black text-slate-800 dark:text-slate-200">{formatCurrency(kpi?.adsRr || 0)}</span>
+                             </div>
+                         </div>
+
+                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center pl-2 relative z-10">
+                             <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Last Month</span>
+                             <span className="text-[10px] lg:text-xs font-black text-slate-700 dark:text-slate-300">{formatCurrency(kpi?.adsLm || 0)}</span>
+                         </div>
                       </div>
 
                       {/* MCA Disbursed Card (CLICKABLE) */}
-                      <div onClick={() => setShowMcaModal(true)} className="bg-white p-5 md:p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col h-full relative overflow-hidden group hover:-translate-y-1 hover:border-amber-400 cursor-pointer transition-all duration-300">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-amber-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
-                        <div className="flex justify-between items-start mb-6 relative z-10">
-                          <div className="flex items-center gap-2">
-                             <div className="p-2 bg-amber-50 rounded-xl text-amber-500 group-hover:bg-amber-100 transition-colors"><Database size={18} /></div>
-                             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                                MCA Config <MousePointer size={12} className="text-slate-300 group-hover:text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5"/>
-                             </p>
-                          </div>
-                        </div>
-                        <div className="relative z-10 mb-4">
-                            <span className="text-3xl font-black text-amber-600 tracking-tight leading-none block mb-1">{formatCurrency(kpi?.mcaDis || 0)}</span>
-                            <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Total Disbursed</span>
-                        </div>
-                        <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
-                          <div className="flex-1 min-w-0 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex flex-col justify-center">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase mb-0.5 truncate">Eligibility</span>
-                            <span className="text-xs font-black text-slate-600 truncate" title={formatCurrency(kpi?.mcaEli || 0)}>{formatCurrency(kpi?.mcaEli || 0)}</span>
-                          </div>
-                          <div className="w-16 min-w-0 bg-amber-50 p-2.5 rounded-2xl border border-amber-100 flex flex-col items-center justify-center shrink-0">
-                            <span className="text-[9px] font-bold text-amber-600 uppercase mb-0.5 truncate max-w-full">Toko</span>
-                            <span className="text-xs font-black text-amber-700 truncate max-w-full" title={kpi?.mcaDisCount || 0}>{kpi?.mcaDisCount || 0}</span>
-                          </div>
-                        </div>
+                      <div onClick={() => setShowMcaModal(true)} className="cursor-pointer bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 hover:-translate-y-1 group h-full">
+                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500 dark:bg-amber-400"></div>
+                         <Database className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
+                         
+                         <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
+                             <div className="flex items-center gap-2 lg:gap-3">
+                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400 flex items-center justify-center shrink-0"><Database size={18} strokeWidth={2.5}/></div>
+                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1 truncate">
+                                     MCA <MousePointer size={10} className="text-slate-300 group-hover:text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 shrink-0 hidden lg:block"/>
+                                 </p>
+                             </div>
+                         </div>
+
+                         <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
+                             <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Disbursed</p>
+                             <p className="text-2xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.mcaDis || 0)}</p>
+                             <div className="flex flex-wrap items-center gap-1.5 lg:gap-2 mb-1 lg:mb-2">
+                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Eligibility:</span>
+                                 <span className="text-xs lg:text-sm font-black text-slate-800 dark:text-slate-200">{formatCurrency(kpi?.mcaEli || 0)}</span>
+                             </div>
+                         </div>
+
+                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center pl-2 relative z-10">
+                             <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Total Toko</span>
+                             <span className="px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                 {kpi?.mcaDisCount || 0} Toko
+                             </span>
+                         </div>
                       </div>
 
                       {/* Campaign Pts Card */}
-                      <div className="bg-white p-5 md:p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col h-full relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
-                        <div className="flex justify-between items-start mb-6 relative z-10">
-                           <div className="flex items-center gap-2">
-                             <div className="p-2 bg-indigo-50 rounded-xl text-indigo-500"><Award size={18} /></div>
-                             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Campaign</p>
-                           </div>
-                        </div>
-                        <div className="relative z-10 mb-4">
-                            <span className="text-3xl font-black text-indigo-600 tracking-tight leading-none block mb-1">{(kpi?.totalPoints || 0).toLocaleString('id-ID')}</span>
-                            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Total Points</span>
-                        </div>
-                        <div className="flex gap-2 mt-auto pt-4 border-t border-slate-50 relative z-10">
-                          <div className="flex-1 min-w-0 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex flex-col justify-center">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase mb-0.5 truncate">Joiners</span>
-                            <span className="text-xs font-black text-slate-600 truncate" title={`${kpi?.joiners || 0} Toko`}>{kpi?.joiners || 0} Toko</span>
-                          </div>
-                          <div className="flex-1 min-w-0 bg-indigo-50 p-2.5 rounded-2xl border border-indigo-100 flex flex-col justify-center">
-                            <span className="text-[9px] font-bold text-indigo-500 uppercase mb-0.5 truncate">Avg Pts</span>
-                            <span className="text-xs font-black text-indigo-700 truncate" title={kpi?.avgPtsPerJoiner || 0}>{kpi?.avgPtsPerJoiner || 0}</span>
-                          </div>
-                        </div>
+                      <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 group h-full">
+                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500 dark:bg-indigo-400"></div>
+                         <Award className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
+                         
+                         <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
+                             <div className="flex items-center gap-2 lg:gap-3">
+                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 flex items-center justify-center shrink-0"><Award size={18} strokeWidth={2.5}/></div>
+                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Campaigns</p>
+                             </div>
+                         </div>
+
+                         <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
+                             <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Points</p>
+                             <p className="text-2xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-3 lg:mb-4">{(kpi?.totalPoints || 0).toLocaleString('id-ID')}</p>
+                             <div className="flex flex-wrap items-center gap-1.5 lg:gap-2 mb-1 lg:mb-2">
+                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Joiners:</span>
+                                 <span className="text-xs lg:text-sm font-black text-slate-800 dark:text-slate-200">{kpi?.joiners || 0} Toko</span>
+                             </div>
+                         </div>
+
+                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center pl-2 relative z-10">
+                             <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Avg Points</span>
+                             <span className="text-[10px] lg:text-xs font-black text-slate-700 dark:text-slate-300">{kpi?.avgPtsPerJoiner || 0} pts</span>
+                         </div>
                       </div>
                       
                       {/* Outlets Card (NOW CLICKABLE WITH 0-TRX) */}
-                      <div onClick={() => setShowOutletsModal(true)} className="bg-white p-5 md:p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col h-full relative overflow-hidden group hover:-translate-y-1 hover:border-blue-400 cursor-pointer transition-all duration-300">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
-                        <div className="flex justify-between items-start mb-6 relative z-10">
-                           <div className="flex items-center gap-2">
-                             <div className="p-2 bg-blue-50 rounded-xl text-blue-500 group-hover:bg-blue-100 transition-colors"><Store size={18} /></div>
-                             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                                Outlets <MousePointer size={12} className="text-slate-300 group-hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5"/>
-                             </p>
-                           </div>
-                        </div>
-                        <div className="relative z-10 mb-4">
-                            <span className="text-3xl font-black text-blue-600 tracking-tight leading-none block mb-1">{kpi?.totalMex || 0}</span>
-                            <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Total Managed</span>
-                        </div>
-                        <div className="flex gap-1.5 mt-auto pt-4 border-t border-slate-50 relative z-10">
-                          <div className="flex-1 min-w-0 bg-blue-50 p-2 rounded-xl border border-blue-100 flex flex-col items-center justify-center">
-                            <span className="text-[8px] font-bold text-blue-500 uppercase truncate">Active</span>
-                            <span className="text-xs font-black text-blue-700 truncate" title={kpi?.activeMex || 0}>{kpi?.activeMex || 0}</span>
-                          </div>
-                          <div className="flex-1 min-w-0 bg-slate-50 p-2 rounded-xl border border-slate-200 flex flex-col items-center justify-center">
-                            <span className="text-[8px] font-bold text-slate-500 uppercase truncate">Inactive</span>
-                            <span className="text-xs font-black text-slate-600 truncate" title={kpi?.inactiveMex || 0}>{kpi?.inactiveMex || 0}</span>
-                          </div>
-                          <div className="flex-1 min-w-0 bg-rose-50 p-2 rounded-xl border border-rose-100 flex flex-col items-center justify-center">
-                            <span className="text-[8px] font-bold text-rose-500 uppercase truncate">0-Trx</span>
-                            <span className="text-xs font-black text-rose-700 truncate" title={kpi?.zeroTrxMex || 0}>{kpi?.zeroTrxMex || 0}</span>
-                          </div>
-                        </div>
+                      <div onClick={() => setShowOutletsModal(true)} className="cursor-pointer bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 group h-full">
+                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500 dark:bg-blue-400"></div>
+                         <Store className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
+                         
+                         <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
+                             <div className="flex items-center gap-2 lg:gap-3">
+                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 dark:text-blue-400 flex items-center justify-center shrink-0"><Store size={18} strokeWidth={2.5}/></div>
+                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1 truncate">
+                                     Outlets <MousePointer size={10} className="text-slate-300 group-hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 shrink-0 hidden lg:block"/>
+                                 </p>
+                             </div>
+                         </div>
+
+                         <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
+                             <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Managed</p>
+                             <p className="text-2xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-3 lg:mb-4">{kpi?.totalMex || 0}</p>
+                             
+                             <div className="flex items-center gap-3 mb-1 lg:mb-2">
+                                 <div className="flex items-center gap-1.5">
+                                     <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                     <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Active:</span>
+                                     <span className="text-xs lg:text-sm font-black text-slate-800 dark:text-slate-200">{kpi?.activeMex || 0}</span>
+                                 </div>
+                             </div>
+                         </div>
+
+                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center pl-2 relative z-10 gap-2">
+                             <div className="flex items-center gap-1 lg:gap-1.5 flex-1 min-w-0">
+                                 <span className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-slate-400 shrink-0"></span>
+                                 <span className="text-[8px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">Inactive</span>
+                                 <span className="text-[9px] lg:text-xs font-black text-slate-700 dark:text-slate-300 ml-auto pl-1">{kpi?.inactiveMex || 0}</span>
+                             </div>
+                             <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0"></div>
+                             <div className="flex items-center gap-1 lg:gap-1.5 flex-1 min-w-0">
+                                 <span className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-rose-500 shrink-0"></span>
+                                 <span className="text-[8px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">0-Trx</span>
+                                 <span className="text-[9px] lg:text-xs font-black text-rose-600 dark:text-rose-400 ml-auto pl-1">{kpi?.zeroTrxMex || 0}</span>
+                             </div>
+                         </div>
                       </div>
                     </div>
 
@@ -2475,164 +2490,190 @@ export default function App() {
                   </div>
                </div>
 
-               {/* NEW TOP KPI CARDS (PROPORTIONAL 4-COLS) DIBAWAH HEADER */}
+               {/* ========================================================= */}
+               {/* ENTERPRISE SAAS KPI CARDS (ULTRA CLEAN & PROFESSIONAL) */}
+               {/* ========================================================= */}
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                  {/* Card 1: Sales */}
-                  <div className="bg-white rounded-[32px] shadow-lg shadow-slate-200/40 border border-slate-100 p-5 md:p-6 flex flex-col h-full group hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden">
-                     <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
-                     <div className="flex justify-between items-start gap-2 mb-5 relative z-10">
-                         <div className="flex items-center gap-2 min-w-0">
-                            <div className="p-2 bg-emerald-50 rounded-xl text-[#00B14F] shrink-0"><Activity size={16}/></div>
-                            <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest truncate">Sales</p>
-                         </div>
-                         <div className={`flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs font-black px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border shrink-0 whitespace-nowrap ${selectedMex.rrBs > selectedMex.lmBs ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
-                            {selectedMex.rrBs > selectedMex.lmBs ? <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5"/> : <ArrowDownRight className="w-3 h-3 sm:w-3.5 sm:h-3.5"/>}
-                            {Math.abs(selectedMex.rrVsLm).toFixed(1)}%
+                  
+                  {/* Card 1: Sales (Emerald) */}
+                  <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1 group">
+                     {/* Left Accent Bar */}
+                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500 dark:bg-emerald-400"></div>
+                     {/* Subtle Watermark */}
+                     <Activity className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
+
+                     <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
+                        <div className="flex items-center gap-3">
+                           <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                              <Activity size={18} strokeWidth={2.5} />
+                           </div>
+                           <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Sales</p>
+                        </div>
+                        <div className={`px-2 py-1 rounded-md text-[10px] font-black flex items-center gap-1 ${selectedMex.rrBs > selectedMex.lmBs ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
+                           {selectedMex.rrBs > selectedMex.lmBs ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(selectedMex.rrVsLm).toFixed(1)}%
+                        </div>
+                     </div>
+
+                     <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
+                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">MTD Sales</p>
+                         <p className="text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-4">
+                             {formatCurrency(selectedMex.mtdBs)}
+                         </p>
+                         
+                         <div className="flex items-center gap-2 mb-2">
+                             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Projected Runrate:</span>
+                             <span className="text-sm font-black text-slate-800 dark:text-slate-200">{formatCurrency(selectedMex.rrBs)}</span>
                          </div>
                      </div>
-                     
-                     <div className="relative z-10 flex flex-col gap-3 mb-2">
-                         <div className="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-100/60">
-                             <span className="text-[10px] font-black text-[#00B14F] uppercase tracking-widest block mb-1">MTD Sales</span>
-                             <span className="text-2xl md:text-3xl font-black text-[#00B14F] tracking-tight leading-none block">{formatCurrency(selectedMex.mtdBs)}</span>
-                         </div>
-                         <div className="px-3">
-                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Projected Runrate</span>
-                             <span className="text-2xl md:text-3xl font-black text-emerald-900 tracking-tight leading-none block">{formatCurrency(selectedMex.rrBs)}</span>
-                         </div>
-                     </div>
-                     
-                     <div className="flex justify-between items-center mt-auto pt-4 border-t border-slate-50 relative z-10">
+
+                     <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center pl-2 relative z-10">
                          <span className="text-[10px] font-bold text-slate-400 uppercase">Last Month</span>
-                         <span className="text-sm font-black text-slate-600">{formatCurrency(selectedMex.lmBs)}</span>
+                         <span className="text-xs font-black text-slate-700 dark:text-slate-300">{formatCurrency(selectedMex.lmBs)}</span>
                      </div>
                   </div>
 
-                  {/* Card 2: Active Campaigns */}
-                  <div className="bg-white rounded-[32px] shadow-lg shadow-slate-200/40 border border-slate-100 p-5 md:p-6 flex flex-col h-full group hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden">
-                     <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-amber-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
-                     <div className="flex justify-between items-start mb-6 relative z-10">
-                         <div className="flex items-center gap-2">
-                            <div className="p-2 bg-amber-50 rounded-xl text-amber-500"><Zap size={16}/></div>
-                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Campaigns</p>
+                  {/* Card 2: Campaigns (Amber) */}
+                  <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 hover:-translate-y-1 group">
+                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500 dark:bg-amber-400"></div>
+                     {/* Subtle Watermark */}
+                     <Award className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
+
+                     <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
+                        <div className="flex items-center gap-3">
+                           <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400 flex items-center justify-center">
+                              <Zap size={18} strokeWidth={2.5} />
+                           </div>
+                           <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Campaigns</p>
+                        </div>
+                     </div>
+
+                     <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
+                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Points</p>
+                         <p className="text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-4">
+                             {selectedMex.campaignPoint || 0}
+                         </p>
+
+                         <div>
+                             <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Active List:</p>
+                             <div className="flex flex-wrap gap-1.5">
+                                {(!selectedMex.campaigns || selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || selectedMex.campaigns.toLowerCase().includes('no campaign')) ? (
+                                    <span className="text-slate-400 dark:text-slate-500 text-[10px] font-semibold italic">Tidak ada partisipasi</span>
+                                ) : (
+                                    selectedMex.campaigns.split(/[|,]/).map(c => c.trim()).filter(Boolean).map((camp, idx) => (
+                                        <span key={idx} className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider">
+                                            {camp}
+                                        </span>
+                                    ))
+                                )}
+                             </div>
                          </div>
-                     </div>
-                     <div className="relative z-10 mb-4">
-                         <span className="text-2xl md:text-3xl font-black text-amber-500 tracking-tight leading-none block mb-1 flex items-center gap-2">
-                           {selectedMex.campaignPoint || 0} <Award className="w-6 h-6 text-amber-300" />
-                         </span>
-                         <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Campaign Points</span>
-                     </div>
-                     <div className="mt-auto pt-4 border-t border-slate-50 relative z-10">
-                         <span className="text-[9px] text-slate-400 font-bold uppercase block mb-1 truncate">Active List:</span>
-                         {renderMerchantCampaigns(selectedMex.campaigns)}
                      </div>
                   </div>
 
-                  {/* Card 3: Marketing */}
-                  <div className="bg-white rounded-[32px] shadow-lg shadow-slate-200/40 border border-slate-100 p-5 md:p-6 flex flex-col h-full group hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden">
-                     <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-rose-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
-                     <div className="flex justify-between items-start gap-2 mb-6 relative z-10">
-                         <div className="flex items-center gap-2 min-w-0">
-                             <div className="p-2 bg-rose-50 rounded-xl text-rose-500 shrink-0"><Megaphone size={16}/></div>
-                             <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest truncate">Marketing</p>
-                         </div>
-                         {(() => {
+                  {/* Card 3: Marketing (Rose) */}
+                  <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-rose-500/5 hover:-translate-y-1 group">
+                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500 dark:bg-rose-400"></div>
+                     {/* Subtle Watermark */}
+                     <Megaphone className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
+
+                     <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
+                        <div className="flex items-center gap-3">
+                           <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-500 dark:text-rose-400 flex items-center justify-center">
+                              <Megaphone size={18} strokeWidth={2.5} />
+                           </div>
+                           <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Marketing</p>
+                        </div>
+                        {(() => {
                             let adsTrend = 0;
-                            if (selectedMex.adsLM > 0) {
-                                adsTrend = ((selectedMex.adsRR - selectedMex.adsLM) / selectedMex.adsLM) * 100;
-                            } else if (selectedMex.adsRR > 0) {
-                                adsTrend = 100;
-                            }
+                            if (selectedMex.adsLM > 0) adsTrend = ((selectedMex.adsRR - selectedMex.adsLM) / selectedMex.adsLM) * 100;
+                            else if (selectedMex.adsRR > 0) adsTrend = 100;
                             const isAdsUp = adsTrend > 0;
                             return (
-                                <div className={`flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs font-black px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border shrink-0 whitespace-nowrap ${!isAdsUp ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
-                                   {isAdsUp ? <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5"/> : <ArrowDownRight className="w-3 h-3 sm:w-3.5 sm:h-3.5"/>}
-                                   {Math.abs(adsTrend).toFixed(1)}%
+                                <div className={`px-2 py-1 rounded-md text-[10px] font-black flex items-center gap-1 ${!isAdsUp ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
+                                   {isAdsUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(adsTrend).toFixed(1)}%
                                 </div>
                             );
-                         })()}
+                        })()}
                      </div>
-                     <div className="relative z-10 mb-3">
-                         <span className="text-2xl md:text-3xl font-black text-rose-500 tracking-tight leading-none block mb-1">{formatCurrency(selectedMex.adsTotal)}</span>
-                         <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Ads Spend (MTD)</span>
-                     </div>
-                     
-                     <div className="flex items-center justify-between bg-rose-50/60 rounded-xl p-2.5 mb-2 relative z-10 border border-rose-100/50 shadow-sm">
-                         <div className="text-center flex-1 min-w-0 border-r border-rose-100/60 last:border-0">
-                             <p className="text-[8px] font-bold text-rose-400 uppercase tracking-widest mb-0.5">Mobile</p>
-                             <p className="text-[10px] md:text-xs font-black text-rose-700 truncate px-1" title={formatCurrency(selectedMex.adsMob || 0)}>{formatCurrency(selectedMex.adsMob || 0)}</p>
-                         </div>
-                         <div className="text-center flex-1 min-w-0 border-r border-rose-100/60 last:border-0">
-                             <p className="text-[8px] font-bold text-rose-400 uppercase tracking-widest mb-0.5">Web</p>
-                             <p className="text-[10px] md:text-xs font-black text-rose-700 truncate px-1" title={formatCurrency(selectedMex.adsWeb || 0)}>{formatCurrency(selectedMex.adsWeb || 0)}</p>
-                         </div>
-                         <div className="text-center flex-1 min-w-0 last:border-0">
-                             <p className="text-[8px] font-bold text-rose-400 uppercase tracking-widest mb-0.5">Direct</p>
-                             <p className="text-[10px] md:text-xs font-black text-rose-700 truncate px-1" title={formatCurrency(selectedMex.adsDir || 0)}>{formatCurrency(selectedMex.adsDir || 0)}</p>
+
+                     <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
+                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Ads Spend (MTD)</p>
+                         <p className="text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-4">
+                             {formatCurrency(selectedMex.adsTotal)}
+                         </p>
+
+                         {/* Minimalist Breakdown */}
+                         <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 mb-1">
+                             <div className="flex flex-col">
+                                 <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Mobile</span>
+                                 <span className="text-[10px] font-black text-slate-700 dark:text-slate-200">{formatCurrency(selectedMex.adsMob || 0)}</span>
+                             </div>
+                             <div className="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
+                             <div className="flex flex-col">
+                                 <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Web</span>
+                                 <span className="text-[10px] font-black text-slate-700 dark:text-slate-200">{formatCurrency(selectedMex.adsWeb || 0)}</span>
+                             </div>
+                             <div className="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
+                             <div className="flex flex-col">
+                                 <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Direct</span>
+                                 <span className="text-[10px] font-black text-slate-700 dark:text-slate-200">{formatCurrency(selectedMex.adsDir || 0)}</span>
+                             </div>
                          </div>
                      </div>
 
-                     <div className="flex gap-2 mt-auto pt-3 border-t border-slate-50 relative z-10">
-                         <div className="flex-1 min-w-0 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col justify-center">
-                           <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5 truncate">LM Ads</span>
-                           <span className="text-xs font-black text-slate-700 truncate" title={formatCurrency(selectedMex.adsLM)}>{formatCurrency(selectedMex.adsLM)}</span>
-                         </div>
-                         <div className="w-16 min-w-0 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col items-center justify-center shrink-0">
-                           <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5 truncate max-w-full">Komisi</span>
-                           <span className="text-xs font-black text-slate-800 truncate max-w-full" title={selectedMex.commission || '-'}>{selectedMex.commission || '-'}</span>
-                         </div>
+                     <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center pl-2 relative z-10">
+                         <span className="text-[10px] font-bold text-slate-400 uppercase">Last Month Ads</span>
+                         <span className="text-xs font-black text-slate-700 dark:text-slate-300">{formatCurrency(selectedMex.adsLM)}</span>
                      </div>
                   </div>
 
-                  {/* Card 4: MCA */}
-                  <div className="bg-white rounded-[32px] shadow-lg shadow-slate-200/40 border border-slate-100 p-5 md:p-6 flex flex-col h-full group hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden">
-                     <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
-                     <div className="flex justify-between items-start mb-5 relative z-10">
-                         <div className="flex items-center gap-2">
-                             <div className="p-2 bg-blue-50 rounded-xl text-blue-500"><Database size={16}/></div>
-                             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">MCA Config</p>
-                         </div>
-                         {selectedMex.mcaPriority && selectedMex.mcaPriority !== '-' && (
-                             <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase shadow-sm border ${getPriorityBadgeClass(selectedMex.mcaPriority)}`}>
-                                {selectedMex.mcaPriority}
-                             </span>
-                         )}
+                  {/* Card 4: MCA Config (Blue) */}
+                  <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 group">
+                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500 dark:bg-blue-400"></div>
+                     {/* Subtle Watermark */}
+                     <Database className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
+
+                     <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
+                        <div className="flex items-center gap-3">
+                           <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 dark:text-blue-400 flex items-center justify-center">
+                              <Database size={18} strokeWidth={2.5} />
+                           </div>
+                           <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">MCA Config</p>
+                        </div>
+                        {selectedMex.mcaPriority && selectedMex.mcaPriority !== '-' && (
+                            <div className={`px-2 py-1 rounded-md text-[9px] font-black uppercase ${getPriorityBadgeClass(selectedMex.mcaPriority).replace('rounded-md', '')}`}>
+                               {selectedMex.mcaPriority}
+                            </div>
+                        )}
                      </div>
-                     
-                     <div className="relative z-10 flex flex-col gap-3 mb-2">
+
+                     <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                          {(() => {
                              const isPending = selectedMex.mcaDisburseStatus && String(selectedMex.mcaDisburseStatus).toLowerCase().includes('pending');
+                             const textColor = isPending ? 'text-amber-500 dark:text-amber-400' : 'text-blue-500 dark:text-blue-400';
+                             const labelText = isPending ? 'Pending Disbursed' : 'Disbursed';
+                             
                              return (
-                                 <div className={`p-3 rounded-2xl border ${isPending ? 'bg-amber-50/60 border-amber-100/60' : 'bg-blue-50/60 border-blue-100/60'}`}>
-                                     <span className={`text-[10px] font-black uppercase tracking-widest block mb-1 ${isPending ? 'text-amber-600' : 'text-blue-600'}`}>
-                                         {isPending ? 'Pending Disbursed' : 'Disbursed'}
-                                     </span>
-                                     <span className={`text-2xl md:text-3xl font-black tracking-tight leading-none block ${isPending ? 'text-amber-600' : 'text-blue-600'}`}>
+                                 <div className="mb-4">
+                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{labelText}</p>
+                                     <p className={`text-3xl lg:text-4xl font-black ${textColor} tracking-tight leading-none`}>
                                          {formatCurrency(selectedMex.mcaAmount)}
-                                     </span>
+                                     </p>
                                  </div>
                              );
                          })()}
-                         <div className="px-3">
-                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Limit Tersedia</span>
-                             <span className="text-2xl md:text-3xl font-black text-blue-900 tracking-tight leading-none block">{selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}</span>
+
+                         <div className="flex items-center gap-2 mb-2">
+                             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Limit Tersedia:</span>
+                             <span className="text-sm font-black text-slate-800 dark:text-slate-200">{selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}</span>
                          </div>
                      </div>
-                     
-                     <div className="mt-auto relative z-10 flex flex-col">
-                         {selectedMex.mcaDropOff && selectedMex.mcaDropOff !== '-' && selectedMex.mcaDropOff !== '0' && (
-                            <div className="mb-3 inline-flex items-center gap-1.5 bg-rose-50 text-rose-600 border border-rose-100/50 px-2 py-1 rounded-lg w-fit shadow-sm max-w-full">
-                               <AlertCircle size={12} className="shrink-0" />
-                               <span className="text-[9px] font-bold truncate">Drop Off: {selectedMex.mcaDropOff}</span>
-                            </div>
-                         )}
-                         <div className="flex justify-between items-center pt-4 border-t border-slate-50">
-                             <span className="text-[10px] font-bold text-slate-400 uppercase">Eligibility</span>
-                             <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase border truncate ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
-                                 {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'Eligible' : 'Not Eligible'}
-                             </span>
-                         </div>
+
+                     <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center pl-2 relative z-10">
+                         <span className="text-[10px] font-bold text-slate-400 uppercase">Eligibility</span>
+                         <span className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
+                             {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'Eligible' : 'Not Eligible'}
+                         </span>
                      </div>
                   </div>
                </div>
