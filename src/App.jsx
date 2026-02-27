@@ -111,6 +111,32 @@ const getMerchantSegment = (campaignsStr) => {
   return 'Local Only';
 };
 
+// Fungsi Penentu Warna Badge Priority
+const getPriorityBadgeClass = (prio) => {
+    if (!prio || prio === '-') return 'bg-slate-500 text-white border-slate-600 shadow-sm';
+    const p = String(prio).toUpperCase();
+    if (p.includes('P0')) return 'bg-rose-600 text-white border-rose-700 shadow-sm';
+    if (p.includes('P1')) return 'bg-amber-600 text-white border-amber-700 shadow-sm';
+    if (p.includes('P2')) return 'bg-blue-600 text-white border-blue-700 shadow-sm';
+    if (p.includes('P3')) return 'bg-emerald-600 text-white border-emerald-700 shadow-sm';
+    return 'bg-indigo-600 text-white border-indigo-700 shadow-sm';
+};
+
+// Fungsi Cerdas Pemendek Nama AM
+const getShortAMName = (fullName) => {
+    const amFull = (fullName || 'AM').trim();
+    const amFullLower = amFull.toLowerCase();
+    let amShort = amFull.split(' ')[0]; // Ambil kata pertama
+    
+    // Mapping spesifik
+    if (amFullLower.includes('novan')) return 'Novan';
+    if (amFullLower.includes('reginaldo') || amFullLower.includes('aldo')) return 'Aldo';
+    if (amFullLower.includes('dadan')) return 'Dadan';
+    if (amFullLower.includes('hikam')) return 'Hikam';
+    
+    return amShort;
+};
+
 // ============================================================================
 // UTILS: INDEXEDDB BROWSER STORAGE (Anti-Quota Exceeded)
 // ============================================================================
@@ -211,22 +237,8 @@ export default function App() {
       const phone = selectedMex.phone.replace(/\D/g, ''); // Hapus semua karakter non-angka
       const owner = selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Mitra Grab';
       
-      // Mengambil nama AM dari data dan membersihkan spasi berlebih
-      const amFull = (selectedMex.amName || 'AM').trim();
-      const amFullLower = amFull.toLowerCase();
-      
-      let amShort = amFull.split(' ')[0]; // Fallback: ambil kata pertama jika tidak masuk mapping
-
-      // Mapping cerdas: Cek apakah nama mengandung keyword tertentu (tahan terhadap typo/perbedaan format di data real)
-      if (amFullLower.includes('novan')) {
-          amShort = 'Novan';
-      } else if (amFullLower.includes('reginaldo') || amFullLower.includes('aldo')) {
-          amShort = 'Aldo';
-      } else if (amFullLower.includes('dadan')) {
-          amShort = 'Dadan';
-      } else if (amFullLower.includes('hikam')) {
-          amShort = 'Hikam';
-      }
+      // Menggunakan Helper Pemendek Nama AM
+      const amShort = getShortAMName(selectedMex.amName);
 
       const mexName = selectedMex.name;
       
@@ -617,7 +629,8 @@ export default function App() {
           const mcaLimit = mca > 0 ? mca * 1.5 : (Math.random() > 0.85 ? 25000000 : 0);
           
           const pRoll = Math.random();
-          const mcaPriority = mcaLimit > 0 ? (pRoll > 0.7 ? 'P1' : pRoll > 0.3 ? 'P2' : 'P3') : '-';
+          // Modifikasi dummy data agar memunculkan variasi P0-A untuk demo
+          const mcaPriority = mcaLimit > 0 ? (pRoll > 0.85 ? 'P0-A' : pRoll > 0.6 ? 'P1' : pRoll > 0.3 ? 'P2' : 'P3') : '-';
           const dropOffScenarios = ['-', '-', '-', 'Term & Condition', 'KYC Verification', 'Review Plan'];
 
           let assignedCampaigns = [];
@@ -1128,16 +1141,16 @@ export default function App() {
                           <div className="min-w-0 pr-4 flex-1">
                              <div className="flex items-center gap-2 min-w-0">
                                 {mex.mcaPriority && mex.mcaPriority !== '-' && (
-                                   <span className={`px-1.5 py-0.5 rounded text-[9px] font-black shrink-0 ${isPending ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'}`}>
+                                   <span className={`px-1.5 py-0.5 rounded text-[9px] font-black shrink-0 border ${getPriorityBadgeClass(mex.mcaPriority)}`}>
                                       {mex.mcaPriority}
                                    </span>
                                 )}
                                 <p className={`font-bold text-sm md:text-base text-slate-800 truncate transition-colors ${isPending ? 'group-hover:text-blue-600' : 'group-hover:text-amber-600'}`}>{mex.name}</p>
                              </div>
                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[9px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded uppercase tracking-widest flex items-center gap-1"><Users size={10} /> {mex.amName}</span>
+                                <span className="text-[9px] font-black text-white bg-indigo-600 border border-indigo-700 px-1.5 py-0.5 rounded uppercase tracking-widest flex items-center gap-1 shadow-sm"><Users size={10} className="text-indigo-200" /> {getShortAMName(mex.amName)}</span>
                                 {mex.disbursedDate && String(mex.disbursedDate).trim() !== '-' && (
-                                   <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-widest ${isPending ? 'text-blue-600 bg-blue-50 border border-blue-100' : 'text-amber-600 bg-amber-50 border border-amber-100'}`}>{mex.disbursedDate}</span>
+                                   <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-widest text-white shadow-sm ${isPending ? 'bg-blue-600 border-blue-700' : 'bg-amber-600 border-amber-700'}`}>{mex.disbursedDate}</span>
                                 )}
                              </div>
                           </div>
@@ -1464,9 +1477,9 @@ export default function App() {
                                   <div className="min-w-0 pr-4 flex-1">
                                       <p className={`font-bold text-sm md:text-base text-slate-800 truncate transition-colors ${outletModalTab === 'inactive' ? 'group-hover:text-blue-600' : 'group-hover:text-rose-600'}`}>{mex.name}</p>
                                       <div className="flex flex-wrap items-center gap-2 mt-1">
-                                          <span className="text-[9px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded uppercase tracking-widest flex items-center gap-1"><Users size={10} /> {mex.amName}</span>
+                                          <span className="text-[9px] font-black text-white bg-indigo-600 border border-indigo-700 px-1.5 py-0.5 rounded uppercase tracking-widest flex items-center gap-1 shadow-sm"><Users size={10} className="text-indigo-200" /> {getShortAMName(mex.amName)}</span>
                                           {outletModalTab === 'zerotrx' && (
-                                              <span className="text-[9px] font-bold text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200 uppercase tracking-widest" title="Omset Bulan Lalu">LM: {formatCurrency(mex.lmBs)}</span>
+                                              <span className="text-[9px] font-bold text-white bg-slate-600 px-1.5 py-0.5 rounded border border-slate-700 uppercase tracking-widest shadow-sm" title="Omset Bulan Lalu">LM: {formatCurrency(mex.lmBs)}</span>
                                           )}
                                       </div>
                                       {/* RENDER CAMPAIGN JIKA ADA (hideEmpty = true agar tidak muncul teks kosong) */}
@@ -2375,7 +2388,7 @@ export default function App() {
                                    </span>
                                 </td>
                                 <td className="px-4 py-3 text-center hidden lg:table-cell">
-                                   <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${r.mcaPriority !== '-' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'text-slate-400 bg-slate-50'}`}>
+                                   <span className={`text-[10px] font-black px-2 py-1 rounded-md border ${getPriorityBadgeClass(r.mcaPriority)}`}>
                                       {r.mcaPriority}
                                    </span>
                                 </td>
@@ -2581,7 +2594,7 @@ export default function App() {
                              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">MCA Config</p>
                          </div>
                          {selectedMex.mcaPriority && selectedMex.mcaPriority !== '-' && (
-                             <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md text-[9px] font-black uppercase shadow-sm border border-blue-100">
+                             <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase shadow-sm border ${getPriorityBadgeClass(selectedMex.mcaPriority)}`}>
                                 {selectedMex.mcaPriority}
                              </span>
                          )}
