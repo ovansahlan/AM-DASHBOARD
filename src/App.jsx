@@ -7,7 +7,7 @@ import {
   UploadCloud, TrendingUp, Database, Filter, Megaphone,
   Search, CheckCircle, AlertCircle, DollarSign, Activity, X,
   Store, ArrowUpRight, ArrowDownRight, Minus, Users, Info, ArrowLeft, Zap, MapPin, Phone, Smartphone, Mail, Award, LayoutDashboard, Table, ShoppingBag, Target, Percent, ExternalLink, Calculator,
-  ShoppingCart, Check, ArrowRight, Settings, List, Tags, Ticket, ChevronDown, Plus, MousePointer, Eye, RefreshCw, BarChart2, FileText, MessageCircle, Clock, ArrowUp, ArrowDown, Moon, Sun
+  ShoppingCart, Check, ArrowRight, Settings, List, Tags, Ticket, ChevronDown, Plus, MousePointer, Eye, RefreshCw, BarChart2, FileText, MessageCircle, Clock, ArrowUp, ArrowDown, Moon, Sun, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 // ============================================================================
@@ -204,6 +204,9 @@ export default function App() {
 
   const [compareMonths, setCompareMonths] = useState(['', '', '']);
   const [sortConfig, setSortConfig] = useState({ key: 'mtdBs', direction: 'desc' });
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
       const savedTheme = localStorage.getItem('am_dashboard_theme');
@@ -753,8 +756,15 @@ export default function App() {
     setSortConfig({ key, direction });
   };
 
+  const paginatedData = useMemo(() => {
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      return filtered.slice(startIndex, startIndex + itemsPerPage);
+  }, [filtered, currentPage]);
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+
   const handleSearchChange = (e) => {
-    const val = e.target.value; setSearchTerm(val);
+    const val = e.target.value; setSearchTerm(val); setCurrentPage(1);
     if (val && activeTab !== 'data' && !selectedMex) { setActiveTab('data'); }
   };
 
@@ -1177,6 +1187,185 @@ export default function App() {
         </div>
       )}
 
+      {/* MODAL OUTLETS ATTENTION (INACTIVE & 0-TRX) */}
+      {showOutletsModal && (
+        <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in" onClick={() => setShowOutletsModal(false)} />
+          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-300 ease-out overflow-hidden">
+            <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10">
+               <div>
+                  <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
+                     <Store className="w-5 h-5 text-blue-500"/>
+                     Outlets Attention
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-1">Daftar merchant yang perlu perhatian khusus</p>
+               </div>
+               <button onClick={() => setShowOutletsModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
+            </div>
+            
+            <div className="flex px-5 pt-4 gap-2 bg-[#f8fafc] border-b border-slate-100 shrink-0">
+                <button onClick={() => setOutletModalTab('inactive')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest rounded-t-xl transition-all border-b-2 ${outletModalTab === 'inactive' ? 'border-slate-800 text-slate-800 bg-white shadow-sm' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>Inactive ({kpi?.inactiveMex || 0})</button>
+                <button onClick={() => setOutletModalTab('zerotrx')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest rounded-t-xl transition-all border-b-2 ${outletModalTab === 'zerotrx' ? 'border-rose-500 text-rose-600 bg-rose-50' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>0-Trx MTD ({kpi?.zeroTrxMex || 0})</button>
+            </div>
+
+            <div className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar bg-[#f8fafc]">
+               {(() => {
+                   const displayList = outletModalTab === 'inactive' ? inactiveMerchants : zeroTrxMerchants;
+                   if (displayList.length === 0) {
+                       return (
+                           <div className="flex flex-col items-center justify-center h-48 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
+                               <CheckCircle className="w-10 h-10 mb-3 opacity-30 text-emerald-500" />
+                               <p className="text-[11px] font-bold uppercase tracking-widest">Semua Aman!</p>
+                           </div>
+                       );
+                   }
+                   return (
+                       <div className="grid grid-cols-1 gap-3">
+                          {displayList.map((mex, idx) => (
+                              <div key={mex.id} style={{ animationDelay: `${idx * 30}ms` }} onClick={() => { setSelectedMex(mex); setShowOutletsModal(false); setActiveTab('overview'); }} className={`animate-fade-in-up flex justify-between items-center p-4 bg-white border border-slate-200 rounded-2xl cursor-pointer transition-all duration-300 group hover:shadow-lg ${outletModalTab === 'inactive' ? 'hover:border-slate-400 hover:shadow-slate-500/10' : 'hover:border-rose-400 hover:shadow-rose-500/10'}`}>
+                                  <div className="min-w-0 pr-4 flex-1">
+                                      <p className={`font-bold text-sm md:text-base text-slate-800 truncate transition-colors ${outletModalTab === 'inactive' ? 'group-hover:text-blue-600' : 'group-hover:text-rose-600'}`}>{mex.name}</p>
+                                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                                          <span className="text-[9px] font-black text-white bg-indigo-600/[0.65] border border-indigo-700/[0.65] px-1.5 py-0.5 rounded uppercase tracking-widest flex items-center gap-1 shadow-sm backdrop-blur-sm"><Users size={10} className="text-indigo-100" /> {getShortAMName(mex.amName)}</span>
+                                          {outletModalTab === 'zerotrx' && (
+                                              <span className="text-[9px] font-bold text-white bg-slate-600/[0.65] px-1.5 py-0.5 rounded border border-slate-700/[0.65] uppercase tracking-widest shadow-sm backdrop-blur-sm" title="Omset Bulan Lalu">LM: {formatCurrency(mex.lmBs)}</span>
+                                          )}
+                                      </div>
+                                      {renderMerchantCampaigns(mex.campaigns, true)}
+                                  </div>
+                                  <div className="text-right shrink-0 flex flex-col items-end">
+                                     <div className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest shadow-sm ${outletModalTab === 'inactive' ? 'bg-slate-100 text-slate-500 border border-slate-200' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
+                                        {outletModalTab === 'inactive' ? 'Inactive' : '0-Trx'}
+                                     </div>
+                                  </div>
+                              </div>
+                          ))}
+                       </div>
+                   );
+               })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL COMPARE PERFORMANCE */}
+      {showCompareModal && selectedMex && (
+        <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in" onClick={() => setShowCompareModal(false)} />
+          <div className="relative w-full max-w-4xl bg-[#f8fafc] rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300 ease-out overflow-hidden">
+            <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-200 shrink-0 bg-white relative z-10 shadow-sm">
+               <div>
+                  <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
+                     <BarChart2 className="w-5 h-5 text-indigo-500"/>
+                     Performance Comparison
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-1">{selectedMex.name}</p>
+               </div>
+               <button onClick={() => setShowCompareModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
+            </div>
+            
+            <div className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                    {[0, 1, 2].map((idx) => {
+                        const selectedMonth = compareMonths[idx];
+                        const hist = selectedMex.history.find(h => h.month === selectedMonth);
+                        
+                        const getGrowth = (current, previous) => {
+                            if (!previous || previous === 0) return 0;
+                            return ((current - previous) / previous) * 100;
+                        };
+                        
+                        let prev = null;
+                        if (hist) {
+                            const currentIndex = selectedMex.history.findIndex(h => h.month === selectedMonth);
+                            if (currentIndex > 0) prev = selectedMex.history[currentIndex - 1];
+                        }
+
+                        const renderGrowthBadge = (val, invert = false) => {
+                            if (!val || val === 0) return null;
+                            const isUp = val > 0;
+                            const isGood = invert ? !isUp : isUp;
+                            return (
+                                <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-black shadow-sm ${isGood ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
+                                    {isUp ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />} {Math.abs(val).toFixed(1)}%
+                                </span>
+                            );
+                        };
+
+                        return (
+                            <div key={idx} className="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm flex flex-col relative overflow-hidden animate-fade-in-up" style={{ animationDelay: `${idx * 100}ms` }}>
+                                <div className="mb-5 relative z-10">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Bulan {idx + 1}</label>
+                                    <select 
+                                        value={selectedMonth}
+                                        onChange={(e) => {
+                                            const newMonths = [...compareMonths];
+                                            newMonths[idx] = e.target.value;
+                                            setCompareMonths(newMonths);
+                                        }}
+                                        className="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm font-bold rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-400 transition-colors cursor-pointer"
+                                    >
+                                        <option value="">-- Pilih Bulan --</option>
+                                        {[...selectedMex.history].reverse().map(h => (
+                                            <option key={h.month} value={h.month}>{formatMonth(h.month)}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {hist ? (
+                                    <div className="relative z-10 flex flex-col mt-auto gap-4">
+                                        <div className="bg-emerald-600/70 border border-emerald-500/50 rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-inner backdrop-blur-sm relative overflow-hidden">
+                                            <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-bl-full opacity-50 -mr-2 -mt-2 pointer-events-none"></div>
+                                            <p className="text-[10px] font-black text-emerald-50 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Activity size={12}/> Gross Sales</p>
+                                            <p className="text-2xl font-black text-white tracking-tight mb-2">{formatCurrency(hist.basket_size)}</p>
+                                            {renderGrowthBadge(getGrowth(hist.basket_size, prev?.basket_size))}
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-sm">
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1"><ShoppingBag size={10}/> Orders</p>
+                                                <p className="text-lg font-black text-slate-700 mb-1">{hist.completed_orders}</p>
+                                                {renderGrowthBadge(getGrowth(hist.completed_orders, prev?.completed_orders))}
+                                            </div>
+                                            <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-sm">
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1"><Target size={10}/> AOV</p>
+                                                <p className="text-lg font-black text-slate-700 mb-1">{formatCurrency(hist.aov)}</p>
+                                                {renderGrowthBadge(getGrowth(hist.aov, prev?.aov))}
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-rose-600/70 border border-rose-500/50 rounded-xl p-4 flex flex-col gap-3 shadow-inner backdrop-blur-sm">
+                                            <div className="flex justify-between items-center pb-3 border-b border-rose-400/40">
+                                                <div>
+                                                    <p className="text-[9px] font-bold text-rose-50 uppercase tracking-widest mb-0.5 flex items-center gap-1"><Zap size={10}/> Promo Invest</p>
+                                                    <p className="text-sm font-black text-white">{formatCurrency(hist.total_investment)}</p>
+                                                </div>
+                                                {renderGrowthBadge(getGrowth(hist.total_investment, prev?.total_investment), true)}
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <div>
+                                                    <p className="text-[9px] font-bold text-rose-50 uppercase tracking-widest mb-0.5 flex items-center gap-1"><Megaphone size={10}/> Ads Spend</p>
+                                                    <p className="text-sm font-black text-white">{formatCurrency(hist.ads_total_hist)}</p>
+                                                </div>
+                                                {renderGrowthBadge(getGrowth(hist.ads_total_hist, prev?.ads_total_hist), true)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex-1 flex flex-col items-center justify-center text-slate-300 mt-10">
+                                        <BarChart2 className="w-12 h-12 mb-3 opacity-20" />
+                                        <p className="text-xs font-bold uppercase tracking-widest text-center">Pilih bulan<br/>untuk melihat data</p>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* FULL WIDTH ENTERPRISE SAAS HEADER */}
       <header className="flex-none relative z-50 w-full bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
         <div className="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 h-16 md:h-20 flex items-center justify-between gap-4 md:gap-8">
@@ -1221,7 +1410,7 @@ export default function App() {
              {!selectedMex && (
                  <div className="flex items-center bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg lg:rounded-xl px-2.5 lg:px-3 h-9 sm:h-10 hover:border-[#00B14F] transition-colors">
                      <Filter className="w-3.5 h-3.5 text-emerald-500 mr-1.5 hidden sm:block" />
-                     <select value={selectedAM} onChange={(e) => { setSelectedAM(e.target.value); setSelectedMex(null); }} className="bg-transparent text-slate-700 dark:text-slate-200 text-[10px] lg:text-xs font-bold focus:outline-none w-[70px] sm:w-[90px] lg:w-28 cursor-pointer appearance-none truncate">
+                     <select value={selectedAM} onChange={(e) => { setSelectedAM(e.target.value); setSelectedMex(null); setCurrentPage(1); }} className="bg-transparent text-slate-700 dark:text-slate-200 text-[10px] lg:text-xs font-bold focus:outline-none w-[70px] sm:w-[90px] lg:w-28 cursor-pointer appearance-none truncate">
                         {amOptions.map(am => <option key={am} value={am} className="text-slate-900">{am}</option>)}
                      </select>
                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
@@ -1679,7 +1868,7 @@ export default function App() {
                     <div className="flex items-center gap-3 w-full sm:w-auto">
                         <div className="flex items-center bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm flex-1 sm:flex-none hover:border-indigo-400 transition-colors focus-within:ring-2 focus-within:ring-indigo-100">
                            <Filter className="w-3.5 h-3.5 text-slate-400 mr-2" />
-                           <select value={selectedPriority} onChange={(e) => { setSelectedPriority(e.target.value); setSelectedMex(null); }} className="bg-transparent text-slate-700 text-xs font-bold focus:outline-none w-full sm:w-32 cursor-pointer appearance-none transition-colors">
+                           <select value={selectedPriority} onChange={(e) => { setSelectedPriority(e.target.value); setSelectedMex(null); setCurrentPage(1); }} className="bg-transparent text-slate-700 text-xs font-bold focus:outline-none w-full sm:w-32 cursor-pointer appearance-none transition-colors">
                               {priorityOptions.map(p => <option key={p} value={p}>{p === 'All' ? 'Semua Priority' : `Priority: ${p}`}</option>)}
                            </select>
                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1 pointer-events-none" />
@@ -1722,9 +1911,9 @@ export default function App() {
                            </tr>
                          </thead>
                          <tbody className="divide-y divide-slate-50">
-                            {filtered.map((r, index) => (
-                              <tr key={r.id} onClick={() => setSelectedMex(r)} className="hover:bg-slate-50/80 transition-colors cursor-pointer group animate-fade-in-up" style={{ animationDelay: `${Math.min(index * 20, 500)}ms` }}>
-                                <td className="px-4 py-3 text-center font-bold text-slate-400 text-xs">{index + 1}</td>
+                            {paginatedData.map((r, index) => (
+                              <tr key={r.id} onClick={() => setSelectedMex(r)} className="hover:bg-slate-50/80 transition-colors cursor-pointer group">
+                                <td className="px-4 py-3 text-center font-bold text-slate-400 text-xs">{(currentPage - 1) * itemsPerPage + index + 1}</td>
                                 <td className="px-4 py-3 min-w-[200px]">
                                   <p className="font-bold text-slate-800 text-xs md:text-sm group-hover:text-[#00B14F] truncate transition-colors">{r.name}</p>
                                   <div className="flex items-center gap-2 mt-0.5">
@@ -1761,6 +1950,26 @@ export default function App() {
                       </table>
                     )}
                   </div>
+
+                  {/* PAGINATION CONTROLS */}
+                  {totalPages > 1 && (
+                      <div className="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#f8fafc] shrink-0">
+                          <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest">
+                              Menampilkan <span className="text-slate-800">{(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filtered.length)}</span> dari {filtered.length} Toko
+                          </span>
+                          <div className="flex items-center gap-2">
+                              <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 rounded-xl bg-white border border-slate-200 hover:border-[#00B14F] hover:text-[#00B14F] disabled:opacity-50 disabled:bg-slate-50 disabled:cursor-not-allowed transition-colors shadow-sm">
+                                  <ChevronLeft className="w-4 h-4" />
+                              </button>
+                              <span className="text-xs font-black text-slate-700 bg-white shadow-sm px-4 py-2 rounded-xl border border-slate-200">
+                                  {currentPage} <span className="text-slate-400 font-bold mx-1">/</span> {totalPages}
+                              </span>
+                              <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2 rounded-xl bg-white border border-slate-200 hover:border-[#00B14F] hover:text-[#00B14F] disabled:opacity-50 disabled:bg-slate-50 disabled:cursor-not-allowed transition-colors shadow-sm">
+                                  <ChevronRight className="w-4 h-4" />
+                              </button>
+                          </div>
+                      </div>
+                  )}
                 </div>
               )}
             </Fragment>
@@ -2120,28 +2329,6 @@ export default function App() {
           )}
           </div>
           
-          <footer className="mt-auto pt-8 pb-4 mt-10 w-full border-t border-slate-200 dark:border-slate-800/60 relative z-10">
-             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                 <div className="flex items-center gap-2.5">
-                    <div className="flex h-2 w-2 relative">
-                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </div>
-                    <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">All Systems Normal</span>
-                 </div>
-                 <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 text-center md:text-left">
-                    © {new Date().getFullYear()} Merchant Intelligence. Hak Cipta Dilindungi.
-                 </p>
-                 <div className="flex items-center gap-3 md:gap-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                    <a href="#" className="hover:text-emerald-500 transition-colors">Helpdesk</a>
-                    <span className="w-1 h-1 rounded-full bg-slate-200 dark:bg-slate-700"></span>
-                    <a href="#" className="hover:text-emerald-500 transition-colors">Privacy</a>
-                    <span className="w-1 h-1 rounded-full bg-slate-200 dark:bg-slate-700"></span>
-                    <span className="bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">v3.1.0</span>
-                 </div>
-             </div>
-          </footer>
-
         </div>
       </main>
 
