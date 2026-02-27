@@ -992,10 +992,16 @@ export default function App() {
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark-theme' : ''} bg-[#f8fafc] text-slate-900 flex flex-col font-sans overflow-hidden relative transition-colors duration-300`}>
       
-      {/* DECORATIVE TOP BACKGROUND ANCHOR */}
-      <div className="absolute top-0 left-0 right-0 h-[280px] md:h-[320px] bg-slate-900 z-0 rounded-b-[40px] shadow-lg">
-         <div className="absolute top-[-50%] left-[-10%] w-[60%] h-[200%] bg-emerald-900/30 rounded-full blur-[120px] pointer-events-none"></div>
-         <div className="absolute top-[0%] right-[-10%] w-[50%] h-[150%] bg-blue-900/20 rounded-full blur-[100px] pointer-events-none"></div>
+      {/* MODERN ENTERPRISE GRID BACKGROUND */}
+      <div className="fixed inset-0 z-0 pointer-events-none flex justify-center overflow-hidden">
+         {/* Geometric Grid Pattern */}
+         <div className="absolute inset-0 bg-grid-pattern"></div>
+         
+         {/* Top Center Ambient Glow */}
+         <div className="absolute left-0 right-0 top-[-10%] md:top-[-20%] -z-10 m-auto h-[300px] w-[300px] md:h-[600px] md:w-[600px] rounded-full blur-[100px] glow-effect"></div>
+         
+         {/* Bottom Fade to Solid */}
+         <div className="absolute inset-x-0 bottom-0 h-[40vh] fade-bottom"></div>
       </div>
 
       {/* ========================================================= */}
@@ -1425,427 +1431,122 @@ export default function App() {
       )}
 
       {/* ========================================================= */}
-      {/* MODAL OUTLETS ATTENTION (INACTIVE & 0-TRX) */}
+      {/* FULL WIDTH ENTERPRISE SAAS HEADER (NEW REWORK) */}
       {/* ========================================================= */}
-      {showOutletsModal && (
-        <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 sm:p-6">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowOutletsModal(false)} />
-          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200 overflow-hidden">
-
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10 gap-4">
-               <div>
-                  <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
-                     <Store className="w-5 h-5 text-blue-500"/>
-                     Outlets Attention
-                  </h3>
-                  <p className="text-[11px] md:text-xs text-slate-500 font-medium mt-1">Daftar merchant yang butuh penanganan segera</p>
-               </div>
-               <button onClick={() => setShowOutletsModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors absolute sm:relative right-4 top-4 sm:right-0 sm:top-0"><X size={20}/></button>
-            </div>
-
-            {/* TAB TOGGLES DI DALAM MODAL */}
-            <div className="px-5 md:px-6 pt-4 pb-3 bg-[#f8fafc] shrink-0 border-b border-slate-100 flex gap-2">
-                <button 
-                   onClick={() => setOutletModalTab('inactive')} 
-                   className={`flex-1 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-all ${outletModalTab === 'inactive' ? 'bg-slate-700 text-white shadow-md border border-slate-800' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'}`}
-                >
-                   Inactive ({inactiveMerchants.length})
-                </button>
-                <button 
-                   onClick={() => setOutletModalTab('zerotrx')} 
-                   className={`flex-1 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-all ${outletModalTab === 'zerotrx' ? 'bg-rose-500 text-white shadow-md border border-rose-600' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'}`}
-                >
-                   0-Trx MTD ({zeroTrxMerchants.length})
-                </button>
-            </div>
-
-            <div className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar bg-[#f8fafc]">
-               {(() => {
-                   const displayList = outletModalTab === 'inactive' ? inactiveMerchants : zeroTrxMerchants;
-                   if (displayList.length === 0) {
-                       return (
-                           <div className="flex flex-col items-center justify-center h-48 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
-                               <CheckCircle className="w-10 h-10 mb-3 opacity-30 text-emerald-500" />
-                               <p className="text-[11px] font-bold uppercase tracking-widest">Semua Aman!</p>
-                           </div>
-                       );
-                   }
-                   return (
-                       <div className="grid grid-cols-1 gap-3">
-                          {displayList.map(mex => (
-                              <div key={mex.id} onClick={() => { setSelectedMex(mex); setShowOutletsModal(false); setActiveTab('overview'); }} className={`flex justify-between items-center p-4 bg-white border border-slate-200 rounded-2xl cursor-pointer transition-all duration-300 group hover:shadow-lg ${outletModalTab === 'inactive' ? 'hover:border-slate-400 hover:shadow-slate-500/10' : 'hover:border-rose-400 hover:shadow-rose-500/10'}`}>
-                                  <div className="min-w-0 pr-4 flex-1">
-                                      <p className={`font-bold text-sm md:text-base text-slate-800 truncate transition-colors ${outletModalTab === 'inactive' ? 'group-hover:text-blue-600' : 'group-hover:text-rose-600'}`}>{mex.name}</p>
-                                      <div className="flex flex-wrap items-center gap-2 mt-1">
-                                          <span className="text-[9px] font-black text-white bg-indigo-600/[0.65] border border-indigo-700/[0.65] px-1.5 py-0.5 rounded uppercase tracking-widest flex items-center gap-1 shadow-sm backdrop-blur-sm"><Users size={10} className="text-indigo-100" /> {getShortAMName(mex.amName)}</span>
-                                          {outletModalTab === 'zerotrx' && (
-                                              <span className="text-[9px] font-bold text-white bg-slate-600/[0.65] px-1.5 py-0.5 rounded border border-slate-700/[0.65] uppercase tracking-widest shadow-sm backdrop-blur-sm" title="Omset Bulan Lalu">LM: {formatCurrency(mex.lmBs)}</span>
-                                          )}
-                                      </div>
-                                      {/* RENDER CAMPAIGN JIKA ADA (hideEmpty = true agar tidak muncul teks kosong) */}
-                                      {renderMerchantCampaigns(mex.campaigns, true)}
-                                  </div>
-                                  <div className="text-right shrink-0 flex flex-col items-end justify-center">
-                                      {outletModalTab === 'inactive' ? (
-                                          <span className="bg-slate-100 border border-slate-200 text-slate-500 px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider">{mex.zeusStatus || 'INACTIVE'}</span>
-                                      ) : (
-                                          <>
-                                            <span className="text-sm md:text-base font-black text-rose-500 tracking-tight">{formatCurrency(mex.mtdBs)}</span>
-                                            <span className="text-[9px] font-bold text-rose-400 uppercase tracking-widest mt-0.5">MTD Sales</span>
-                                          </>
-                                      )}
-                                  </div>
-                              </div>
-                          ))}
-                       </div>
-                   )
-               })()}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================= */}
-      {/* MODAL PERBANDINGAN 3 BULAN TERAKHIR */}
-      {/* ========================================================= */}
-      {showCompareModal && selectedMex && (
-        <div className="fixed inset-0 z-[7500] flex items-center justify-center p-4 sm:p-6">
-            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowCompareModal(false)} />
-            <div className="relative w-full max-w-6xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 overflow-hidden">
-                <div className="flex justify-between items-start sm:items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10 flex-col sm:flex-row gap-4">
-                    <div>
-                        <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
-                           <BarChart2 className="w-5 h-5 text-indigo-500"/>
-                           Custom Performance Review
-                        </h3>
-                        <p className="text-[11px] md:text-xs text-slate-500 font-medium mt-1">
-                           Bandingkan data historis <strong className="text-slate-700">{selectedMex.name}</strong> secara komprehensif
-                        </p>
-                    </div>
-                    <button onClick={() => setShowCompareModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors absolute sm:relative right-4 top-4 sm:right-0 sm:top-0"><X size={20}/></button>
-                </div>
-
-                <div className="flex-1 overflow-auto p-4 md:p-6 bg-[#f8fafc] custom-scrollbar">
-                    
-                    {/* NEW: GRAFIK KOMPARASI */}
-                    {(() => {
-                        const validMonthsStr = compareMonths.filter(Boolean);
-                        if (validMonthsStr.length === 0) return null;
-
-                        // Urutkan bulan dari yang terlama ke terbaru
-                        const sortedMonths = [...validMonthsStr].sort((a, b) => new Date(a) - new Date(b));
-                        
-                        // Struktur Data: Bulan sebagai poros X untuk Stacking
-                        const compareChartData = sortedMonths.map(monthStr => {
-                            const hist = (selectedMex.history || []).find(h => h.month === monthStr);
-                            if (!hist) return null;
-                            return {
-                                name: formatMonth(hist.month),
-                                'Net Sales': hist.net_sales,
-                                'Promo Invest': hist.total_investment,
-                                'Gross Sales': hist.basket_size,
-                                'Orders': hist.completed_orders,
-                                'AOV': hist.aov
-                            };
-                        }).filter(Boolean);
-
-                        return (
-                            <div className="bg-white rounded-[28px] p-5 md:p-6 border border-slate-200 shadow-sm mb-5 md:mb-6 animate-in fade-in slide-in-from-top-4">
-                                <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                    <BarChart2 size={14} className="text-indigo-500" /> Komposisi Gross Sales (Bulan ke Bulan)
-                                </h4>
-                                <div className="w-full h-[200px] md:h-[250px]">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={compareChartData} margin={{ top: 25, right: 10, left: -20, bottom: 5 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                            <XAxis dataKey="name" tick={{ fill: '#1e293b', fontSize: 11, fontWeight: 900 }} tickLine={false} axisLine={false} />
-                                            
-                                            {/* Multi-YAxis agar skala bar tidak saling menindih */}
-                                            <YAxis yAxisId="left" tick={{ fill: COLORS.slate400, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} />
-                                            <YAxis yAxisId="right" orientation="right" tick={{ fill: '#f59e0b', fontSize: 10, fontWeight: 800 }} tickLine={false} axisLine={false} tickFormatter={(v) => fNum(v)} width={40} />
-                                            <YAxis yAxisId="rightAov" orientation="right" tick={{ fill: '#06b6d4', fontSize: 10, fontWeight: 800 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={40} />
-                                            
-                                            <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [n === 'Orders' ? fNum(v) : formatCurrency(v), n]} />
-                                            <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop: '10px' }} iconType="circle" />
-                                            
-                                            {/* Stack 1: Gross Sales (Net Sales + Promo Invest) */}
-                                            <Bar yAxisId="left" dataKey="Net Sales" stackId="a" fill="#10b981" maxBarSize={32} />
-                                            <Bar yAxisId="left" dataKey="Promo Invest" stackId="a" fill="#f43f5e" radius={[4,4,0,0]} maxBarSize={32}>
-                                                {/* Label Total Gross Sales melayang di ujung batang Stack */}
-                                                <LabelList dataKey="Gross Sales" position="top" offset={10} fontSize={10} fontWeight={900} fill="#1e293b" formatter={(v) => formatCurrency(v)} />
-                                            </Bar>
-                                            
-                                            {/* Bar 2: Orders */}
-                                            <Bar yAxisId="right" dataKey="Orders" name="Orders" fill="#f59e0b" radius={[4,4,0,0]} maxBarSize={32} />
-                                            
-                                            {/* Bar 3: AOV */}
-                                            <Bar yAxisId="rightAov" dataKey="AOV" name="AOV" fill="#06b6d4" radius={[4,4,0,0]} maxBarSize={32} />
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
-                        );
-                    })()}
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
-                        {[0, 1, 2].map((colIdx) => {
-                            const available = selectedMex.history || [];
-                            const selectedMonthStr = compareMonths[colIdx];
-                            const hist = available.find(h => h.month === selectedMonthStr);
-                            const origIdx = available.findIndex(h => h.month === selectedMonthStr);
-                            const prev = origIdx > 0 ? available[origIdx - 1] : null;
-
-                            const handleSelectChange = (e) => {
-                                const newArr = [...compareMonths];
-                                newArr[colIdx] = e.target.value;
-                                setCompareMonths(newArr);
-                            };
-
-                            const getGrowth = (curr, prv) => {
-                                if (!prv || prv === 0) return null;
-                                return ((curr - prv) / prv) * 100;
-                            };
-
-                            const renderGrowthBadge = (growth, isReverseColor = false) => {
-                                if (growth === null) return null;
-                                const isPositive = growth >= 0;
-                                const colorClass = isReverseColor 
-                                    ? (isPositive ? 'text-rose-600 bg-rose-50 border-rose-100' : 'text-[#00B14F] bg-emerald-50 border-emerald-100')
-                                    : (isPositive ? 'text-[#00B14F] bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100');
-                                const Arrow = isPositive ? ArrowUpRight : ArrowDownRight;
-                                
-                                return (
-                                    <div className={`flex items-center gap-0.5 text-[9px] font-black px-1.5 py-0.5 rounded-md border ${colorClass}`} title="MoM Growth">
-                                        <Arrow size={10} /> {Math.abs(growth).toFixed(1)}%
-                                    </div>
-                                );
-                            };
-
-                            return (
-                                <div key={colIdx} className="bg-white rounded-[28px] p-5 border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-200 transition-all flex flex-col h-full">
-                                    {/* DROPDOWN SELECTOR */}
-                                    <div className="mb-5 relative z-10 w-full">
-                                        <div className="relative inline-block w-full">
-                                            <select 
-                                                value={selectedMonthStr}
-                                                onChange={handleSelectChange}
-                                                className="appearance-none w-full text-xs font-black bg-slate-50 border border-slate-200 text-slate-700 px-4 py-3 pr-10 rounded-2xl focus:outline-none focus:bg-indigo-50 focus:border-indigo-300 focus:text-indigo-800 cursor-pointer shadow-sm transition-all uppercase tracking-widest text-center"
-                                            >
-                                                <option value="">-- PILIH BULAN --</option>
-                                                {available.map((h, i) => (
-                                                    <option key={i} value={h.month}>{formatMonth(h.month)}</option>
-                                                ))}
-                                            </select>
-                                            <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                                        </div>
-                                    </div>
-
-                                    {hist ? (
-                                        <div className="relative z-10 flex flex-col mt-auto gap-4">
-                                            
-                                            {/* 1. HERO METRIC: Gross Sales */}
-                                            <div className="bg-emerald-50/60 border border-emerald-100/60 rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm relative overflow-hidden">
-                                                <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-100 rounded-bl-full opacity-50 -mr-2 -mt-2"></div>
-                                                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Activity size={12}/> Gross Sales</p>
-                                                <p className="text-2xl font-black text-slate-800 tracking-tight mb-2">{formatCurrency(hist.basket_size)}</p>
-                                                {renderGrowthBadge(getGrowth(hist.basket_size, prev?.basket_size))}
-                                            </div>
-
-                                            {/* 2. SECONDARY GRID: Net Sales, Orders, AOV */}
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col justify-between">
-                                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Net Sales</p>
-                                                    <p className="text-sm font-black text-slate-800 truncate" title={formatCurrency(hist.net_sales)}>{formatCurrency(hist.net_sales)}</p>
-                                                    <div className="mt-1">{renderGrowthBadge(getGrowth(hist.net_sales, prev?.net_sales))}</div>
-                                                </div>
-                                                <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col justify-between">
-                                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1"><ShoppingCart size={10}/> Orders</p>
-                                                    <p className="text-sm font-black text-slate-800 truncate">{fNum(hist.completed_orders)}</p>
-                                                    <div className="mt-1">{renderGrowthBadge(getGrowth(hist.completed_orders, prev?.completed_orders))}</div>
-                                                </div>
-                                                <div className="col-span-2 bg-slate-50 border border-slate-100 rounded-xl p-3 flex justify-between items-center">
-                                                    <div>
-                                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-0.5 flex items-center gap-1"><Target size={10}/> AOV</p>
-                                                        <p className="text-sm font-black text-slate-800">{formatCurrency(hist.aov)}</p>
-                                                    </div>
-                                                    <div>{renderGrowthBadge(getGrowth(hist.aov, prev?.aov))}</div>
-                                                </div>
-                                            </div>
-
-                                            {/* 3. PROGRESS BARS: Promo & MI Ratio */}
-                                            <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm space-y-4">
-                                                <div>
-                                                    <div className="flex justify-between items-end mb-1.5">
-                                                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1"><Percent size={10}/> Promo Usage</span>
-                                                        <div className="flex items-center gap-2">
-                                                            {renderGrowthBadge(getGrowth(hist.promo_order_pct, prev?.promo_order_pct), false)}
-                                                            <span className="text-xs font-black text-slate-800">{hist.promo_order_pct}%</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                                                        <div className="bg-teal-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, hist.promo_order_pct)}%` }}></div>
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <div className="flex justify-between items-end mb-1.5">
-                                                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1"><PieChart size={10}/> MI / BS %</span>
-                                                        <div className="flex items-center gap-2">
-                                                            {renderGrowthBadge(getGrowth(hist.mi_percentage, prev?.mi_percentage), true)}
-                                                            <span className="text-xs font-black text-slate-800">{hist.mi_percentage}%</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                                                        <div className="bg-rose-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, hist.mi_percentage)}%` }}></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* 4. COST/INVESTMENT HIGHLIGHT */}
-                                            <div className="bg-rose-50/50 border border-rose-100 rounded-xl p-4 flex flex-col gap-3">
-                                                <div className="flex justify-between items-center pb-3 border-b border-rose-100/60">
-                                                    <div>
-                                                        <p className="text-[9px] font-bold text-rose-500 uppercase tracking-widest mb-0.5 flex items-center gap-1"><Zap size={10}/> Promo Invest</p>
-                                                        <p className="text-sm font-black text-rose-700">{formatCurrency(hist.total_investment)}</p>
-                                                    </div>
-                                                    {renderGrowthBadge(getGrowth(hist.total_investment, prev?.total_investment), true)}
-                                                </div>
-                                                <div className="flex justify-between items-center">
-                                                    <div>
-                                                        <p className="text-[9px] font-bold text-rose-500 uppercase tracking-widest mb-0.5 flex items-center gap-1"><Megaphone size={10}/> Ads Spend</p>
-                                                        <p className="text-sm font-black text-rose-700">{formatCurrency(hist.ads_total_hist)}</p>
-                                                    </div>
-                                                    {renderGrowthBadge(getGrowth(hist.ads_total_hist, prev?.ads_total_hist), true)}
-                                                </div>
-                                            </div>
-
-                                        </div>
-                                    ) : (
-                                        <div className="relative z-10 flex flex-col items-center justify-center flex-1 text-slate-400 min-h-[250px] bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200">
-                                            <Activity className="w-10 h-10 mb-3 opacity-30 animate-pulse" />
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-center">Pilih bulan di atas<br/>untuk memuat metrik</p>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-        </div>
-      )}
-
-      {/* ELEGAN & MODERN HEADER */}
-      <header className="sticky top-0 z-40 transition-all pt-4 pb-2 md:py-4 px-4 md:px-6">
-        <div className="flex items-center justify-between gap-3 md:gap-4 lg:gap-6 bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-3xl p-3 md:p-4 shadow-2xl shadow-black/20">
+      <header className="flex-none relative z-50 w-full bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 h-16 md:h-20 flex items-center justify-between gap-4 md:gap-8">
           
-          {/* 1. Left Section: Logo & Desktop Tabs / Back Button */}
-          <div className="flex items-center gap-3 lg:gap-6 shrink-0">
+          {/* 1. Left: Logo & Context / Tabs */}
+          <div className="flex items-center gap-4 md:gap-6 flex-1 min-w-0">
              {/* Logo */}
-             <div className="flex items-center gap-3 cursor-pointer group" onClick={() => { setSelectedMex(null); setActiveTab('overview'); setSearchTerm(''); }}>
-               <div className="w-9 h-9 md:w-10 md:h-10 bg-gradient-to-br from-[#00B14F] to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-105 transition-transform duration-300 shrink-0">
+             <div className="flex items-center gap-2.5 cursor-pointer group shrink-0" onClick={() => { setSelectedMex(null); setActiveTab('overview'); setSearchTerm(''); }}>
+               <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-[#00B14F] to-emerald-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-all">
                  <Activity className="w-4 h-4 md:w-5 md:h-5 text-white" />
                </div>
-               <h1 className="text-xl md:text-2xl font-black text-white tracking-tight hidden xl:block drop-shadow-sm whitespace-nowrap">
-                 AM DASHBOARD <span className="text-emerald-400 ml-0.5">PRO</span>
-               </h1>
+               <div className="flex flex-col">
+                 <h1 className="text-sm md:text-base lg:text-lg font-black text-slate-900 dark:text-white tracking-tight leading-none group-hover:text-[#00B14F] transition-colors">
+                   AM DASHBOARD <span className="text-[#00B14F] dark:text-emerald-400">PRO</span>
+                 </h1>
+               </div>
              </div>
 
-             {/* TABS NAVIGATION (Desktop) */}
-             {!selectedMex && (
-               <Fragment>
-                 <div className="hidden lg:block w-px h-8 bg-slate-700/50 mx-1"></div>
-                 <div className="hidden lg:flex bg-slate-950/50 p-1.5 rounded-2xl shrink-0 border border-white/5">
-                     <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`px-4 xl:px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'overview' ? 'bg-[#00B14F] text-white shadow-md shadow-emerald-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-                         <LayoutDashboard className="w-4 h-4" /> Overview
-                     </button>
-                     <button onClick={() => setActiveTab('data')} className={`px-4 xl:px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'data' ? 'bg-[#00B14F] text-white shadow-md shadow-emerald-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-                         <Table className="w-4 h-4" /> Master Data
-                     </button>
-                 </div>
-               </Fragment>
-             )}
+             <div className="hidden md:block w-px h-6 bg-slate-200 dark:bg-slate-700 shrink-0"></div>
 
-             {/* Back Button for Detail View */}
-             {selectedMex && (
-                 <button onClick={() => setSelectedMex(null)} className="group flex items-center gap-2 text-slate-300 hover:text-white font-bold text-xs md:text-sm transition-all px-3 md:px-4 py-2 md:py-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-700 border border-white/10 ml-1 md:ml-2">
-                    <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform"/> <span className="hidden sm:inline">Kembali</span>
-                 </button>
-             )}
+             {/* Dynamic Context Area (Tabs OR Breadcrumb) */}
+             <div className="hidden md:flex items-center flex-1 min-w-0">
+                 {!selectedMex ? (
+                    // DESKTOP TABS
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
+                        <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'overview' ? 'bg-white dark:bg-slate-950 text-[#00B14F] dark:text-emerald-400 shadow-sm border border-slate-200/50 dark:border-slate-800/80' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'}`}>
+                            <LayoutDashboard className="w-4 h-4" /> Overview
+                        </button>
+                        <button onClick={() => setActiveTab('data')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'data' ? 'bg-white dark:bg-slate-950 text-[#00B14F] dark:text-emerald-400 shadow-sm border border-slate-200/50 dark:border-slate-800/80' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'}`}>
+                            <Table className="w-4 h-4" /> Directory
+                        </button>
+                    </div>
+                 ) : (
+                    // BREADCRUMB
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-400 truncate">
+                        <button onClick={() => setSelectedMex(null)} className="hover:text-[#00B14F] transition-colors flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                           <ArrowLeft className="w-3.5 h-3.5" /> Beranda
+                        </button>
+                        <span className="text-slate-300 dark:text-slate-600">/</span>
+                        <span className="text-slate-800 dark:text-slate-200 truncate">{selectedMex.name}</span>
+                    </div>
+                 )}
+             </div>
           </div>
-          
-          {/* 2. Right Section: Filters, Last Update & Actions */}
-          {!selectedMex && (
-            <div className="flex items-center gap-2 lg:gap-3 shrink-0 ml-auto">
-               {/* Filters Pill */}
-               <div className="flex items-center bg-slate-800/80 border border-slate-700 rounded-xl lg:rounded-2xl px-2.5 lg:px-3 h-9 sm:h-10 lg:h-11 shadow-inner hover:border-slate-500 transition-colors shrink-0">
-                   <Filter className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-emerald-400 hidden sm:block mr-1.5 lg:mr-2" />
-                   
-                   <select value={selectedAM} onChange={(e) => { setSelectedAM(e.target.value); setSelectedMex(null); }} className="bg-transparent text-slate-200 hover:text-white text-[11px] lg:text-xs font-bold focus:outline-none w-[70px] sm:w-[90px] lg:w-28 cursor-pointer appearance-none truncate">
-                      {amOptions.map(am => <option key={am} value={am} className="text-slate-900">{am}</option>)}
-                   </select>
-                   <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block ml-1 shrink-0" />
-               </div>
 
-               {/* LAST UPDATE & REFRESH COMBO BOX */}
-               <div className="flex items-center bg-slate-800/80 border border-slate-700 rounded-xl lg:rounded-2xl p-1 shadow-inner shrink-0 h-9 sm:h-10 lg:h-11">
-                   {globalLastUpdate && (
-                       <div className="flex flex-col justify-center px-2 lg:px-3">
-                           <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-0.5 hidden sm:block">Data Terakhir</span>
-                           <span className="text-[9px] lg:text-[10px] font-bold text-emerald-400 leading-none flex items-center gap-1">
-                               <Clock size={10} className="hidden sm:block" /> {globalLastUpdate}
-                           </span>
-                       </div>
-                   )}
-                   
-                   {globalLastUpdate && <div className="w-px h-5 bg-slate-700 mx-1 hidden sm:block"></div>}
+          {/* 2. Right: Tools & Filters */}
+          <div className="flex items-center gap-3 md:gap-4 shrink-0">
+             
+             {!selectedMex && (
+                 <div className="flex items-center bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg lg:rounded-xl px-2.5 lg:px-3 h-9 sm:h-10 hover:border-[#00B14F] transition-colors">
+                     <Filter className="w-3.5 h-3.5 text-emerald-500 mr-1.5 hidden sm:block" />
+                     <select value={selectedAM} onChange={(e) => { setSelectedAM(e.target.value); setSelectedMex(null); }} className="bg-transparent text-slate-700 dark:text-slate-200 text-[10px] lg:text-xs font-bold focus:outline-none w-[70px] sm:w-[90px] lg:w-28 cursor-pointer appearance-none truncate">
+                        {amOptions.map(am => <option key={am} value={am} className="text-slate-900">{am}</option>)}
+                     </select>
+                     <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
+                 </div>
+             )}
 
-                   <button 
-                       onClick={() => setIsForceUpload(true)} 
-                       className="group flex items-center justify-center bg-slate-700/50 hover:bg-[#00B14F] text-slate-300 hover:text-white w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-lg lg:rounded-xl transition-all shadow-sm shrink-0"
-                       title="Update Data"
-                   >
-                       <RefreshCw className="w-3.5 h-3.5 lg:w-4 lg:h-4 group-hover:rotate-180 transition-transform duration-500" />
-                   </button>
-                   
-                   {/* THEME TOGGLE BUTTON */}
-                   <button 
-                       onClick={() => setIsDarkMode(!isDarkMode)} 
-                       className="group flex items-center justify-center bg-slate-700/50 hover:bg-indigo-500 text-slate-300 hover:text-white w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-lg lg:rounded-xl transition-all shadow-sm shrink-0 ml-1.5"
-                       title={isDarkMode ? "Beralih ke Light Mode" : "Beralih ke Dark Mode"}
-                   >
-                       {isDarkMode ? <Sun className="w-3.5 h-3.5 lg:w-4 lg:h-4 group-hover:rotate-90 transition-transform duration-500" /> : <Moon className="w-3.5 h-3.5 lg:w-4 lg:h-4 group-hover:-rotate-12 transition-transform duration-500" />}
-                   </button>
-               </div>
-            </div>
-          )}
+             {selectedMex && (
+                 <div className="hidden sm:flex items-center gap-1.5 lg:gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg lg:rounded-xl px-2.5 lg:px-3 py-1.5 lg:py-2 shadow-sm">
+                    <Users className="w-3.5 h-3.5 text-[#00B14F]" />
+                    <span className="text-slate-500 dark:text-slate-400 text-[9px] lg:text-[10px] font-bold tracking-widest uppercase">AM <span className="text-slate-800 dark:text-white ml-1 font-black">{selectedMex.amName}</span></span>
+                 </div>
+             )}
 
-          {/* AM Info for Detail View */}
-          {selectedMex && (
-            <div className="flex items-center gap-1.5 lg:gap-2 bg-slate-800/80 border border-slate-700 rounded-xl lg:rounded-2xl px-2.5 lg:px-4 py-2 lg:py-2.5 shadow-inner ml-auto animate-in fade-in shrink-0">
-               <Users className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-emerald-400" />
-               <span className="text-slate-300 text-[9px] lg:text-[10px] font-bold tracking-widest uppercase">AM <span className="text-white ml-1 lg:ml-2">{selectedMex.amName}</span></span>
-            </div>
-          )}
+             <div className="flex items-center gap-1 border-l border-slate-200 dark:border-slate-700 pl-3 md:pl-4">
+                 {globalLastUpdate && !selectedMex && (
+                     <div className="flex flex-col justify-center px-2 lg:px-3 text-right hidden lg:flex">
+                         <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">Last Sync</span>
+                         <span className="text-[10px] font-bold text-[#00B14F] dark:text-emerald-400 leading-none flex items-center gap-1 justify-end">
+                             <Clock size={10} /> {globalLastUpdate}
+                         </span>
+                     </div>
+                 )}
+                 {!selectedMex && <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1 hidden lg:block"></div>}
+                 
+                 <button 
+                     onClick={() => setIsForceUpload(true)} 
+                     className="flex items-center justify-center text-slate-500 hover:text-[#00B14F] dark:text-slate-400 dark:hover:text-emerald-400 w-8 h-8 md:w-9 md:h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group shadow-sm border border-slate-200/50 dark:border-slate-700"
+                     title="Update Data"
+                 >
+                     <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
+                 </button>
+                 
+                 <button 
+                     onClick={() => setIsDarkMode(!isDarkMode)} 
+                     className="flex items-center justify-center text-slate-500 hover:text-indigo-500 dark:text-slate-400 dark:hover:text-indigo-400 w-8 h-8 md:w-9 md:h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group shadow-sm border border-slate-200/50 dark:border-slate-700"
+                     title={isDarkMode ? "Beralih ke Light Mode" : "Beralih ke Dark Mode"}
+                 >
+                     {isDarkMode ? <Sun className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" /> : <Moon className="w-4 h-4 group-hover:-rotate-12 transition-transform duration-500" />}
+                 </button>
+             </div>
+          </div>
         </div>
 
-        {/* TABS NAVIGATION (Mobile - Floating below header) */}
+        {/* MOBILE SUB-NAV */}
         {!selectedMex && (
-          <div className="lg:hidden flex justify-center mt-3 animate-in fade-in slide-in-from-top-2 relative z-40">
-             <div className="flex bg-slate-900/90 backdrop-blur-xl p-1.5 rounded-2xl border border-white/10 shadow-2xl">
-                <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 ${activeTab === 'overview' ? 'bg-[#00B14F] text-white shadow-md' : 'text-slate-400 hover:text-white'}`}>
-                    <LayoutDashboard className="w-3.5 h-3.5" /> Overview
-                </button>
-                <button onClick={() => setActiveTab('data')} className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 ${activeTab === 'data' ? 'bg-[#00B14F] text-white shadow-md' : 'text-slate-400 hover:text-white'}`}>
-                    <Table className="w-3.5 h-3.5" /> Data
-                </button>
-             </div>
-          </div>
+            <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+                <div className="flex items-center justify-between px-4 py-2.5 gap-2">
+                    <div className="flex w-full gap-2">
+                        <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 ${activeTab === 'overview' ? 'bg-white dark:bg-slate-800 text-[#00B14F] dark:text-emerald-400 shadow-sm border border-slate-200 dark:border-slate-700' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                            <LayoutDashboard className="w-3.5 h-3.5" /> Overview
+                        </button>
+                        <button onClick={() => setActiveTab('data')} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 ${activeTab === 'data' ? 'bg-white dark:bg-slate-800 text-[#00B14F] dark:text-emerald-400 shadow-sm border border-slate-200 dark:border-slate-700' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                            <Table className="w-3.5 h-3.5" /> Data
+                        </button>
+                    </div>
+                </div>
+            </div>
         )}
       </header>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 overflow-y-auto relative w-full hide-scrollbar z-10 px-4 md:px-6 lg:px-8 pb-4 md:pb-6 lg:pb-8 pt-2 md:pt-4">
-        <div className="max-w-[1400px] mx-auto pb-safe">
+      <main className={`flex-1 overflow-y-auto relative w-full hide-scrollbar z-10 px-4 md:px-6 lg:px-8 pt-4 md:pt-6 flex flex-col ${selectedMex ? 'pb-28 md:pb-4' : 'pb-4'}`}>
+        <div className="max-w-[1400px] mx-auto w-full flex-1 flex flex-col pb-safe">
 
           {/* ========================================================= */}
           {/* GLOBAL SEARCH BAR (DIPINDAHKAN KE BAWAH HEADER) */}
@@ -1882,14 +1583,14 @@ export default function App() {
                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
                       
                       {/* Basketsize Card */}
-                      <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1 group h-full">
-                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500 dark:bg-emerald-400"></div>
+                      <div className="bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1 group h-full">
+                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500"></div>
                          <Activity className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
                          
                          <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-5 pl-2 relative z-10">
                              <div className="flex items-center gap-2 lg:gap-3">
-                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0"><Activity size={18} strokeWidth={2.5}/></div>
-                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Basketsize</p>
+                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0"><Activity size={18} strokeWidth={2.5}/></div>
+                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest truncate">Basketsize</p>
                              </div>
                              {(() => {
                                  let trend = 0;
@@ -1897,7 +1598,7 @@ export default function App() {
                                  else if (kpi?.rr > 0) trend = 100;
                                  const isUp = trend >= 0;
                                  return (
-                                     <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap ${isUp ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
+                                     <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap ${isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
                                          {isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%
                                      </div>
                                  );
@@ -1906,28 +1607,28 @@ export default function App() {
                          
                          <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                              <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">MTD Sales</p>
-                             <p className="text-2xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.mtd || 0)}</p>
+                             <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.mtd || 0)}</p>
                              <div className="flex flex-wrap items-center gap-1.5 lg:gap-2 mb-1 lg:mb-2">
-                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Runrate:</span>
-                                 <span className="text-xs lg:text-sm font-black text-slate-800 dark:text-slate-200">{formatCurrency(kpi?.rr || 0)}</span>
+                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Runrate:</span>
+                                 <span className="text-xs lg:text-sm font-black text-slate-800">{formatCurrency(kpi?.rr || 0)}</span>
                              </div>
                          </div>
                          
-                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center pl-2 relative z-10">
+                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
                              <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Last Month</span>
-                             <span className="text-[10px] lg:text-xs font-black text-slate-700 dark:text-slate-300">{formatCurrency(kpi?.lm || 0)}</span>
+                             <span className="text-[10px] lg:text-xs font-black text-slate-700">{formatCurrency(kpi?.lm || 0)}</span>
                          </div>
                       </div>
 
                       {/* Merchant Invest Card (NOW CLICKABLE) */}
-                      <div onClick={() => setShowMiModal(true)} className="cursor-pointer bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-teal-500/5 hover:-translate-y-1 group h-full">
-                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-teal-500 dark:bg-teal-400"></div>
+                      <div onClick={() => setShowMiModal(true)} className="cursor-pointer bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-teal-500/5 hover:-translate-y-1 group h-full">
+                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-teal-500"></div>
                          <DollarSign className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
                          
                          <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-5 pl-2 relative z-10">
                              <div className="flex items-center gap-2 lg:gap-3">
-                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-teal-50 dark:bg-teal-500/10 text-teal-500 dark:text-teal-400 flex items-center justify-center shrink-0"><DollarSign size={18} strokeWidth={2.5}/></div>
-                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1 truncate">
+                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0"><DollarSign size={18} strokeWidth={2.5}/></div>
+                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">
                                      Invest <MousePointer size={10} className="text-slate-300 group-hover:text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 shrink-0 hidden lg:block"/>
                                  </p>
                              </div>
@@ -1937,7 +1638,7 @@ export default function App() {
                                  else if (kpi?.miRr > 0) trend = 100;
                                  const isUp = trend > 0;
                                  return (
-                                     <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap ${!isUp ? 'bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
+                                     <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap ${!isUp ? 'bg-teal-50 text-teal-600' : 'bg-rose-50 text-rose-600'}`}>
                                          {isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%
                                      </div>
                                  );
@@ -1947,34 +1648,34 @@ export default function App() {
                          <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                              <div className="flex flex-wrap items-center gap-1.5 mb-1">
                                  <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest">MTD Invest</p>
-                                 <span className="text-[8px] lg:text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-teal-600 dark:text-teal-400 px-1.5 py-0.5 rounded-md leading-none">{kpi?.mtd ? ((kpi.miMtd / kpi.mtd) * 100).toFixed(1) : 0}%</span>
+                                 <span className="text-[8px] lg:text-[9px] font-bold bg-slate-100 text-teal-600 px-1.5 py-0.5 rounded-md leading-none">{kpi?.mtd ? ((kpi.miMtd / kpi.mtd) * 100).toFixed(1) : 0}%</span>
                              </div>
-                             <p className="text-2xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.miMtd || 0)}</p>
+                             <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.miMtd || 0)}</p>
                              <div className="flex flex-wrap items-center gap-1.5 lg:gap-2 mb-1 lg:mb-2">
-                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Runrate:</span>
-                                 <span className="text-xs lg:text-sm font-black text-slate-800 dark:text-slate-200">{formatCurrency(kpi?.miRr || 0)}</span>
-                                 <span className="text-[8px] lg:text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded-md leading-none hidden lg:block">{kpi?.rr ? ((kpi.miRr / kpi.rr) * 100).toFixed(1) : 0}%</span>
+                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Runrate:</span>
+                                 <span className="text-xs lg:text-sm font-black text-slate-800">{formatCurrency(kpi?.miRr || 0)}</span>
+                                 <span className="text-[8px] lg:text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md leading-none hidden lg:block">{kpi?.rr ? ((kpi.miRr / kpi.rr) * 100).toFixed(1) : 0}%</span>
                              </div>
                          </div>
 
-                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center pl-2 relative z-10">
+                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
                              <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Last Month</span>
                              <div className="flex items-center gap-1.5">
-                                 <span className="text-[10px] lg:text-xs font-black text-slate-700 dark:text-slate-300">{formatCurrency(kpi?.miLm || 0)}</span>
-                                 <span className="text-[8px] lg:text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded-md leading-none hidden sm:block">{kpi?.lm ? ((kpi.miLm / kpi.lm) * 100).toFixed(1) : 0}%</span>
+                                 <span className="text-[10px] lg:text-xs font-black text-slate-700">{formatCurrency(kpi?.miLm || 0)}</span>
+                                 <span className="text-[8px] lg:text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md leading-none hidden sm:block">{kpi?.lm ? ((kpi.miLm / kpi.lm) * 100).toFixed(1) : 0}%</span>
                              </div>
                          </div>
                       </div>
 
                       {/* Ads Spend Card (NOW CLICKABLE) */}
-                      <div onClick={() => setShowAdsModal(true)} className="cursor-pointer bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-rose-500/5 hover:-translate-y-1 group h-full">
-                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500 dark:bg-rose-400"></div>
+                      <div onClick={() => setShowAdsModal(true)} className="cursor-pointer bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-rose-500/5 hover:-translate-y-1 group h-full">
+                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500"></div>
                          <Megaphone className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
                          
                          <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-5 pl-2 relative z-10">
                              <div className="flex items-center gap-2 lg:gap-3">
-                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-500 dark:text-rose-400 flex items-center justify-center shrink-0"><Megaphone size={18} strokeWidth={2.5}/></div>
-                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1 truncate">
+                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0"><Megaphone size={18} strokeWidth={2.5}/></div>
+                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">
                                      Ads <MousePointer size={10} className="text-slate-300 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 shrink-0 hidden lg:block"/>
                                  </p>
                              </div>
@@ -1984,7 +1685,7 @@ export default function App() {
                                  else if (kpi?.adsRr > 0) trend = 100;
                                  const isUp = trend > 0;
                                  return (
-                                     <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap ${!isUp ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
+                                     <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap ${!isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
                                          {isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%
                                      </div>
                                  );
@@ -1993,28 +1694,28 @@ export default function App() {
 
                          <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                              <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">MTD Ads</p>
-                             <p className="text-2xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.adsMtd || 0)}</p>
+                             <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.adsMtd || 0)}</p>
                              <div className="flex flex-wrap items-center gap-1.5 lg:gap-2 mb-1 lg:mb-2">
-                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Runrate:</span>
-                                 <span className="text-xs lg:text-sm font-black text-slate-800 dark:text-slate-200">{formatCurrency(kpi?.adsRr || 0)}</span>
+                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Runrate:</span>
+                                 <span className="text-xs lg:text-sm font-black text-slate-800">{formatCurrency(kpi?.adsRr || 0)}</span>
                              </div>
                          </div>
 
-                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center pl-2 relative z-10">
+                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
                              <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Last Month</span>
-                             <span className="text-[10px] lg:text-xs font-black text-slate-700 dark:text-slate-300">{formatCurrency(kpi?.adsLm || 0)}</span>
+                             <span className="text-[10px] lg:text-xs font-black text-slate-700">{formatCurrency(kpi?.adsLm || 0)}</span>
                          </div>
                       </div>
 
                       {/* MCA Disbursed Card (CLICKABLE) */}
-                      <div onClick={() => setShowMcaModal(true)} className="cursor-pointer bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 hover:-translate-y-1 group h-full">
-                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500 dark:bg-amber-400"></div>
+                      <div onClick={() => setShowMcaModal(true)} className="cursor-pointer bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 hover:-translate-y-1 group h-full">
+                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500"></div>
                          <Database className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
                          
                          <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
                              <div className="flex items-center gap-2 lg:gap-3">
-                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400 flex items-center justify-center shrink-0"><Database size={18} strokeWidth={2.5}/></div>
-                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1 truncate">
+                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0"><Database size={18} strokeWidth={2.5}/></div>
+                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">
                                      MCA <MousePointer size={10} className="text-slate-300 group-hover:text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 shrink-0 hidden lg:block"/>
                                  </p>
                              </div>
@@ -2022,57 +1723,57 @@ export default function App() {
 
                          <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                              <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Disbursed</p>
-                             <p className="text-2xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.mcaDis || 0)}</p>
+                             <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.mcaDis || 0)}</p>
                              <div className="flex flex-wrap items-center gap-1.5 lg:gap-2 mb-1 lg:mb-2">
-                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Eligibility:</span>
-                                 <span className="text-xs lg:text-sm font-black text-slate-800 dark:text-slate-200">{formatCurrency(kpi?.mcaEli || 0)}</span>
+                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Eligibility:</span>
+                                 <span className="text-xs lg:text-sm font-black text-slate-800">{formatCurrency(kpi?.mcaEli || 0)}</span>
                              </div>
                          </div>
 
-                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center pl-2 relative z-10">
+                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
                              <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Total Toko</span>
-                             <span className="px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                             <span className="px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black uppercase bg-slate-100 text-slate-600">
                                  {kpi?.mcaDisCount || 0} Toko
                              </span>
                          </div>
                       </div>
 
                       {/* Campaign Pts Card */}
-                      <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 group h-full">
-                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500 dark:bg-indigo-400"></div>
+                      <div className="bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 group h-full">
+                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500"></div>
                          <Award className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
                          
                          <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
                              <div className="flex items-center gap-2 lg:gap-3">
-                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 flex items-center justify-center shrink-0"><Award size={18} strokeWidth={2.5}/></div>
-                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Campaigns</p>
+                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0"><Award size={18} strokeWidth={2.5}/></div>
+                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest truncate">Campaigns</p>
                              </div>
                          </div>
 
                          <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                              <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Points</p>
-                             <p className="text-2xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-3 lg:mb-4">{(kpi?.totalPoints || 0).toLocaleString('id-ID')}</p>
+                             <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{(kpi?.totalPoints || 0).toLocaleString('id-ID')}</p>
                              <div className="flex flex-wrap items-center gap-1.5 lg:gap-2 mb-1 lg:mb-2">
-                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Joiners:</span>
-                                 <span className="text-xs lg:text-sm font-black text-slate-800 dark:text-slate-200">{kpi?.joiners || 0} Toko</span>
+                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Joiners:</span>
+                                 <span className="text-xs lg:text-sm font-black text-slate-800">{kpi?.joiners || 0} Toko</span>
                              </div>
                          </div>
 
-                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center pl-2 relative z-10">
+                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
                              <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Avg Points</span>
-                             <span className="text-[10px] lg:text-xs font-black text-slate-700 dark:text-slate-300">{kpi?.avgPtsPerJoiner || 0} pts</span>
+                             <span className="text-[10px] lg:text-xs font-black text-slate-700">{kpi?.avgPtsPerJoiner || 0} pts</span>
                          </div>
                       </div>
                       
                       {/* Outlets Card (NOW CLICKABLE WITH 0-TRX) */}
-                      <div onClick={() => setShowOutletsModal(true)} className="cursor-pointer bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 group h-full">
-                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500 dark:bg-blue-400"></div>
+                      <div onClick={() => setShowOutletsModal(true)} className="cursor-pointer bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 group h-full">
+                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
                          <Store className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
                          
                          <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
                              <div className="flex items-center gap-2 lg:gap-3">
-                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 dark:text-blue-400 flex items-center justify-center shrink-0"><Store size={18} strokeWidth={2.5}/></div>
-                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1 truncate">
+                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0"><Store size={18} strokeWidth={2.5}/></div>
+                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">
                                      Outlets <MousePointer size={10} className="text-slate-300 group-hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 shrink-0 hidden lg:block"/>
                                  </p>
                              </div>
@@ -2080,28 +1781,28 @@ export default function App() {
 
                          <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                              <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Managed</p>
-                             <p className="text-2xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-3 lg:mb-4">{kpi?.totalMex || 0}</p>
+                             <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{kpi?.totalMex || 0}</p>
                              
                              <div className="flex items-center gap-3 mb-1 lg:mb-2">
                                  <div className="flex items-center gap-1.5">
                                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                     <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Active:</span>
-                                     <span className="text-xs lg:text-sm font-black text-slate-800 dark:text-slate-200">{kpi?.activeMex || 0}</span>
+                                     <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active:</span>
+                                     <span className="text-xs lg:text-sm font-black text-slate-800">{kpi?.activeMex || 0}</span>
                                  </div>
                              </div>
                          </div>
 
-                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center pl-2 relative z-10 gap-2">
+                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10 gap-2">
                              <div className="flex items-center gap-1 lg:gap-1.5 flex-1 min-w-0">
                                  <span className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-slate-400 shrink-0"></span>
                                  <span className="text-[8px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">Inactive</span>
-                                 <span className="text-[9px] lg:text-xs font-black text-slate-700 dark:text-slate-300 ml-auto pl-1">{kpi?.inactiveMex || 0}</span>
+                                 <span className="text-[9px] lg:text-xs font-black text-slate-700 ml-auto pl-1">{kpi?.inactiveMex || 0}</span>
                              </div>
-                             <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0"></div>
+                             <div className="w-px h-4 bg-slate-200 shrink-0"></div>
                              <div className="flex items-center gap-1 lg:gap-1.5 flex-1 min-w-0">
                                  <span className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-rose-500 shrink-0"></span>
                                  <span className="text-[8px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">0-Trx</span>
-                                 <span className="text-[9px] lg:text-xs font-black text-rose-600 dark:text-rose-400 ml-auto pl-1">{kpi?.zeroTrxMex || 0}</span>
+                                 <span className="text-[9px] lg:text-xs font-black text-rose-600 ml-auto pl-1">{kpi?.zeroTrxMex || 0}</span>
                              </div>
                          </div>
                       </div>
@@ -2454,14 +2155,14 @@ export default function App() {
                   </div>
                   
                   {/* Action Buttons (Right side on desktop, bottom on mobile) */}
-                  <div className="relative z-10 shrink-0 w-full lg:w-auto flex flex-col sm:flex-row items-center justify-start lg:justify-end gap-3 mt-2 lg:mt-0 pt-4 lg:pt-0 border-t border-slate-100 lg:border-none">
+                  <div className="relative z-10 shrink-0 w-full lg:w-auto flex flex-col sm:flex-row items-center justify-start lg:justify-end gap-3 mt-4 lg:mt-0 pt-4 lg:pt-0 border-t border-slate-100 lg:border-none">
                       
-                      {/* Tombol Hubungi WhatsApp */}
+                      {/* Tombol Hubungi WhatsApp (Sembunyikan di Mobile karena sudah ada di Bottom Bar) */}
                       <button 
                          onClick={() => {
                              if (selectedMex.phone && selectedMex.phone !== '-') setShowWaModal(true);
                          }} 
-                         className={`w-full sm:w-auto px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-sm group ${selectedMex.phone && selectedMex.phone !== '-' ? 'bg-[#00B14F] hover:bg-emerald-600 text-white shadow-emerald-500/20' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}`}
+                         className={`hidden sm:flex w-full sm:w-auto px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-all items-center justify-center gap-2 shadow-sm group ${selectedMex.phone && selectedMex.phone !== '-' ? 'bg-[#00B14F] hover:bg-emerald-600 text-white shadow-emerald-500/20' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}`}
                          title={selectedMex.phone && selectedMex.phone !== '-' ? 'Hubungi via WhatsApp' : 'Nomor tidak tersedia'}
                       >
                          <MessageCircle size={16} className={selectedMex.phone && selectedMex.phone !== '-' ? "group-hover:scale-110 transition-transform" : ""} /> 
@@ -2496,71 +2197,73 @@ export default function App() {
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                   
                   {/* Card 1: Sales (Emerald) */}
-                  <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1 group">
+                  <div className="bg-white rounded-[28px] border border-slate-200 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1 group">
                      {/* Left Accent Bar */}
-                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500 dark:bg-emerald-400"></div>
+                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500"></div>
                      {/* Subtle Watermark */}
                      <Activity className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
 
-                     <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
+                     <div className="flex items-start mb-5 pl-2 relative z-10">
                         <div className="flex items-center gap-3">
-                           <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                           <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                               <Activity size={18} strokeWidth={2.5} />
                            </div>
-                           <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Sales</p>
-                        </div>
-                        <div className={`px-2 py-1 rounded-md text-[10px] font-black flex items-center gap-1 ${selectedMex.rrBs > selectedMex.lmBs ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
-                           {selectedMex.rrBs > selectedMex.lmBs ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(selectedMex.rrVsLm).toFixed(1)}%
+                           <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Sales</p>
                         </div>
                      </div>
 
                      <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
-                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">MTD Sales</p>
-                         <p className="text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-4">
+                         <div className="flex items-center gap-2 mb-1">
+                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">MTD Sales</p>
+                             <div className={`px-1.5 py-0.5 rounded-md text-[9px] font-black flex items-center gap-0.5 ${selectedMex.rrBs > selectedMex.lmBs ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                                {selectedMex.rrBs > selectedMex.lmBs ? <ArrowUpRight size={10}/> : <ArrowDownRight size={10}/>} {Math.abs(selectedMex.rrVsLm).toFixed(1)}%
+                             </div>
+                         </div>
+                         <p className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-4">
                              {formatCurrency(selectedMex.mtdBs)}
                          </p>
                          
                          <div className="flex items-center gap-2 mb-2">
-                             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Projected Runrate:</span>
-                             <span className="text-sm font-black text-slate-800 dark:text-slate-200">{formatCurrency(selectedMex.rrBs)}</span>
+                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Projected Runrate:</span>
+                             <span className="text-sm font-black text-slate-800">{formatCurrency(selectedMex.rrBs)}</span>
                          </div>
                      </div>
 
-                     <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center pl-2 relative z-10">
+                     <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
                          <span className="text-[10px] font-bold text-slate-400 uppercase">Last Month</span>
-                         <span className="text-xs font-black text-slate-700 dark:text-slate-300">{formatCurrency(selectedMex.lmBs)}</span>
+                         <span className="text-xs font-black text-slate-700">{formatCurrency(selectedMex.lmBs)}</span>
                      </div>
                   </div>
 
                   {/* Card 2: Campaigns (Amber) */}
-                  <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 hover:-translate-y-1 group">
-                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500 dark:bg-amber-400"></div>
+                  <div className="bg-white rounded-[28px] border border-slate-200 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 hover:-translate-y-1 group">
+                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500"></div>
                      {/* Subtle Watermark */}
                      <Award className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
 
                      <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
                         <div className="flex items-center gap-3">
-                           <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400 flex items-center justify-center">
+                           <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center">
                               <Zap size={18} strokeWidth={2.5} />
                            </div>
-                           <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Campaigns</p>
+                           <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Campaigns</p>
                         </div>
                      </div>
 
                      <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Points</p>
-                         <p className="text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-4">
+                         <p className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-4">
                              {selectedMex.campaignPoint || 0}
                          </p>
 
                          <div>
-                             <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Active List:</p>
+                             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Active List:</p>
                              <div className="flex flex-wrap gap-1.5">
                                 {(!selectedMex.campaigns || selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || selectedMex.campaigns.toLowerCase().includes('no campaign')) ? (
-                                    <span className="text-slate-400 dark:text-slate-500 text-[10px] font-semibold italic">Tidak ada partisipasi</span>
+                                    <span className="text-slate-400 text-[10px] font-semibold italic">Tidak ada partisipasi</span>
                                 ) : (
                                     selectedMex.campaigns.split(/[|,]/).map(c => c.trim()).filter(Boolean).map((camp, idx) => (
-                                        <span key={idx} className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider">
+                                        <span key={idx} className="bg-slate-100 text-slate-600 px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider">
                                             {camp}
                                         </span>
                                     ))
@@ -2571,86 +2274,83 @@ export default function App() {
                   </div>
 
                   {/* Card 3: Marketing (Rose) */}
-                  <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-rose-500/5 hover:-translate-y-1 group">
-                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500 dark:bg-rose-400"></div>
+                  <div className="bg-white rounded-[28px] border border-slate-200 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-rose-500/5 hover:-translate-y-1 group">
+                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500"></div>
                      {/* Subtle Watermark */}
                      <Megaphone className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
 
-                     <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
+                     <div className="flex items-start mb-5 pl-2 relative z-10">
                         <div className="flex items-center gap-3">
-                           <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-500 dark:text-rose-400 flex items-center justify-center">
+                           <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center">
                               <Megaphone size={18} strokeWidth={2.5} />
                            </div>
-                           <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Marketing</p>
+                           <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Marketing</p>
                         </div>
-                        {(() => {
-                            let adsTrend = 0;
-                            if (selectedMex.adsLM > 0) adsTrend = ((selectedMex.adsRR - selectedMex.adsLM) / selectedMex.adsLM) * 100;
-                            else if (selectedMex.adsRR > 0) adsTrend = 100;
-                            const isAdsUp = adsTrend > 0;
-                            return (
-                                <div className={`px-2 py-1 rounded-md text-[10px] font-black flex items-center gap-1 ${!isAdsUp ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
-                                   {isAdsUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(adsTrend).toFixed(1)}%
-                                </div>
-                            );
-                        })()}
                      </div>
 
                      <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
-                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Ads Spend (MTD)</p>
-                         <p className="text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-4">
+                         <div className="flex items-center gap-2 mb-1">
+                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ads Spend (MTD)</p>
+                             {(() => {
+                                 let adsTrend = 0;
+                                 if (selectedMex.adsLM > 0) adsTrend = ((selectedMex.adsRR - selectedMex.adsLM) / selectedMex.adsLM) * 100;
+                                 else if (selectedMex.adsRR > 0) adsTrend = 100;
+                                 const isAdsUp = adsTrend > 0;
+                                 return (
+                                     <div className={`px-1.5 py-0.5 rounded-md text-[9px] font-black flex items-center gap-0.5 ${!isAdsUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                                        {isAdsUp ? <ArrowUpRight size={10}/> : <ArrowDownRight size={10}/>} {Math.abs(adsTrend).toFixed(1)}%
+                                     </div>
+                                 );
+                             })()}
+                         </div>
+                         <p className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-4">
                              {formatCurrency(selectedMex.adsTotal)}
                          </p>
 
                          {/* Minimalist Breakdown */}
-                         <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 mb-1">
+                         <div className="flex justify-between items-center bg-slate-50 rounded-xl p-3 mb-1">
                              <div className="flex flex-col">
                                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Mobile</span>
-                                 <span className="text-[10px] font-black text-slate-700 dark:text-slate-200">{formatCurrency(selectedMex.adsMob || 0)}</span>
+                                 <span className="text-[10px] font-black text-slate-700">{formatCurrency(selectedMex.adsMob || 0)}</span>
                              </div>
-                             <div className="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
+                             <div className="w-px h-6 bg-slate-200"></div>
                              <div className="flex flex-col">
                                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Web</span>
-                                 <span className="text-[10px] font-black text-slate-700 dark:text-slate-200">{formatCurrency(selectedMex.adsWeb || 0)}</span>
+                                 <span className="text-[10px] font-black text-slate-700">{formatCurrency(selectedMex.adsWeb || 0)}</span>
                              </div>
-                             <div className="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
+                             <div className="w-px h-6 bg-slate-200"></div>
                              <div className="flex flex-col">
                                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Direct</span>
-                                 <span className="text-[10px] font-black text-slate-700 dark:text-slate-200">{formatCurrency(selectedMex.adsDir || 0)}</span>
+                                 <span className="text-[10px] font-black text-slate-700">{formatCurrency(selectedMex.adsDir || 0)}</span>
                              </div>
                          </div>
                      </div>
 
-                     <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center pl-2 relative z-10">
+                     <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
                          <span className="text-[10px] font-bold text-slate-400 uppercase">Last Month Ads</span>
-                         <span className="text-xs font-black text-slate-700 dark:text-slate-300">{formatCurrency(selectedMex.adsLM)}</span>
+                         <span className="text-xs font-black text-slate-700">{formatCurrency(selectedMex.adsLM)}</span>
                      </div>
                   </div>
 
                   {/* Card 4: MCA Config (Blue) */}
-                  <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-200 dark:border-slate-800 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 group">
-                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500 dark:bg-blue-400"></div>
+                  <div className="bg-white rounded-[28px] border border-slate-200 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 group">
+                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
                      {/* Subtle Watermark */}
                      <Database className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
 
-                     <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
+                     <div className="flex items-start mb-5 pl-2 relative z-10">
                         <div className="flex items-center gap-3">
-                           <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 dark:text-blue-400 flex items-center justify-center">
+                           <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center">
                               <Database size={18} strokeWidth={2.5} />
                            </div>
-                           <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">MCA Config</p>
+                           <p className="text-xs font-black text-slate-500 uppercase tracking-widest">MCA Config</p>
                         </div>
-                        {selectedMex.mcaPriority && selectedMex.mcaPriority !== '-' && (
-                            <div className={`px-2 py-1 rounded-md text-[9px] font-black uppercase ${getPriorityBadgeClass(selectedMex.mcaPriority).replace('rounded-md', '')}`}>
-                               {selectedMex.mcaPriority}
-                            </div>
-                        )}
                      </div>
 
                      <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                          {(() => {
                              const isPending = selectedMex.mcaDisburseStatus && String(selectedMex.mcaDisburseStatus).toLowerCase().includes('pending');
-                             const textColor = isPending ? 'text-amber-500 dark:text-amber-400' : 'text-blue-500 dark:text-blue-400';
+                             const textColor = isPending ? 'text-amber-500' : 'text-blue-500';
                              const labelText = isPending ? 'Pending Disbursed' : 'Disbursed';
                              
                              return (
@@ -2664,16 +2364,23 @@ export default function App() {
                          })()}
 
                          <div className="flex items-center gap-2 mb-2">
-                             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Limit Tersedia:</span>
-                             <span className="text-sm font-black text-slate-800 dark:text-slate-200">{selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}</span>
+                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Limit Tersedia:</span>
+                             <span className="text-sm font-black text-slate-800">{selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}</span>
                          </div>
                      </div>
 
-                     <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center pl-2 relative z-10">
+                     <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
                          <span className="text-[10px] font-bold text-slate-400 uppercase">Eligibility</span>
-                         <span className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
-                             {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'Eligible' : 'Not Eligible'}
-                         </span>
+                         <div className="flex items-center gap-1.5">
+                             {selectedMex.mcaPriority && selectedMex.mcaPriority !== '-' && (
+                                 <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border ${getPriorityBadgeClass(selectedMex.mcaPriority)}`}>
+                                    {selectedMex.mcaPriority}
+                                 </span>
+                             )}
+                             <span className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
+                                 {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'Eligible' : 'Not Eligible'}
+                             </span>
+                         </div>
                      </div>
                   </div>
                </div>
@@ -2873,11 +2580,58 @@ export default function App() {
                   </div>
                </div>
 
+               {/* ========================================================= */}
+               {/* MOBILE FLOATING ACTION BAR (THUMB-FRIENDLY NAV) */}
+               {/* ========================================================= */}
+               <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-[55] animate-in slide-in-from-bottom-10 fade-in duration-500">
+                   <div className="bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-xl p-2 rounded-2xl shadow-2xl border border-slate-700/50 flex items-center justify-between gap-2">
+                       <button 
+                           onClick={() => setSelectedMex(null)} 
+                           className="flex-1 py-3 px-4 flex items-center justify-center gap-2 text-white hover:bg-slate-800 dark:hover:bg-slate-700 rounded-xl transition-colors font-bold text-xs tracking-wide"
+                       >
+                           <ArrowLeft className="w-4 h-4" /> Kembali
+                       </button>
+                       <div className="w-px h-8 bg-slate-700"></div>
+                       <button 
+                           onClick={() => { if (selectedMex.phone && selectedMex.phone !== '-') setShowWaModal(true); }} 
+                           className={`flex-1 py-3 px-4 flex items-center justify-center gap-2 rounded-xl font-bold text-xs tracking-wide transition-colors ${selectedMex.phone && selectedMex.phone !== '-' ? 'bg-[#00B14F] text-white hover:bg-emerald-600 shadow-lg shadow-emerald-500/20' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`}
+                       >
+                           <MessageCircle className="w-4 h-4" /> Hubungi
+                       </button>
+                   </div>
+               </div>
+
             </div>
           )}
+          
+          {/* ========================================================= */}
+          {/* SLEEK ENTERPRISE FOOTER */}
+          {/* ========================================================= */}
+          <footer className="mt-auto pt-8 pb-4 mt-10 w-full border-t border-slate-200 dark:border-slate-800/60">
+             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                 <div className="flex items-center gap-2.5">
+                    <div className="flex h-2 w-2 relative">
+                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </div>
+                    <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">All Systems Normal</span>
+                 </div>
+                 <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 text-center md:text-left">
+                    © {new Date().getFullYear()} Merchant Intelligence. Hak Cipta Dilindungi.
+                 </p>
+                 <div className="flex items-center gap-3 md:gap-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                    <a href="#" className="hover:text-emerald-500 transition-colors">Helpdesk</a>
+                    <span className="w-1 h-1 rounded-full bg-slate-200 dark:bg-slate-700"></span>
+                    <a href="#" className="hover:text-emerald-500 transition-colors">Privacy</a>
+                    <span className="w-1 h-1 rounded-full bg-slate-200 dark:bg-slate-700"></span>
+                    <span className="bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">v3.1.0</span>
+                 </div>
+             </div>
+          </footer>
+
         </div>
       </main>
-      
+
       <style dangerouslySetInnerHTML={{__html: `
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -2894,6 +2648,14 @@ export default function App() {
         @keyframes float-up { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
         .animate-float-up { animation: float-up 1.5s ease-in-out infinite; }
 
+        /* --- CUSTOM BACKGROUND UTILS --- */
+        .bg-grid-pattern { background-image: linear-gradient(to right, rgba(148, 163, 184, 0.15) 1px, transparent 1px), linear-gradient(to bottom, rgba(148, 163, 184, 0.15) 1px, transparent 1px); background-size: 24px 24px; }
+        .dark-theme .bg-grid-pattern { background-image: linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px); }
+        .glow-effect { background-color: #00B14F; opacity: 0.12; }
+        .dark-theme .glow-effect { opacity: 0.05; }
+        .fade-bottom { background-image: linear-gradient(to top, #f8fafc 10%, transparent); }
+        .dark-theme .fade-bottom { background-image: linear-gradient(to top, #020617 10%, transparent); }
+
         /* --- DARK MODE ENGINE --- */
         .dark-theme { background-color: #020617 !important; color: #f8fafc !important; }
         .dark-theme .bg-white { background-color: #0f172a !important; border-color: #1e293b !important; }
@@ -2906,7 +2668,7 @@ export default function App() {
         .dark-theme .border-slate-100, .dark-theme .border-slate-200 { border-color: #1e293b !important; }
         .dark-theme .border-slate-50 { border-color: #0f172a !important; }
         .dark-theme .bg-slate-50 { background-color: #1e293b !important; border-color: #334155 !important; color: #cbd5e1 !important; }
-        .dark-theme .bg-slate-100 { background-color: #334155 !important; }
+        .dark-theme .bg-slate-100 { background-color: #1e293b !important; border-color: #334155 !important; color: #cbd5e1 !important; }
         .dark-theme .bg-slate-50\\/50 { background-color: rgba(30, 41, 59, 0.5) !important; border-color: #334155 !important; }
         .dark-theme .divide-slate-50 > :not([hidden]) ~ :not([hidden]) { border-color: #1e293b !important; }
         .dark-theme .shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8) !important; }
@@ -2922,12 +2684,12 @@ export default function App() {
         .dark-theme .bg-purple-50 { background-color: rgba(88, 28, 135, 0.3) !important; border-color: rgba(88, 28, 135, 0.5) !important; }
 
         /* BRIGHTEN DARK TEXT COLORS ON DARK THEME */
-        .dark-theme .text-emerald-900, .dark-theme .text-emerald-800, .dark-theme .text-emerald-700 { color: #34d399 !important; }
-        .dark-theme .text-teal-900, .dark-theme .text-teal-800, .dark-theme .text-teal-700 { color: #2dd4bf !important; }
-        .dark-theme .text-rose-900, .dark-theme .text-rose-800, .dark-theme .text-rose-700 { color: #fb7185 !important; }
-        .dark-theme .text-blue-900, .dark-theme .text-blue-800, .dark-theme .text-blue-700 { color: #60a5fa !important; }
-        .dark-theme .text-amber-900, .dark-theme .text-amber-800, .dark-theme .text-amber-700 { color: #fbbf24 !important; }
-        .dark-theme .text-indigo-900, .dark-theme .text-indigo-800, .dark-theme .text-indigo-700 { color: #818cf8 !important; }
+        .dark-theme .text-emerald-900, .dark-theme .text-emerald-800, .dark-theme .text-emerald-700, .dark-theme .text-emerald-600, .dark-theme .text-emerald-500 { color: #34d399 !important; }
+        .dark-theme .text-teal-900, .dark-theme .text-teal-800, .dark-theme .text-teal-700, .dark-theme .text-teal-600, .dark-theme .text-teal-500 { color: #2dd4bf !important; }
+        .dark-theme .text-rose-900, .dark-theme .text-rose-800, .dark-theme .text-rose-700, .dark-theme .text-rose-600, .dark-theme .text-rose-500 { color: #fb7185 !important; }
+        .dark-theme .text-blue-900, .dark-theme .text-blue-800, .dark-theme .text-blue-700, .dark-theme .text-blue-600, .dark-theme .text-blue-500 { color: #60a5fa !important; }
+        .dark-theme .text-amber-900, .dark-theme .text-amber-800, .dark-theme .text-amber-700, .dark-theme .text-amber-600, .dark-theme .text-amber-500 { color: #fbbf24 !important; }
+        .dark-theme .text-indigo-900, .dark-theme .text-indigo-800, .dark-theme .text-indigo-700, .dark-theme .text-indigo-600, .dark-theme .text-indigo-500 { color: #818cf8 !important; }
         
         /* Recharts Dark Mode Fixes */
         .dark-theme .recharts-cartesian-grid-horizontal line, .dark-theme .recharts-cartesian-grid-vertical line { stroke: #1e293b !important; }
