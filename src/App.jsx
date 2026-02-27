@@ -26,40 +26,33 @@ const cleanNumber = (val) => {
   const dotCount = (str.match(/\./g) || []).length;
   
   if (commaCount > 0 && dotCount > 0) {
-     // Kasus 1: Punya koma dan titik (Misal: 1.000.000,50 atau 1,000,000.50)
      if (str.lastIndexOf(',') > str.lastIndexOf('.')) {
-         // Koma ada di akhir -> Format Indonesia -> Koma jadi titik desimal
          str = str.replace(/\./g, '').replace(',', '.');
      } else {
-         // Titik ada di akhir -> Format Internasional -> Hapus koma
          str = str.replace(/,/g, '');
      }
   } else if (commaCount > 0) {
-     // Kasus 2: Hanya punya Koma
      if (commaCount > 1) {
-         str = str.replace(/,/g, ''); // Banyak koma pasti ribuan
+         str = str.replace(/,/g, ''); 
      } else {
          const parts = str.split(',');
          if (parts[1] && parts[1].length === 3) {
-             str = str.replace(',', ''); // Koma diikuti tepat 3 angka (misal 10,000) -> Ribuan
+             str = str.replace(',', ''); 
          } else {
-             str = str.replace(',', '.'); // Jika tidak, pasti desimal (misal 1,5)
+             str = str.replace(',', '.'); 
          }
      }
   } else if (dotCount > 0) {
-     // Kasus 3: Hanya punya Titik
      if (dotCount > 1) {
-         str = str.replace(/\./g, ''); // Banyak titik pasti ribuan (misal 1.000.000)
+         str = str.replace(/\./g, ''); 
      } else {
          const parts = str.split('.');
          if (parts[1] && parts[1].length === 3) {
-             str = str.replace(/\./g, ''); // Titik diikuti tepat 3 angka (misal 10.000) -> Ribuan
+             str = str.replace(/\./g, ''); 
          } 
-         // Jika bukan 3 angka, titik dibiarkan (misal 1.0) akan otomatis menjadi desimal!
      }
   }
   
-  // Bersihkan sisa karakter aneh (selain angka, titik desimal, dan minus)
   str = str.replace(/[^0-9.-]/g, '');
   const num = parseFloat(str);
   return isNaN(num) ? 0 : num;
@@ -91,7 +84,6 @@ const COLORS = {
   basketSize: '#3b82f6' 
 };
 
-// Fungsi Penentu Klasifikasi Campaign
 const getMerchantSegment = (campaignsStr) => {
   const c = campaignsStr ? String(campaignsStr).trim().toLowerCase() : '';
   if (!c || c === '-' || c === '0' || c.includes('no campaign')) return '0 Invest';
@@ -111,7 +103,6 @@ const getMerchantSegment = (campaignsStr) => {
   return 'Local Only';
 };
 
-// Fungsi Penentu Warna Badge Priority
 const getPriorityBadgeClass = (prio) => {
     if (!prio || prio === '-') return 'bg-slate-500/[0.65] text-white border-slate-600/[0.65] shadow-sm backdrop-blur-sm';
     const p = String(prio).toUpperCase();
@@ -122,13 +113,11 @@ const getPriorityBadgeClass = (prio) => {
     return 'bg-indigo-600/[0.65] text-white border-indigo-700/[0.65] shadow-sm backdrop-blur-sm';
 };
 
-// Fungsi Cerdas Pemendek Nama AM
 const getShortAMName = (fullName) => {
     const amFull = (fullName || 'AM').trim();
     const amFullLower = amFull.toLowerCase();
-    let amShort = amFull.split(' ')[0]; // Ambil kata pertama
+    let amShort = amFull.split(' ')[0]; 
     
-    // Mapping spesifik
     if (amFullLower.includes('novan')) return 'Novan';
     if (amFullLower.includes('reginaldo') || amFullLower.includes('aldo')) return 'Aldo';
     if (amFullLower.includes('dadan')) return 'Dadan';
@@ -180,9 +169,6 @@ const loadFromIndexedDB = async (key) => {
   });
 };
 
-// ============================================================================
-// UTILS & HELPER
-// ============================================================================
 const fNum = (n) => Math.round(n || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
 export default function App() {
@@ -208,19 +194,17 @@ export default function App() {
   const [showMcaModal, setShowMcaModal] = useState(false);
   const [showCompareModal, setShowCompareModal] = useState(false);
   
-  // STATE BARU UNTUK POPUP MERCHANT INVEST, OUTLETS & ADS SPEND
   const [showMiModal, setShowMiModal] = useState(false);
   const [showOutletsModal, setShowOutletsModal] = useState(false);
   const [showAdsModal, setShowAdsModal] = useState(false);
-  const [outletModalTab, setOutletModalTab] = useState('inactive'); // 'inactive' | 'zerotrx'
+  const [outletModalTab, setOutletModalTab] = useState('inactive');
   
-  // STATE BARU: Array untuk menampung 3 pilihan bulan secara mandiri
-  const [compareMonths, setCompareMonths] = useState(['', '', '']);
+  const [showFloatingBar, setShowFloatingBar] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
-  // STATE BARU: Konfigurasi sorting tabel Master Data
+  const [compareMonths, setCompareMonths] = useState(['', '', '']);
   const [sortConfig, setSortConfig] = useState({ key: 'mtdBs', direction: 'desc' });
 
-  // STATE BARU: Dark Mode
   const [isDarkMode, setIsDarkMode] = useState(() => {
       const savedTheme = localStorage.getItem('am_dashboard_theme');
       return savedTheme === 'dark';
@@ -230,91 +214,65 @@ export default function App() {
       localStorage.setItem('am_dashboard_theme', isDarkMode ? 'dark' : 'light');
   }, [isDarkMode]);
 
-  // --- LOGIKA TEMPLATE WHATSAPP ---
+  useEffect(() => {
+      setShowFloatingBar(true);
+  }, [selectedMex]);
+
+  const handleMainScroll = (e) => {
+      const currentScrollY = e.target.scrollTop;
+      if (currentScrollY > lastScrollY && currentScrollY > 20) {
+          setShowFloatingBar(false);
+      } else {
+          setShowFloatingBar(true);
+      }
+      setLastScrollY(currentScrollY);
+  };
+
   const handleSendWA = (templateType) => {
       if (!selectedMex || !selectedMex.phone) return;
       
-      const phone = selectedMex.phone.replace(/\D/g, ''); // Hapus semua karakter non-angka
+      const phone = selectedMex.phone.replace(/\D/g, ''); 
       const owner = selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Mitra Grab';
-      
-      // Menggunakan Helper Pemendek Nama AM
       const amShort = getShortAMName(selectedMex.amName);
-
       const mexName = selectedMex.name;
       
-      // FORMATTER KHUSUS WA: Menggunakan kata "Juta" agar tidak salah sangka "Miliar"
       let mcaLimit = '';
       if (selectedMex.mcaWlLimit >= 1000000) {
           const valJuta = selectedMex.mcaWlLimit / 1000000;
-          // Jika bulat (misal 15) tampilkan 15. Jika desimal (misal 1.5) tampilkan 1,5
           mcaLimit = `Rp ${Number.isInteger(valJuta) ? valJuta : valJuta.toFixed(1).replace('.', ',')} Juta`;
       } else {
-          // Format ribuan biasa pakai titik (misal: Rp 500.000)
           mcaLimit = `Rp ${fNum(selectedMex.mcaWlLimit)}`;
       }
 
       let templates = [];
-
       switch(templateType) {
           case 'promo':
               templates = [
                   `Halo kak ${owner}! Saya ${amShort} dari Grab.\n\nAda program Promo spesial nih yang pas banget buat naikin orderan di *${mexName}*. Boleh kita bahas via telpon kak?`,
                   `Selamat pagi/siang kak ${owner}, saya ${amShort} (Grab).\n\nKhusus untuk *${mexName}*, kita ada kuota promo eksklusif loh. Mau saya bantu jelaskan detailnya?`,
                   `Halo kak ${owner}, dengan ${amShort} dari Grab.\n\nYuk boost lagi penjualan *${mexName}* pakai promo terbaru dari Grab! Kalau kakak berminat, boleh kita ngobrol sebentar?`,
-                  `Permisi kak ${owner}! Saya ${amShort} (Grab).\n\nSayang banget nih kalau *${mexName}* kelewatan campaign promo bulan ini. Ada waktu luang buat saya jelasin untungnya kak?`,
-                  `Halo kak ${owner}! ${amShort} dari Grab.\n\nMau nawarin join promo nih buat *${mexName}* biar makin ramai pembeli. Bisa telpon sebentar untuk detailnya kak?`
-              ];
-              break;
+              ]; break;
           case 'mca':
               templates = [
                   `Halo kak ${owner}!\nSaya ${amShort} dari Grab.\n\nRamadan dan Lebaran sering menjadi periode dengan potensi peningkatan penjualan.\n\nUntuk mendukung kesiapan usaha *${mexName}* di momen ini, tersedia program *Grab Modal Mantul* dengan detail:\n- Estimasi pendanaan hingga *${mcaLimit}*\n- Penyesuaian dengan evaluasi dan ketentuan yang berlaku.\n\nSilakan cek detail penawaran yang tersedia melalui aplikasi GrabMerchant ya kak!`,
-                  
-                  `Halo kak ${owner}!\nDengan ${amShort} dari Grab.\n\nMemasuki bulan Ramadan hingga Lebaran, banyak usaha mempersiapkan tambahan stok dan operasional.\n\nSaat ini tersedia program *Grab Modal Mantul* untuk *${mexName}* dengan:\n- Limit hingga *${mcaLimit}*\n- Menyesuaikan profil mitra.\n\nInformasi lengkap dapat dilihat langsung di aplikasi GrabMerchant ya kak.`,
-                  
-                  `Selamat siang kak ${owner}!\nSaya ${amShort} dari Grab.\n\nPeriode Ramadan dan Lebaran dapat menjadi momentum pertumbuhan usaha.\n\nUntuk mendukung kebutuhan *${mexName}*, tersedia program *Grab Modal Mantul*:\n- Estimasi pendanaan hingga *${mcaLimit}*\n- Nominal mengikuti hasil evaluasi sistem.\n\nSilakan cek ketersediaannya di aplikasi GrabMerchant sekarang juga.`,
-                  
-                  `Halo kak ${owner},\nSaya ${amShort} (Grab).\n\nMenjelang Lebaran, kesiapan stok dan kelancaran operasional *${mexName}* menjadi hal penting untuk mengoptimalkan peluang penjualan.\n\nProgram *Grab Modal Mantul* menyediakan opsi tambahan modal:\n- Hingga *${mcaLimit}* (sesuai ketentuan yang berlaku).\n\nSilakan cek detail penawaran melalui aplikasi GrabMerchant ya kak.`,
-                  
-                  `Halo kak ${owner},\n${amShort} dari Grab di sini.\n\nRamadan hingga Lebaran sering menjadi periode dengan aktivitas penjualan yang lebih tinggi.\n\nUntuk mendukung kelancaran usaha *${mexName}*, tersedia program *Grab Modal Mantul* dengan:\n- Estimasi pendanaan hingga *${mcaLimit}*\n\nSilakan melihat informasi lengkapnya langsung di aplikasi GrabMerchant kak.`,
-                  
-                  `Halo kak ${owner}!\nSaya ${amShort} dari Grab.\n\nDalam rangka menyambut Ramadan dan Lebaran, tersedia program *Grab Modal Mantul* yang dapat menjadi opsi tambahan modal usaha untuk *${mexName}*.\n\n- Estimasi nominal yang tersedia hingga *${mcaLimit}* (menyesuaikan hasil evaluasi).\n\nDetail dapat dicek langsung melalui aplikasi GrabMerchant ya kak.`,
-                  
-                  `Selamat siang kak ${owner}!\nDengan ${amShort} (AM Grab).\n\nMomen Ramadan dan Lebaran dapat menjadi peluang untuk meningkatkan performa usaha *${mexName}*.\n\nSaat ini tersedia program *Grab Modal Mantul* dengan:\n- Limit hingga *${mcaLimit}*\n\nUntuk mengetahui rincian penawaran pada akun Anda, silakan cek langsung di aplikasi GrabMerchant ya.`,
-                  
-                  `Halo kak ${owner}!\nSaya ${amShort} dari Grab.\n\nUntuk membantu persiapan usaha *${mexName}* menghadapi Ramadan dan Lebaran, tersedia program *Grab Modal Mantul*.\n\n- Estimasi pendanaan hingga *${mcaLimit}* (sesuai evaluasi sistem).\n\nKetersediaan penawaran dapat berbeda, silakan cek penawarannya melalui aplikasi GrabMerchant kak.`,
-                  
-                  `Halo kak ${owner}!\n${amShort} (Grab) di sini.\n\nRamadan dan Lebaran merupakan periode penting bagi banyak pelaku usaha.\n\nJika *${mexName}* membutuhkan tambahan modal untuk mendukung operasional, tersedia program *Grab Modal Mantul* dengan:\n- Nominal hingga *${mcaLimit}*\n\nDetail penawaran dan ketentuan dapat dilihat langsung di aplikasi GrabMerchant ya kak.`,
-                  
-                  `Yth. kak ${owner},\nSaya ${amShort} dari Grab.\n\nDalam menyambut periode Ramadan dan Lebaran, tersedia program *Grab Modal Mantul* sebagai opsi tambahan modal usaha untuk *${mexName}*.\n\n- Estimasi pendanaan yang tersedia hingga *${mcaLimit}* (sesuai hasil evaluasi akun).\n\nSilakan cek informasi lengkapnya melalui aplikasi GrabMerchant ya kak.`
-              ];
-              break;
+                  `Selamat siang kak ${owner}!\nSaya ${amShort} dari Grab.\n\nPeriode Ramadan dan Lebaran dapat menjadi momentum pertumbuhan usaha.\n\nUntuk mendukung kebutuhan *${mexName}*, tersedia program *Grab Modal Mantul*:\n- Estimasi pendanaan hingga *${mcaLimit}*\n- Nominal mengikuti hasil evaluasi sistem.\n\nSilakan cek ketersediaannya di aplikasi GrabMerchant sekarang juga.`
+              ]; break;
           case 'inactive':
               templates = [
                   `Halo kak ${owner}! Saya ${amShort} dari Grab.\n\nSaya cek *${mexName}* lagi offline nih. Apakah ada kendala operasional atau di aplikasinya kak? Biar saya bantu.`,
-                  `Selamat siang kak ${owner}, saya ${amShort} (Grab).\n\nNotis *${mexName}* belum aktif nih kak. Kalau ada masalah sama device/aplikasi, kabarin saya ya.`,
-                  `Halo kak ${owner}, dengan ${amShort} dari Grab.\n\nSayang banget pesanan berpotensi miss karena *${mexName}* lagi offline. Ada yang bisa saya bantu supaya toko online lagi kak?`,
-                  `Permisi kak ${owner}, saya ${amShort} dari Grab.\n\n*${mexName}* statusnya offline terus nih belakangan ini. Apakah tokonya sedang libur atau ada kendala teknis kak?`,
-                  `Halo kak ${owner}! ${amShort} dari Grab.\n\nMau make sure aja, *${mexName}* lagi offline karena kendala resto/aplikasi nggak ya? Kalau butuh bantuan, saya siap support kak.`
-              ];
-              break;
+                  `Selamat siang kak ${owner}, saya ${amShort} (Grab).\n\nNotis *${mexName}* belum aktif nih kak. Kalau ada masalah sama device/aplikasi, kabarin saya ya.`
+              ]; break;
           default:
               templates = [
                   `Halo kak ${owner}, saya ${amShort} dari Grab.\n\nBoleh minta waktunya sebentar untuk ngobrolin performa *${mexName}* belakangan ini?`,
-                  `Selamat siang kak ${owner}! Saya ${amShort} (AM Grab).\n\nIngin diskusi sedikit tentang penjualan *${mexName}*. Kapan sekiranya kakak ada waktu luang?`,
-                  `Halo kak ${owner}, dengan ${amShort} dari Grab.\n\nSaya lihat ada potensi nih untuk *${mexName}*, boleh kita telepon sebentar kak?`,
-                  `Permisi kak ${owner}, saya ${amShort} (Grab).\n\nMau update seputar performa toko *${mexName}* nih kak, apakah berkenan untuk telpon hari ini?`,
-                  `Halo kak ${owner}! ${amShort} dari Grab di sini.\n\nSaya mau share insight performa *${mexName}* bulan ini. Enaknya kita diskusi jam berapa ya kak?`
+                  `Selamat siang kak ${owner}! Saya ${amShort} (AM Grab).\n\nIngin diskusi sedikit tentang penjualan *${mexName}*. Kapan sekiranya kakak ada waktu luang?`
               ];
       }
-
-      // Pilih 1 template secara acak dari array
       const randomText = templates[Math.floor(Math.random() * templates.length)];
-
       window.open(`https://wa.me/${phone}?text=${encodeURIComponent(randomText)}`, '_blank');
       setShowWaModal(false);
   };
 
-  // --- MEMUAT DATA DARI LOCAL STORAGE (INDEXEDDB) ---
   useEffect(() => {
     const loadLocalData = async () => {
         try {
@@ -323,20 +281,15 @@ export default function App() {
                 saved.sort((a, b) => a.name.localeCompare(b.name));
                 setData(saved);
                 setIsForceUpload(false);
-                
-                // Load tanggal MTD terakhir jika ada
                 const savedUpdate = localStorage.getItem('am_dashboard_last_update');
                 if (savedUpdate) setGlobalLastUpdate(savedUpdate);
             }
-        } catch (e) {
-            console.error("Gagal memuat data lokal", e);
-        }
+        } catch (e) {}
         setIsInitializing(false);
     };
     loadLocalData();
   }, []);
 
-  // --- SIMPAN KE LOCAL STORAGE ---
   const saveToLocal = async (finalData) => {
       setLoading(true);
       try {
@@ -350,9 +303,7 @@ export default function App() {
       setLoading(false);
   };
 
-  // --- PARSERS ---
   const parseCSVString = (str) => {
-    // AUTO-DETECT CSV DELIMITER (Mencegah error dari file HP yang pakai Titik Koma ';')
     const firstLine = str.split('\n')[0] || '';
     const commaCount = (firstLine.match(/,/g) || []).length;
     const semicolonCount = (firstLine.match(/;/g) || []).length;
@@ -376,15 +327,13 @@ export default function App() {
     try {
         const masterLines = parseCSVString(masterText);
         
-        // MENGAMBIL GLOBAL LAST UPDATE DARI BARIS 1 (Kolom AT, AU, & AV)
         const firstRow = masterLines[0] || [];
         let extractedDate = '';
         let extractedMonth = '';
         if (String(firstRow[45]).trim().toUpperCase() === 'MTD') {
-            extractedDate = String(firstRow[46]).trim(); // Ambil angka sebelahnya (23)
-            extractedMonth = String(firstRow[47]).trim(); // Ambil nama bulan (Febuari) dari kolom AV
+            extractedDate = String(firstRow[46]).trim(); 
+            extractedMonth = String(firstRow[47]).trim(); 
         } else {
-            // Fallback: Cari posisi 'MTD' yang paling akhir jika kolom bergeser
             const fallbackIdx = firstRow.lastIndexOf('MTD');
             if (fallbackIdx !== -1) {
                 extractedDate = String(firstRow[fallbackIdx + 1]).trim();
@@ -418,8 +367,6 @@ export default function App() {
         const lmBIdx = mtdBIdx > 0 ? mtdBIdx - 1 : -1;
         const mtdAIdx = masterHeaders.findIndex(h => h.includes('Total MTD (Ads)') || h.includes('Total MTD\n(Ads)'));
         const lmAIdx = mtdAIdx > 0 ? mtdAIdx - 1 : -1;
-        
-        // INDEX UNTUK MERCHANT INVESTMENT (MI)
         const mtdMiIdx = masterHeaders.findIndex(h => h.includes('MTD (MI)') || h.includes('MTD\n(MI)'));
         const lmMiIdx = mtdMiIdx > 0 ? mtdMiIdx - 1 : -1;
 
@@ -441,13 +388,10 @@ export default function App() {
           let obj = {};
           masterHeaders.forEach((h, idx) => { if(h) obj[h] = vals[idx] !== undefined ? String(vals[idx]).trim() : ''; });
           
-          // PERBAIKAN: Mengembalikan nama variabel mcaId menjadi mexId
           const mexId = obj['Mex ID'];
-          
           let prioVal = (prioHeader && obj[prioHeader]) ? String(obj[prioHeader]).trim() : '-';
           if (!prioVal || prioVal === '') prioVal = '-';
           
-          // KALKULASI MANUAL TREND: Menghindari error persentase (misal: 15% terbaca 0.15 dari HP)
           const lmBsVal = cleanNumber(vals[lmBIdx]);
           const mtdBsVal = cleanNumber(obj['MTD (BS)'] || obj['MTD\n(BS)']);
           const rrBsVal = cleanNumber(obj['RR (BS)'] || obj['RR\n(BS)']);
@@ -459,10 +403,6 @@ export default function App() {
               calcRrVsLm = 100;
           }
           
-          const lmMiVal = cleanNumber(vals[lmMiIdx]);
-          const mtdMiVal = cleanNumber(obj['MTD (MI)'] || obj['MTD\n(MI)']);
-          const rrMiVal = cleanNumber(obj['RR (MI)'] || obj['RR\n(MI)']);
-          
           parsedDataMap.set(mexId, {
             id: mexId,
             name: obj['Mex Name'],
@@ -472,9 +412,9 @@ export default function App() {
             mtdBs: mtdBsVal,
             rrBs: rrBsVal,
             rrVsLm: calcRrVsLm,
-            lmMi: lmMiVal,
-            mtdMi: mtdMiVal,
-            rrMi: rrMiVal,
+            lmMi: cleanNumber(vals[lmMiIdx]),
+            mtdMi: cleanNumber(obj['MTD (MI)'] || obj['MTD\n(MI)']),
+            rrMi: cleanNumber(obj['RR (MI)'] || obj['RR\n(MI)']),
             adsLM: cleanNumber(vals[lmAIdx]),
             adsTotal: cleanNumber(obj['Total MTD (Ads)'] || obj['Total MTD\n(Ads)']),
             adsRR: cleanNumber(obj['RR (Ads)']),
@@ -498,7 +438,7 @@ export default function App() {
             email: obj['Email zeus'],
             latitude: obj['Latitude'] || obj['Lat'] || (vals[14] !== undefined ? String(vals[14]).trim() : ''), 
             longitude: obj['Longitude'] || obj['Long'] || obj['Lng'] || (vals[15] !== undefined ? String(vals[15]).trim() : ''),
-            lastUpdate: '', // Dikembalikan kosong, akan diisi oleh history
+            lastUpdate: '', 
             campaignPoint: cleanNumber(pointHeader ? obj[pointHeader] : 0), 
             history: [] 
           });
@@ -531,7 +471,6 @@ export default function App() {
                     const mexId = String(vals[hMexIdx]).trim();
                     
                     if (parsedDataMap.has(mexId)) {
-                        // MENGEMBALIKAN LOGIKA LAST UPDATE HISTORIS
                         if (vals[0] && String(vals[0]).trim() !== '') {
                             parsedDataMap.get(mexId).lastUpdate = String(vals[0]).trim();
                         }
@@ -587,7 +526,6 @@ export default function App() {
         await saveToLocal(finalData);
 
     } catch (err) {
-        console.error(err);
         setErrorMsg(err.message || "Gagal memproses data. Pastikan format benar.");
         setLoading(false);
     }
@@ -598,9 +536,7 @@ export default function App() {
     try {
         const masterText = await fileMaster.text();
         let histText = null;
-        if (fileHistory) {
-            histText = await fileHistory.text();
-        }
+        if (fileHistory) histText = await fileHistory.text();
         await parseAndSave(masterText, histText);
     } catch (err) {
         setErrorMsg("Gagal membaca file dari komputer Anda.");
@@ -621,70 +557,33 @@ export default function App() {
           const rr = isGrowing ? lm * (1 + Math.random() * 0.5) : lm * (1 - Math.random() * 0.3);
           const mtd = rr * 0.7;
           
-          const lmMiGen = Math.floor(Math.random() * 5000000);
-          const rrMiGen = isGrowing ? lmMiGen * (1 + Math.random() * 0.5) : lmMiGen * (1 - Math.random() * 0.3);
-          const mtdMiGen = rrMiGen * 0.7;
-
           const mca = Math.random() > 0.8 ? Math.floor(Math.random() * 50000000) + 10000000 : 0;
           const mcaLimit = mca > 0 ? mca * 1.5 : (Math.random() > 0.85 ? 25000000 : 0);
           
-          const pRoll = Math.random();
-          // Modifikasi dummy data agar memunculkan variasi P0-A untuk demo
-          const mcaPriority = mcaLimit > 0 ? (pRoll > 0.85 ? 'P0-A' : pRoll > 0.6 ? 'P1' : pRoll > 0.3 ? 'P2' : 'P3') : '-';
-          const dropOffScenarios = ['-', '-', '-', 'Term & Condition', 'KYC Verification', 'Review Plan'];
-
           let assignedCampaigns = [];
           const campaignRoll = Math.random();
           if (campaignRoll < 0.2) assignedCampaigns = ['No Campaign'];
-          else if (campaignRoll < 0.35) assignedCampaigns = [possibleCampaigns[0]]; // GMS Only
-          else if (campaignRoll < 0.5) assignedCampaigns = [possibleCampaigns[4]];  // Booster+
-          else if (campaignRoll < 0.7) assignedCampaigns = [possibleCampaigns[1], possibleCampaigns[3]]; // GMS & Local
-          else assignedCampaigns = [possibleCampaigns[2], possibleCampaigns[3]]; // Local Only
-
-          const adsTotalGenerated = Math.floor(Math.random() * 8000000);
-          const adsMobGenerated = Math.floor(adsTotalGenerated * 0.55);
-          const adsWebGenerated = Math.floor(adsTotalGenerated * 0.25);
-          const adsDirGenerated = adsTotalGenerated - adsMobGenerated - adsWebGenerated;
+          else if (campaignRoll < 0.35) assignedCampaigns = [possibleCampaigns[0]];
+          else if (campaignRoll < 0.5) assignedCampaigns = [possibleCampaigns[4]];
+          else if (campaignRoll < 0.7) assignedCampaigns = [possibleCampaigns[1], possibleCampaigns[3]];
+          else assignedCampaigns = [possibleCampaigns[2], possibleCampaigns[3]];
 
           let baseBs = Math.floor(Math.random() * 15000000) + 5000000;
           const history = months.map(m => {
               const trend = 1 + (Math.random() * 0.4 - 0.2); 
               baseBs = Math.max(1000000, baseBs * trend);
               const totalOrders = Math.floor(baseBs / (30000 + Math.random() * 50000));
-              const completedOrders = Math.floor(totalOrders * (0.8 + Math.random() * 0.2)); 
               const promoOrders = Math.floor(totalOrders * (Math.random() * 0.8)); 
-              
-              const mfc = baseBs * (Math.random() * 0.03);
-              const mfp = baseBs * (Math.random() * 0.04);
-              const cpoVal = baseBs * (Math.random() * 0.02);
-              const gmsVal = baseBs * (Math.random() * 0.02);
-              const basicComm = baseBs * 0.20; 
-              const adsWeb = baseBs * (Math.random() * 0.015);
-              const adsMob = baseBs * (Math.random() * 0.015);
-              const adsDir = baseBs * (Math.random() * 0.01);
-              const adsTotalHist = adsWeb + adsMob + adsDir;
-              
-              const totalInvestment = mfc + mfp + cpoVal + gmsVal + basicComm + adsTotalHist;
-              const netSales = baseBs - totalInvestment;
-              const miPercentage = baseBs > 0 ? ((totalInvestment / baseBs) * 100).toFixed(1) : 0;
-
               return {
                   month: m,
                   basket_size: baseBs,
-                  net_sales: netSales,
+                  net_sales: baseBs * 0.8,
                   total_orders: totalOrders,
-                  completed_orders: completedOrders,
+                  completed_orders: totalOrders,
                   orders_with_promo: promoOrders,
                   promo_order_pct: totalOrders > 0 ? parseFloat(((promoOrders / totalOrders) * 100).toFixed(1)) : 0,
                   aov: totalOrders > 0 ? Math.floor(baseBs / totalOrders) : 0,
-                  mfc: mfc,
-                  mfp: mfp,
-                  cpo: cpoVal,
-                  gms: gmsVal,
-                  basic_commission: basicComm,
-                  ads_total_hist: adsTotalHist,
-                  mi_percentage: parseFloat(miPercentage),
-                  total_investment: totalInvestment
+                  mfc: 0, mfp: 0, cpo: 0, gms: 0, basic_commission: 0, ads_total_hist: 0, mi_percentage: 12, total_investment: 0
               };
           });
 
@@ -694,30 +593,27 @@ export default function App() {
             amName: amNames[i % 4],
             ownerName: `Ona ${String.fromCharCode(65 + (i % 26))}`,
             lmBs: lm, mtdBs: mtd, rrBs: rr, rrVsLm: ((rr - lm) / lm) * 100,
-            lmMi: lmMiGen, mtdMi: mtdMiGen, rrMi: rrMiGen,
+            lmMi: 0, mtdMi: 0, rrMi: 0,
             adsLM: Math.floor(Math.random() * 12000000), 
-            adsTotal: adsTotalGenerated,
-            adsMob: adsMobGenerated,
-            adsWeb: adsWebGenerated,
-            adsDir: adsDirGenerated,
+            adsTotal: Math.floor(Math.random() * 8000000),
+            adsMob: 0, adsWeb: 0, adsDir: 0,
             adsRR: Math.floor(Math.random() * 15000000),
             mcaAmount: mca, 
             mcaWlLimit: mcaLimit, 
             mcaWlClass: mcaLimit > 0 ? 'Repeat' : '-Not in WL',
-            mcaPriority: mcaPriority,
-            mcaDropOff: dropOffScenarios[Math.floor(Math.random() * dropOffScenarios.length)],
-            mcaDisburseStatus: mca > 0 ? (Math.random() > 0.5 ? 'Disbursed' : 'Pending Disbursed') : '',
+            mcaPriority: mcaLimit > 0 ? 'P1' : '-',
+            mcaDropOff: '-',
+            mcaDisburseStatus: mca > 0 ? 'Disbursed' : '',
             disbursedDate: mca > 0 ? `15-Feb-26` : '',
             zeusStatus: Math.random() > 0.15 ? 'ACTIVE' : 'INACTIVE',
             joinDate: `12-Jan-22`,
             campaigns: assignedCampaigns.join(' | '),
             commission: '20%',
             city: ['Bandung', 'Jakarta', 'Sukabumi', 'Bali'][i % 4],
-            address: `Jl. Jend. Sudirman No. ${Math.floor(Math.random() * 100)}`,
+            address: `Jl. Sudirman No. ${Math.floor(Math.random() * 100)}`,
             phone: `+62 812-${Math.floor(Math.random() * 9000)}-${Math.floor(Math.random() * 9000)}`,
             email: `contact@merchant${i}.com`,
-            latitude: (-6.2 + Math.random() * 0.5).toFixed(6),
-            longitude: (106.8 + Math.random() * 0.5).toFixed(6),
+            latitude: '-6.2', longitude: '106.8',
             lastUpdate: '22 Feb 2026',
             campaignPoint: Math.random() > 0.7 ? Math.floor(Math.random() * 500) : 0,
             history: history 
@@ -728,7 +624,6 @@ export default function App() {
      }, 600); 
   };
 
-  // --- COMPUTATIONS ---
   const amOptions = useMemo(() => ['All', ...Array.from(new Set(data.map(d => d.amName).filter(Boolean))).sort()], [data]);
   const priorityOptions = useMemo(() => ['All', ...Array.from(new Set(data.map(d => d.mcaPriority).filter(p => p && p !== '-'))).sort()], [data]);
 
@@ -752,9 +647,7 @@ export default function App() {
         joiners++;
         const c = d.campaigns ? String(d.campaigns).trim().toLowerCase() : '';
         const camps = c.split(/[|,]/).map(x => x.trim()).filter(Boolean);
-        camps.forEach(camp => {
-          counts[camp] = (counts[camp] || 0) + 1;
-        });
+        camps.forEach(camp => { counts[camp] = (counts[camp] || 0) + 1; });
       }
 
       if (segment === 'Booster+') boosterPlus++;
@@ -771,22 +664,15 @@ export default function App() {
       { name: '0 Invest', count: zeroInvest, fill: '#cbd5e1' }   
     ];
 
-    return { 
-      joiners, 
-      zeroInvest, 
-      classification, 
-      list: Object.entries(counts).map(([name, count]) => ({ name, count })) 
-    };
+    return { joiners, zeroInvest, classification, list: Object.entries(counts).map(([name, count]) => ({ name, count })) };
   }, [activeData]);
 
-  // Menyiapkan daftar merchant khusus untuk modal segmen yang diklik
   const filteredSegmentMerchants = useMemo(() => {
      if (!activeSegmentModal) return [];
      return activeData.filter(m => getMerchantSegment(m.campaigns) === activeSegmentModal)
                       .sort((a, b) => b.mtdBs - a.mtdBs); 
   }, [activeData, activeSegmentModal]);
 
-  // Menyiapkan daftar merchant yang melakukan pencairan MCA diurutkan dari tanggal terbaru
   const disbursedMerchants = useMemo(() => {
      return activeData
          .filter(m => m.mcaAmount > 0 && (
@@ -794,27 +680,15 @@ export default function App() {
              (m.mcaDisburseStatus && String(m.mcaDisburseStatus).toLowerCase().includes('pending'))
          ))
          .sort((a, b) => {
-             // Konversi string tanggal ke format Date Javascript untuk diurutkan
              const dateA = new Date(a.disbursedDate);
              const dateB = new Date(b.disbursedDate);
-             
-             // Pastikan format tanggal valid
-             if (!isNaN(dateA) && !isNaN(dateB)) {
-                 return dateB - dateA; // Urutkan Descending (Terbaru di atas)
-             }
-             // Fallback jika format tanggal aneh/teks
+             if (!isNaN(dateA) && !isNaN(dateB)) return dateB - dateA;
              return String(b.disbursedDate || '').localeCompare(String(a.disbursedDate || ''));
          });
   }, [activeData]);
 
-  // LIST UNTUK OUTLETS MODAL (Inactive & 0-Trx)
-  const inactiveMerchants = useMemo(() => {
-     return activeData.filter(m => !m.zeusStatus || m.zeusStatus.toUpperCase() !== 'ACTIVE').sort((a,b) => b.lmBs - a.lmBs);
-  }, [activeData]);
-
-  const zeroTrxMerchants = useMemo(() => {
-     return activeData.filter(m => m.mtdBs <= 0).sort((a,b) => b.lmBs - a.lmBs);
-  }, [activeData]);
+  const inactiveMerchants = useMemo(() => activeData.filter(m => !m.zeusStatus || m.zeusStatus.toUpperCase() !== 'ACTIVE').sort((a,b) => b.lmBs - a.lmBs), [activeData]);
+  const zeroTrxMerchants = useMemo(() => activeData.filter(m => m.mtdBs <= 0).sort((a,b) => b.lmBs - a.lmBs), [activeData]);
 
   const kpi = useMemo(() => {
     if (!activeData.length) return null;
@@ -824,8 +698,6 @@ export default function App() {
         if (d.mtdBs <= 0) { zeroTrxMex++; }
     });
     const totalPts = activeData.reduce((a, c) => a + (c.campaignPoint || 0), 0);
-
-    // Filter spesifik untuk data pencairan di bulan Februari
     const disbursedFeb = activeData.filter(c => c.mcaAmount > 0 && String(c.disbursedDate).toLowerCase().includes('feb'));
 
     return {
@@ -861,37 +733,23 @@ export default function App() {
       result.sort((a, b) => {
         let aValue = a[sortConfig.key];
         let bValue = b[sortConfig.key];
-
-        if (typeof aValue === 'string') {
-          aValue = aValue.toLowerCase();
-          bValue = bValue.toLowerCase();
-        }
-
+        if (typeof aValue === 'string') { aValue = aValue.toLowerCase(); bValue = bValue.toLowerCase(); }
         if (sortConfig.key === 'campaigns') {
             const aActive = a.campaigns && a.campaigns !== '-' && !a.campaigns.toLowerCase().includes('no campaign') ? 1 : 0;
             const bActive = b.campaigns && b.campaigns !== '-' && !b.campaigns.toLowerCase().includes('no campaign') ? 1 : 0;
-            aValue = aActive;
-            bValue = bActive;
+            aValue = aActive; bValue = bActive;
         }
-
-        if (aValue < bValue) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
-        }
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
       });
     }
-
     return result;
   }, [activeData, searchTerm, selectedPriority, sortConfig]);
 
   const requestSort = (key) => {
     let direction = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
     setSortConfig({ key, direction });
   };
 
@@ -934,12 +792,9 @@ export default function App() {
      )
   }
 
-  // --- RENDER SCREEN AWAL (UPLOAD) ---
   if (data.length === 0 || isForceUpload) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden font-sans text-slate-800">
-        
-        {/* Background Accents */}
         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[100%] bg-emerald-900/40 rounded-full blur-[120px] pointer-events-none"></div>
         <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[100%] bg-blue-900/30 rounded-full blur-[120px] pointer-events-none"></div>
 
@@ -988,30 +843,21 @@ export default function App() {
     );
   }
 
-  // --- RENDER DASHBOARD UTAMA ---
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark-theme' : ''} bg-[#f8fafc] text-slate-900 flex flex-col font-sans overflow-hidden relative transition-colors duration-300`}>
       
       {/* MODERN ENTERPRISE GRID BACKGROUND */}
       <div className="fixed inset-0 z-0 pointer-events-none flex justify-center overflow-hidden">
-         {/* Geometric Grid Pattern */}
          <div className="absolute inset-0 bg-grid-pattern"></div>
-         
-         {/* Top Center Ambient Glow */}
          <div className="absolute left-0 right-0 top-[-10%] md:top-[-20%] -z-10 m-auto h-[300px] w-[300px] md:h-[600px] md:w-[600px] rounded-full blur-[100px] glow-effect"></div>
-         
-         {/* Bottom Fade to Solid */}
          <div className="absolute inset-x-0 bottom-0 h-[40vh] fade-bottom"></div>
       </div>
 
-      {/* ========================================================= */}
       {/* MODAL TEMPLATE WHATSAPP */}
-      {/* ========================================================= */}
       {showWaModal && selectedMex && (
         <div className="fixed inset-0 z-[7000] flex items-center justify-center p-4 sm:p-6">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowWaModal(false)} />
-          <div className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col animate-in zoom-in-95 duration-200 overflow-hidden">
-            
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 ease-out animate-in fade-in" onClick={() => setShowWaModal(false)} />
+          <div className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col animate-in zoom-in-95 duration-300 ease-out overflow-hidden">
             <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10">
                <div>
                   <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
@@ -1024,29 +870,21 @@ export default function App() {
                </div>
                <button onClick={() => setShowWaModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
             </div>
-            
             <div className="p-5 md:p-6 bg-[#f8fafc] space-y-3">
-               {/* Option General */}
                <button onClick={() => handleSendWA('general')} className="w-full text-left p-4 bg-white border border-slate-200 hover:border-[#00B14F] hover:shadow-md rounded-2xl transition-all group">
                    <p className="font-bold text-sm text-slate-800 group-hover:text-[#00B14F] mb-1">Review Performa (General)</p>
                    <p className="text-xs text-slate-500 line-clamp-2">Ada 5 variasi pesan sapaan untuk diskusi performa secara umum dengan owner...</p>
                </button>
-               
-               {/* Option Promo */}
                <button onClick={() => handleSendWA('promo')} className="w-full text-left p-4 bg-white border border-slate-200 hover:border-[#00B14F] hover:shadow-md rounded-2xl transition-all group">
                    <p className="font-bold text-sm text-slate-800 group-hover:text-[#00B14F] mb-1 flex items-center gap-1.5"><Zap size={14} className="text-amber-500"/> Penawaran Promo</p>
                    <p className="text-xs text-slate-500 line-clamp-2">Ada 5 variasi pesan untuk mengajak merchant mengikuti program promo/campaign...</p>
                </button>
-               
-               {/* Option MCA (Hanya muncul jika eligible) */}
                {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') && (
                    <button onClick={() => handleSendWA('mca')} className="w-full text-left p-4 bg-blue-50 border border-blue-200 hover:border-blue-500 hover:shadow-md rounded-2xl transition-all group">
                        <p className="font-bold text-sm text-blue-800 group-hover:text-blue-600 mb-1 flex items-center gap-1.5"><Database size={14} className="text-blue-500"/> Info Limit MCA</p>
                        <p className="text-xs text-blue-600/80 line-clamp-2">Ada 5 variasi pesan untuk menginfokan fasilitas pinjaman senilai {formatCurrency(selectedMex.mcaWlLimit)}...</p>
                    </button>
                )}
-               
-               {/* Option Inactive (Hanya muncul jika toko Inactive) */}
                {selectedMex.zeusStatus !== 'ACTIVE' && (
                    <button onClick={() => handleSendWA('inactive')} className="w-full text-left p-4 bg-rose-50 border border-rose-200 hover:border-rose-500 hover:shadow-md rounded-2xl transition-all group">
                        <p className="font-bold text-sm text-rose-800 group-hover:text-rose-600 mb-1 flex items-center gap-1.5"><AlertCircle size={14} className="text-rose-500"/> Follow-up Toko Offline</p>
@@ -1054,19 +892,15 @@ export default function App() {
                    </button>
                )}
             </div>
-
           </div>
         </div>
       )}
 
-      {/* ========================================================= */}
       {/* MODAL DAFTAR MERCHANT PER SEGMEN CAMPAIGN */}
-      {/* ========================================================= */}
       {activeSegmentModal && (
         <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 sm:p-6">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setActiveSegmentModal(null)} />
-          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200 overflow-hidden">
-            
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in" onClick={() => setActiveSegmentModal(null)} />
+          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-300 ease-out overflow-hidden">
             <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10">
                <div>
                   <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
@@ -1077,7 +911,6 @@ export default function App() {
                </div>
                <button onClick={() => setActiveSegmentModal(null)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
             </div>
-            
             <div className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar bg-[#f8fafc]">
                {filteredSegmentMerchants.length === 0 ? (
                  <div className="flex flex-col items-center justify-center h-48 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
@@ -1086,8 +919,8 @@ export default function App() {
                  </div>
                ) : (
                  <div className="grid grid-cols-1 gap-3">
-                    {filteredSegmentMerchants.map((mex) => (
-                       <div key={mex.id} onClick={() => { setSelectedMex(mex); setActiveSegmentModal(null); setActiveTab('overview'); }} className="flex justify-between items-center p-4 bg-white border border-slate-200 rounded-2xl hover:border-[#00B14F] hover:shadow-lg hover:shadow-emerald-500/10 cursor-pointer transition-all duration-300 group">
+                    {filteredSegmentMerchants.map((mex, idx) => (
+                       <div key={mex.id} style={{ animationDelay: `${idx * 30}ms` }} onClick={() => { setSelectedMex(mex); setActiveSegmentModal(null); setActiveTab('overview'); }} className="animate-fade-in-up flex justify-between items-center p-4 bg-white border border-slate-200 rounded-2xl hover:border-[#00B14F] hover:shadow-lg hover:shadow-emerald-500/10 cursor-pointer transition-all duration-300 group">
                           <div className="min-w-0 pr-4">
                              <p className="font-bold text-sm md:text-base text-slate-800 group-hover:text-[#00B14F] truncate transition-colors">{mex.name}</p>
                              <div className="-mt-0.5">
@@ -1108,19 +941,15 @@ export default function App() {
                  </div>
                )}
             </div>
-
           </div>
         </div>
       )}
 
-      {/* ========================================================= */}
       {/* MODAL DAFTAR MERCHANT PENCAIRAN MCA */}
-      {/* ========================================================= */}
       {showMcaModal && (
         <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 sm:p-6">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowMcaModal(false)} />
-          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200 overflow-hidden">
-            
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in" onClick={() => setShowMcaModal(false)} />
+          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-300 ease-out overflow-hidden">
             <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10">
                <div>
                   <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
@@ -1131,7 +960,6 @@ export default function App() {
                </div>
                <button onClick={() => setShowMcaModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
             </div>
-            
             <div className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar bg-[#f8fafc]">
                {disbursedMerchants.length === 0 ? (
                  <div className="flex flex-col items-center justify-center h-48 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
@@ -1140,10 +968,10 @@ export default function App() {
                  </div>
                ) : (
                  <div className="grid grid-cols-1 gap-3">
-                    {disbursedMerchants.map((mex) => {
+                    {disbursedMerchants.map((mex, idx) => {
                        const isPending = mex.mcaDisburseStatus && String(mex.mcaDisburseStatus).toLowerCase().includes('pending');
                        return (
-                       <div key={mex.id} onClick={() => { setSelectedMex(mex); setShowMcaModal(false); setActiveTab('overview'); }} className={`flex justify-between items-center p-4 bg-white border border-slate-200 rounded-2xl cursor-pointer transition-all duration-300 group ${isPending ? 'hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/10' : 'hover:border-amber-400 hover:shadow-lg hover:shadow-amber-500/10'}`}>
+                       <div key={mex.id} style={{ animationDelay: `${idx * 30}ms` }} onClick={() => { setSelectedMex(mex); setShowMcaModal(false); setActiveTab('overview'); }} className={`animate-fade-in-up flex justify-between items-center p-4 bg-white border border-slate-200 rounded-2xl cursor-pointer transition-all duration-300 group ${isPending ? 'hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/10' : 'hover:border-amber-400 hover:shadow-lg hover:shadow-amber-500/10'}`}>
                           <div className="min-w-0 pr-4 flex-1">
                              <div className="flex items-center gap-2 min-w-0">
                                 {mex.mcaPriority && mex.mcaPriority !== '-' && (
@@ -1169,19 +997,15 @@ export default function App() {
                  </div>
                )}
             </div>
-
           </div>
         </div>
       )}
 
-      {/* ========================================================= */}
       {/* MODAL MERCHANT INVESTMENT (MI) RATIO DETAIL */}
-      {/* ========================================================= */}
       {showMiModal && kpi && (
         <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 sm:p-6">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowMiModal(false)} />
-          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col animate-in zoom-in-95 duration-200 overflow-hidden">
-            
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in" onClick={() => setShowMiModal(false)} />
+          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col animate-in zoom-in-95 duration-300 ease-out overflow-hidden">
             <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10">
                <div>
                   <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
@@ -1192,12 +1016,9 @@ export default function App() {
                </div>
                <button onClick={() => setShowMiModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
             </div>
-            
             <div className="p-4 md:p-6 bg-[#f8fafc] space-y-5 custom-scrollbar overflow-y-auto max-h-[75vh]">
-               {/* HERO: PROYEKSI RUNRATE RATIO */}
-               <div className="bg-white rounded-[28px] p-6 border border-slate-200 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center gap-6">
+               <div className="bg-white rounded-[28px] p-6 border border-slate-200 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center gap-6 animate-fade-in-up stagger-1">
                    <div className="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none"></div>
-                   
                    <div className="flex-1 w-full relative z-10 text-center md:text-left">
                        <p className="text-[11px] font-black text-teal-600 uppercase tracking-widest mb-2 flex items-center justify-center md:justify-start gap-1.5"><Activity size={14}/> Projected Ratio</p>
                        <div className="flex items-baseline justify-center md:justify-start gap-1 mb-2">
@@ -1210,7 +1031,6 @@ export default function App() {
                            Diproyeksikan bahwa beban investasi (MI) akan memakan <strong className="text-slate-700">{kpi?.rr ? ((kpi.miRr / kpi.rr) * 100).toFixed(1) : 0}%</strong> dari total Omset bulan ini.
                        </p>
                    </div>
-
                    <div className="flex-1 w-full flex flex-col gap-4 relative z-10 border-t md:border-t-0 md:border-l border-slate-100 pt-5 md:pt-0 md:pl-6">
                        <div>
                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1"><TrendingUp size={12}/> Projected Sales (BS)</p>
@@ -1223,20 +1043,15 @@ export default function App() {
                    </div>
                </div>
 
-               {/* GRID: LM vs MTD */}
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                   {/* LAST MONTH */}
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fade-in-up stagger-2">
                    <div className="bg-white rounded-[24px] p-5 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-slate-300 transition-colors">
                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Last Month</p>
-                       
                        <div className="flex justify-between items-end mb-2">
                            <span className="text-4xl font-black text-slate-700 tracking-tight">{kpi?.lm ? ((kpi.miLm / kpi.lm) * 100).toFixed(1) : 0}%</span>
                        </div>
-                       
                        <div className="w-full bg-slate-100 rounded-full h-2.5 mb-5 overflow-hidden">
                            <div className="bg-slate-400 h-2.5 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, kpi?.lm ? ((kpi.miLm / kpi.lm) * 100) : 0)}%` }}></div>
                        </div>
-
                        <div className="space-y-2.5 pt-4 border-t border-slate-50">
                            <div className="flex justify-between items-center text-xs">
                                <span className="text-slate-500 font-medium">Sales (BS)</span>
@@ -1248,21 +1063,16 @@ export default function App() {
                            </div>
                        </div>
                    </div>
-
-                   {/* MTD ACTUAL */}
                    <div className="bg-white rounded-[24px] p-5 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-teal-300 transition-colors">
                        <div className="flex justify-between items-center mb-3">
                           <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest flex items-center gap-1.5"><Clock size={12}/> MTD Actual</p>
                        </div>
-                       
                        <div className="flex justify-between items-end mb-2">
                            <span className="text-4xl font-black text-teal-600 tracking-tight">{kpi?.mtd ? ((kpi.miMtd / kpi.mtd) * 100).toFixed(1) : 0}%</span>
                        </div>
-                       
                        <div className="w-full bg-teal-50 rounded-full h-2.5 mb-5 overflow-hidden">
                            <div className="bg-teal-500 h-2.5 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, kpi?.mtd ? ((kpi.miMtd / kpi.mtd) * 100) : 0)}%` }}></div>
                        </div>
-
                        <div className="space-y-2.5 pt-4 border-t border-slate-50">
                            <div className="flex justify-between items-center text-xs">
                                <span className="text-slate-500 font-medium">Sales (BS)</span>
@@ -1275,28 +1085,16 @@ export default function App() {
                        </div>
                    </div>
                </div>
-               
-               {/* EDUKASI */}
-               <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 flex gap-3">
-                   <Info className="w-5 h-5 text-blue-500 shrink-0" />
-                   <p className="text-[11px] text-blue-800 leading-relaxed font-medium">
-                       Rasio ini sangat penting untuk memantau efisiensi bakar uang toko. Rasio yang membengkak (naik drastis) bisa berarti merchant mengikuti terlalu banyak campaign diskon tinggi namun tidak berdampak signifikan ke volume penjualan (Basket Size).
-                   </p>
-               </div>
             </div>
-
           </div>
         </div>
       )}
 
-      {/* ========================================================= */}
       {/* MODAL ADS SPEND BREAKDOWN */}
-      {/* ========================================================= */}
       {showAdsModal && (kpi || selectedMex) && (
         <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 sm:p-6">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowAdsModal(false)} />
-          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col animate-in zoom-in-95 duration-200 overflow-hidden">
-            
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in" onClick={() => setShowAdsModal(false)} />
+          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col animate-in zoom-in-95 duration-300 ease-out overflow-hidden">
             <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10">
                <div>
                   <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
@@ -1307,29 +1105,16 @@ export default function App() {
                </div>
                <button onClick={() => setShowAdsModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
             </div>
-            
             <div className="p-4 md:p-6 bg-[#f8fafc] space-y-5 custom-scrollbar overflow-y-auto max-h-[75vh]">
-               {/* HERO: TOTAL ADS MTD & RUNRATE */}
-               <div className="bg-white rounded-[28px] p-6 md:p-8 border border-slate-200 shadow-sm relative overflow-hidden flex flex-col gap-6">
+               <div className="bg-white rounded-[28px] p-6 md:p-8 border border-slate-200 shadow-sm relative overflow-hidden flex flex-col gap-6 animate-fade-in-up stagger-1">
                    <div className="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none"></div>
-                   
                    {(() => {
-                       // AUTO-ADAPT: Menggunakan data spesifik jika dibuka dari Detail Merchant, atau Data Global jika dari Overview
                        const adsData = selectedMex ? {
-                           total: selectedMex.adsTotal || 0,
-                           rr: selectedMex.adsRR || 0,
-                           mob: selectedMex.adsMob || 0,
-                           web: selectedMex.adsWeb || 0,
-                           dir: selectedMex.adsDir || 0
+                           total: selectedMex.adsTotal || 0, rr: selectedMex.adsRR || 0, mob: selectedMex.adsMob || 0, web: selectedMex.adsWeb || 0, dir: selectedMex.adsDir || 0
                        } : {
-                           total: kpi?.adsMtd || 0,
-                           rr: kpi?.adsRr || 0,
-                           mob: kpi?.adsMobMtd || 0,
-                           web: kpi?.adsWebMtd || 0,
-                           dir: kpi?.adsDirMtd || 0
+                           total: kpi?.adsMtd || 0, rr: kpi?.adsRr || 0, mob: kpi?.adsMobMtd || 0, web: kpi?.adsWebMtd || 0, dir: kpi?.adsDirMtd || 0
                        };
-
-                       const totalAds = adsData.total || 1; // Cegah divide by 0
+                       const totalAds = adsData.total || 1; 
                        const mobPct = ((adsData.mob / totalAds) * 100).toFixed(1);
                        const webPct = ((adsData.web / totalAds) * 100).toFixed(1);
                        const dirPct = ((adsData.dir / totalAds) * 100).toFixed(1);
@@ -1351,72 +1136,35 @@ export default function App() {
                                        </p>
                                    </div>
                                </div>
-
-                               {/* BREAKDOWN LIST */}
                                <div className="space-y-4 relative z-10 w-full mt-2 border-t border-slate-100 pt-6">
-                                   {/* MOBILE ADS */}
                                    <div className="bg-white rounded-2xl p-4 md:p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center gap-4 group hover:border-blue-300 transition-colors">
-                                       <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center shrink-0 shadow-inner group-hover:bg-blue-100 transition-colors">
-                                           <Smartphone size={24} />
-                                       </div>
+                                       <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center shrink-0 shadow-inner group-hover:bg-blue-100 transition-colors"><Smartphone size={24} /></div>
                                        <div className="flex-1 w-full">
                                            <div className="flex justify-between items-end mb-1">
-                                               <div>
-                                                   <h4 className="font-black text-slate-800 text-sm md:text-base">Ads Mobile</h4>
-                                                   <p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">Marketing Self Serve</p>
-                                               </div>
-                                               <div className="text-right">
-                                                   <p className="font-black text-blue-600 text-lg md:text-xl leading-none">{formatCurrency(adsData.mob)}</p>
-                                                   <p className="text-xs font-bold text-slate-500 mt-1">{adsData.total > 0 ? mobPct : 0}% Porsi</p>
-                                               </div>
+                                               <div><h4 className="font-black text-slate-800 text-sm md:text-base">Ads Mobile</h4><p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">Marketing Self Serve</p></div>
+                                               <div className="text-right"><p className="font-black text-blue-600 text-lg md:text-xl leading-none">{formatCurrency(adsData.mob)}</p><p className="text-xs font-bold text-slate-500 mt-1">{adsData.total > 0 ? mobPct : 0}% Porsi</p></div>
                                            </div>
-                                           <div className="w-full bg-slate-100 rounded-full h-2 mt-2 overflow-hidden">
-                                               <div className="bg-blue-500 h-2 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, adsData.total > 0 ? mobPct : 0)}%` }}></div>
-                                           </div>
+                                           <div className="w-full bg-slate-100 rounded-full h-2 mt-2 overflow-hidden"><div className="bg-blue-500 h-2 rounded-full transition-all duration-1000 delay-300" style={{ width: `${Math.min(100, adsData.total > 0 ? mobPct : 0)}%` }}></div></div>
                                        </div>
                                    </div>
-
-                                   {/* WEB ADS */}
                                    <div className="bg-white rounded-2xl p-4 md:p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center gap-4 group hover:border-amber-300 transition-colors">
-                                       <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center shrink-0 shadow-inner group-hover:bg-amber-100 transition-colors">
-                                           <ExternalLink size={24} />
-                                       </div>
+                                       <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center shrink-0 shadow-inner group-hover:bg-amber-100 transition-colors"><ExternalLink size={24} /></div>
                                        <div className="flex-1 w-full">
                                            <div className="flex justify-between items-end mb-1">
-                                               <div>
-                                                   <h4 className="font-black text-slate-800 text-sm md:text-base">Ads Web</h4>
-                                                   <p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">Marketing Manager</p>
-                                               </div>
-                                               <div className="text-right">
-                                                   <p className="font-black text-amber-600 text-lg md:text-xl leading-none">{formatCurrency(adsData.web)}</p>
-                                                   <p className="text-xs font-bold text-slate-500 mt-1">{adsData.total > 0 ? webPct : 0}% Porsi</p>
-                                               </div>
+                                               <div><h4 className="font-black text-slate-800 text-sm md:text-base">Ads Web</h4><p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">Marketing Manager</p></div>
+                                               <div className="text-right"><p className="font-black text-amber-600 text-lg md:text-xl leading-none">{formatCurrency(adsData.web)}</p><p className="text-xs font-bold text-slate-500 mt-1">{adsData.total > 0 ? webPct : 0}% Porsi</p></div>
                                            </div>
-                                           <div className="w-full bg-slate-100 rounded-full h-2 mt-2 overflow-hidden">
-                                               <div className="bg-amber-500 h-2 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, adsData.total > 0 ? webPct : 0)}%` }}></div>
-                                           </div>
+                                           <div className="w-full bg-slate-100 rounded-full h-2 mt-2 overflow-hidden"><div className="bg-amber-500 h-2 rounded-full transition-all duration-1000 delay-500" style={{ width: `${Math.min(100, adsData.total > 0 ? webPct : 0)}%` }}></div></div>
                                        </div>
                                    </div>
-
-                                   {/* DIRECT ADS */}
                                    <div className="bg-white rounded-2xl p-4 md:p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center gap-4 group hover:border-purple-300 transition-colors">
-                                       <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-xl flex items-center justify-center shrink-0 shadow-inner group-hover:bg-purple-100 transition-colors">
-                                           <Zap size={24} />
-                                       </div>
+                                       <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-xl flex items-center justify-center shrink-0 shadow-inner group-hover:bg-purple-100 transition-colors"><Zap size={24} /></div>
                                        <div className="flex-1 w-full">
                                            <div className="flex justify-between items-end mb-1">
-                                               <div>
-                                                   <h4 className="font-black text-slate-800 text-sm md:text-base">Direct Ads</h4>
-                                                   <p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">Customize Ads</p>
-                                               </div>
-                                               <div className="text-right">
-                                                   <p className="font-black text-purple-600 text-lg md:text-xl leading-none">{formatCurrency(adsData.dir)}</p>
-                                                   <p className="text-xs font-bold text-slate-500 mt-1">{adsData.total > 0 ? dirPct : 0}% Porsi</p>
-                                               </div>
+                                               <div><h4 className="font-black text-slate-800 text-sm md:text-base">Direct Ads</h4><p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">Customize Ads</p></div>
+                                               <div className="text-right"><p className="font-black text-purple-600 text-lg md:text-xl leading-none">{formatCurrency(adsData.dir)}</p><p className="text-xs font-bold text-slate-500 mt-1">{adsData.total > 0 ? dirPct : 0}% Porsi</p></div>
                                            </div>
-                                           <div className="w-full bg-slate-100 rounded-full h-2 mt-2 overflow-hidden">
-                                               <div className="bg-purple-500 h-2 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, adsData.total > 0 ? dirPct : 0)}%` }}></div>
-                                           </div>
+                                           <div className="w-full bg-slate-100 rounded-full h-2 mt-2 overflow-hidden"><div className="bg-purple-500 h-2 rounded-full transition-all duration-1000 delay-700" style={{ width: `${Math.min(100, adsData.total > 0 ? dirPct : 0)}%` }}></div></div>
                                        </div>
                                    </div>
                                </div>
@@ -1424,21 +1172,16 @@ export default function App() {
                        );
                    })()}
                </div>
-
             </div>
           </div>
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* FULL WIDTH ENTERPRISE SAAS HEADER (NEW REWORK) */}
-      {/* ========================================================= */}
+      {/* FULL WIDTH ENTERPRISE SAAS HEADER */}
       <header className="flex-none relative z-50 w-full bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
         <div className="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 h-16 md:h-20 flex items-center justify-between gap-4 md:gap-8">
           
-          {/* 1. Left: Logo & Context / Tabs */}
           <div className="flex items-center gap-4 md:gap-6 flex-1 min-w-0">
-             {/* Logo */}
              <div className="flex items-center gap-2.5 cursor-pointer group shrink-0" onClick={() => { setSelectedMex(null); setActiveTab('overview'); setSearchTerm(''); }}>
                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-[#00B14F] to-emerald-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-all">
                  <Activity className="w-4 h-4 md:w-5 md:h-5 text-white" />
@@ -1452,10 +1195,8 @@ export default function App() {
 
              <div className="hidden md:block w-px h-6 bg-slate-200 dark:bg-slate-700 shrink-0"></div>
 
-             {/* Dynamic Context Area (Tabs OR Breadcrumb) */}
-             <div className="hidden md:flex items-center flex-1 min-w-0">
+             <div className="hidden md:flex items-center flex-1 min-w-0 relative">
                  {!selectedMex ? (
-                    // DESKTOP TABS
                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
                         <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'overview' ? 'bg-white dark:bg-slate-950 text-[#00B14F] dark:text-emerald-400 shadow-sm border border-slate-200/50 dark:border-slate-800/80' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'}`}>
                             <LayoutDashboard className="w-4 h-4" /> Overview
@@ -1465,9 +1206,8 @@ export default function App() {
                         </button>
                     </div>
                  ) : (
-                    // BREADCRUMB
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-400 truncate">
-                        <button onClick={() => setSelectedMex(null)} className="hover:text-[#00B14F] transition-colors flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-400 truncate animate-in slide-in-from-left-4 fade-in duration-300">
+                        <button onClick={() => setSelectedMex(null)} className="hover:text-[#00B14F] transition-colors flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm active:scale-95">
                            <ArrowLeft className="w-3.5 h-3.5" /> Beranda
                         </button>
                         <span className="text-slate-300 dark:text-slate-600">/</span>
@@ -1477,9 +1217,7 @@ export default function App() {
              </div>
           </div>
 
-          {/* 2. Right: Tools & Filters */}
           <div className="flex items-center gap-3 md:gap-4 shrink-0">
-             
              {!selectedMex && (
                  <div className="flex items-center bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg lg:rounded-xl px-2.5 lg:px-3 h-9 sm:h-10 hover:border-[#00B14F] transition-colors">
                      <Filter className="w-3.5 h-3.5 text-emerald-500 mr-1.5 hidden sm:block" />
@@ -1491,7 +1229,7 @@ export default function App() {
              )}
 
              {selectedMex && (
-                 <div className="hidden sm:flex items-center gap-1.5 lg:gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg lg:rounded-xl px-2.5 lg:px-3 py-1.5 lg:py-2 shadow-sm">
+                 <div className="hidden sm:flex items-center gap-1.5 lg:gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg lg:rounded-xl px-2.5 lg:px-3 py-1.5 lg:py-2 shadow-sm animate-in fade-in zoom-in-95 duration-300">
                     <Users className="w-3.5 h-3.5 text-[#00B14F]" />
                     <span className="text-slate-500 dark:text-slate-400 text-[9px] lg:text-[10px] font-bold tracking-widest uppercase">AM <span className="text-slate-800 dark:text-white ml-1 font-black">{selectedMex.amName}</span></span>
                  </div>
@@ -1510,7 +1248,7 @@ export default function App() {
                  
                  <button 
                      onClick={() => setIsForceUpload(true)} 
-                     className="flex items-center justify-center text-slate-500 hover:text-[#00B14F] dark:text-slate-400 dark:hover:text-emerald-400 w-8 h-8 md:w-9 md:h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group shadow-sm border border-slate-200/50 dark:border-slate-700"
+                     className="flex items-center justify-center text-slate-500 hover:text-[#00B14F] dark:text-slate-400 dark:hover:text-emerald-400 w-8 h-8 md:w-9 md:h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group shadow-sm border border-slate-200/50 dark:border-slate-700 active:scale-95"
                      title="Update Data"
                  >
                      <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
@@ -1518,7 +1256,7 @@ export default function App() {
                  
                  <button 
                      onClick={() => setIsDarkMode(!isDarkMode)} 
-                     className="flex items-center justify-center text-slate-500 hover:text-indigo-500 dark:text-slate-400 dark:hover:text-indigo-400 w-8 h-8 md:w-9 md:h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group shadow-sm border border-slate-200/50 dark:border-slate-700"
+                     className="flex items-center justify-center text-slate-500 hover:text-indigo-500 dark:text-slate-400 dark:hover:text-indigo-400 w-8 h-8 md:w-9 md:h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group shadow-sm border border-slate-200/50 dark:border-slate-700 active:scale-95"
                      title={isDarkMode ? "Beralih ke Light Mode" : "Beralih ke Dark Mode"}
                  >
                      {isDarkMode ? <Sun className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" /> : <Moon className="w-4 h-4 group-hover:-rotate-12 transition-transform duration-500" />}
@@ -1545,23 +1283,20 @@ export default function App() {
       </header>
 
       {/* MAIN CONTENT AREA */}
-      <main className={`flex-1 overflow-y-auto relative w-full hide-scrollbar z-10 px-4 md:px-6 lg:px-8 pt-4 md:pt-6 flex flex-col ${selectedMex ? 'pb-28 md:pb-4' : 'pb-4'}`}>
+      <main onScroll={handleMainScroll} className={`flex-1 overflow-y-auto relative w-full hide-scrollbar z-10 px-4 md:px-6 lg:px-8 pt-4 md:pt-6 flex flex-col ${selectedMex ? 'pb-24' : 'pb-4'}`}>
         <div className="max-w-[1400px] mx-auto w-full flex-1 flex flex-col pb-safe">
 
-          {/* ========================================================= */}
-          {/* GLOBAL SEARCH BAR (DIPINDAHKAN KE BAWAH HEADER) */}
-          {/* ========================================================= */}
           {!selectedMex && (
-            <div className="mb-4 md:mb-5 relative group z-20 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="mb-4 md:mb-5 relative group z-20 animate-fade-in-up stagger-1">
                <div className="absolute inset-y-0 left-4 lg:left-5 flex items-center pointer-events-none">
-                   <Search className="w-4 h-4 lg:w-5 lg:h-5 text-slate-400 group-focus-within:text-[#00B14F] transition-colors" />
+                   <Search className="w-4 h-4 lg:w-5 lg:h-5 text-slate-400 group-focus-within:text-[#00B14F] transition-colors duration-300" />
                </div>
                <input 
                    type="text" 
                    value={searchTerm} 
                    onChange={handleSearchChange} 
                    placeholder="Cari nama merchant atau ID..." 
-                   className="w-full bg-white border border-slate-200 hover:border-emerald-300 rounded-2xl pl-10 lg:pl-12 pr-10 lg:pr-12 py-3 lg:py-3.5 text-xs lg:text-sm text-slate-800 font-bold focus:outline-none focus:border-[#00B14F] focus:ring-4 focus:ring-[#00B14F]/10 transition-all shadow-sm" 
+                   className="w-full bg-white border border-slate-200 hover:border-emerald-300 rounded-2xl pl-10 lg:pl-12 pr-10 lg:pr-12 py-3 lg:py-3.5 text-xs lg:text-sm text-slate-800 font-bold focus:outline-none focus:border-[#00B14F] focus:ring-4 focus:ring-[#00B14F]/10 transition-all duration-300 shadow-sm" 
                />
                {searchTerm && (
                    <button onClick={() => setSearchTerm('')} className="absolute right-3 lg:right-4 top-1/2 -translate-y-1/2 p-1.5 lg:p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors">
@@ -1571,40 +1306,27 @@ export default function App() {
             </div>
           )}
 
+          {/* WRAPPER TRANISI TAB */}
+          <div className="flex-1 flex flex-col relative w-full">
           {!selectedMex ? (
             <Fragment>
-              {/* ========================================================= */}
               {/* TAB 1: DASHBOARD OVERVIEW */}
-              {/* ========================================================= */}
               {activeTab === 'overview' && (
-                <div className="space-y-5 md:space-y-6 animate-in fade-in duration-500 slide-in-from-bottom-4">
-
-                    {/* KPI CARDS - 2 Rows (3 Columns) for Better Readability */}
+                <div className="space-y-5 md:space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-500 ease-out fill-mode-forwards absolute inset-0 w-full overflow-visible">
                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-                      
-                      {/* Basketsize Card */}
-                      <div className="bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1 group h-full">
+                      <div className="animate-fade-in-up stagger-1 bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1 group h-full">
                          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500"></div>
                          <Activity className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                         
                          <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-5 pl-2 relative z-10">
                              <div className="flex items-center gap-2 lg:gap-3">
                                  <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0"><Activity size={18} strokeWidth={2.5}/></div>
                                  <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest truncate">Basketsize</p>
                              </div>
                              {(() => {
-                                 let trend = 0;
-                                 if (kpi?.lm > 0) trend = ((kpi.rr - kpi.lm) / kpi.lm) * 100;
-                                 else if (kpi?.rr > 0) trend = 100;
-                                 const isUp = trend >= 0;
-                                 return (
-                                     <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap ${isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                                         {isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%
-                                     </div>
-                                 );
+                                 let trend = 0; if (kpi?.lm > 0) trend = ((kpi.rr - kpi.lm) / kpi.lm) * 100; else if (kpi?.rr > 0) trend = 100; const isUp = trend >= 0;
+                                 return (<div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap transition-colors ${isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>{isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%</div>);
                              })()}
                          </div>
-                         
                          <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                              <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">MTD Sales</p>
                              <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.mtd || 0)}</p>
@@ -1613,38 +1335,25 @@ export default function App() {
                                  <span className="text-xs lg:text-sm font-black text-slate-800">{formatCurrency(kpi?.rr || 0)}</span>
                              </div>
                          </div>
-                         
                          <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
                              <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Last Month</span>
                              <span className="text-[10px] lg:text-xs font-black text-slate-700">{formatCurrency(kpi?.lm || 0)}</span>
                          </div>
                       </div>
 
-                      {/* Merchant Invest Card (NOW CLICKABLE) */}
-                      <div onClick={() => setShowMiModal(true)} className="cursor-pointer bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-teal-500/5 hover:-translate-y-1 group h-full">
+                      <div onClick={() => setShowMiModal(true)} className="animate-fade-in-up stagger-2 cursor-pointer bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-teal-500/5 hover:-translate-y-1 group h-full">
                          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-teal-500"></div>
                          <DollarSign className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                         
                          <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-5 pl-2 relative z-10">
                              <div className="flex items-center gap-2 lg:gap-3">
                                  <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0"><DollarSign size={18} strokeWidth={2.5}/></div>
-                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">
-                                     Invest <MousePointer size={10} className="text-slate-300 group-hover:text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 shrink-0 hidden lg:block"/>
-                                 </p>
+                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">Invest <MousePointer size={10} className="text-slate-300 group-hover:text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-0.5 shrink-0 hidden lg:block"/></p>
                              </div>
                              {(() => {
-                                 let trend = 0;
-                                 if (kpi?.miLm > 0) trend = ((kpi.miRr - kpi.miLm) / kpi.miLm) * 100;
-                                 else if (kpi?.miRr > 0) trend = 100;
-                                 const isUp = trend > 0;
-                                 return (
-                                     <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap ${!isUp ? 'bg-teal-50 text-teal-600' : 'bg-rose-50 text-rose-600'}`}>
-                                         {isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%
-                                     </div>
-                                 );
+                                 let trend = 0; if (kpi?.miLm > 0) trend = ((kpi.miRr - kpi.miLm) / kpi.miLm) * 100; else if (kpi?.miRr > 0) trend = 100; const isUp = trend > 0;
+                                 return (<div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap transition-colors ${!isUp ? 'bg-teal-50 text-teal-600' : 'bg-rose-50 text-rose-600'}`}>{isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%</div>);
                              })()}
                          </div>
-
                          <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                              <div className="flex flex-wrap items-center gap-1.5 mb-1">
                                  <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest">MTD Invest</p>
@@ -1657,7 +1366,6 @@ export default function App() {
                                  <span className="text-[8px] lg:text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md leading-none hidden lg:block">{kpi?.rr ? ((kpi.miRr / kpi.rr) * 100).toFixed(1) : 0}%</span>
                              </div>
                          </div>
-
                          <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
                              <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Last Month</span>
                              <div className="flex items-center gap-1.5">
@@ -1667,31 +1375,19 @@ export default function App() {
                          </div>
                       </div>
 
-                      {/* Ads Spend Card (NOW CLICKABLE) */}
-                      <div onClick={() => setShowAdsModal(true)} className="cursor-pointer bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-rose-500/5 hover:-translate-y-1 group h-full">
+                      <div onClick={() => setShowAdsModal(true)} className="animate-fade-in-up stagger-3 cursor-pointer bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-rose-500/5 hover:-translate-y-1 group h-full">
                          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500"></div>
                          <Megaphone className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                         
                          <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-5 pl-2 relative z-10">
                              <div className="flex items-center gap-2 lg:gap-3">
                                  <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0"><Megaphone size={18} strokeWidth={2.5}/></div>
-                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">
-                                     Ads <MousePointer size={10} className="text-slate-300 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 shrink-0 hidden lg:block"/>
-                                 </p>
+                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">Ads <MousePointer size={10} className="text-slate-300 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-0.5 shrink-0 hidden lg:block"/></p>
                              </div>
                              {(() => {
-                                 let trend = 0;
-                                 if (kpi?.adsLm > 0) trend = ((kpi.adsRr - kpi.adsLm) / kpi.adsLm) * 100;
-                                 else if (kpi?.adsRr > 0) trend = 100;
-                                 const isUp = trend > 0;
-                                 return (
-                                     <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap ${!isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                                         {isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%
-                                     </div>
-                                 );
+                                 let trend = 0; if (kpi?.adsLm > 0) trend = ((kpi.adsRr - kpi.adsLm) / kpi.adsLm) * 100; else if (kpi?.adsRr > 0) trend = 100; const isUp = trend > 0;
+                                 return (<div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap transition-colors ${!isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>{isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%</div>);
                              })()}
                          </div>
-
                          <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                              <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">MTD Ads</p>
                              <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.adsMtd || 0)}</p>
@@ -1700,27 +1396,21 @@ export default function App() {
                                  <span className="text-xs lg:text-sm font-black text-slate-800">{formatCurrency(kpi?.adsRr || 0)}</span>
                              </div>
                          </div>
-
                          <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
                              <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Last Month</span>
                              <span className="text-[10px] lg:text-xs font-black text-slate-700">{formatCurrency(kpi?.adsLm || 0)}</span>
                          </div>
                       </div>
 
-                      {/* MCA Disbursed Card (CLICKABLE) */}
-                      <div onClick={() => setShowMcaModal(true)} className="cursor-pointer bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 hover:-translate-y-1 group h-full">
+                      <div onClick={() => setShowMcaModal(true)} className="animate-fade-in-up stagger-4 cursor-pointer bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 hover:-translate-y-1 group h-full">
                          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500"></div>
                          <Database className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                         
                          <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
                              <div className="flex items-center gap-2 lg:gap-3">
                                  <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0"><Database size={18} strokeWidth={2.5}/></div>
-                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">
-                                     MCA <MousePointer size={10} className="text-slate-300 group-hover:text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 shrink-0 hidden lg:block"/>
-                                 </p>
+                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">MCA <MousePointer size={10} className="text-slate-300 group-hover:text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-0.5 shrink-0 hidden lg:block"/></p>
                              </div>
                          </div>
-
                          <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                              <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Disbursed</p>
                              <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.mcaDis || 0)}</p>
@@ -1729,27 +1419,21 @@ export default function App() {
                                  <span className="text-xs lg:text-sm font-black text-slate-800">{formatCurrency(kpi?.mcaEli || 0)}</span>
                              </div>
                          </div>
-
                          <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
                              <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Total Toko</span>
-                             <span className="px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black uppercase bg-slate-100 text-slate-600">
-                                 {kpi?.mcaDisCount || 0} Toko
-                             </span>
+                             <span className="px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black uppercase bg-slate-100 text-slate-600">{kpi?.mcaDisCount || 0} Toko</span>
                          </div>
                       </div>
 
-                      {/* Campaign Pts Card */}
-                      <div className="bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 group h-full">
+                      <div className="animate-fade-in-up stagger-5 bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 group h-full">
                          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500"></div>
                          <Award className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                         
                          <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
                              <div className="flex items-center gap-2 lg:gap-3">
                                  <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0"><Award size={18} strokeWidth={2.5}/></div>
                                  <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest truncate">Campaigns</p>
                              </div>
                          </div>
-
                          <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                              <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Points</p>
                              <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{(kpi?.totalPoints || 0).toLocaleString('id-ID')}</p>
@@ -1758,31 +1442,24 @@ export default function App() {
                                  <span className="text-xs lg:text-sm font-black text-slate-800">{kpi?.joiners || 0} Toko</span>
                              </div>
                          </div>
-
                          <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
                              <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Avg Points</span>
                              <span className="text-[10px] lg:text-xs font-black text-slate-700">{kpi?.avgPtsPerJoiner || 0} pts</span>
                          </div>
                       </div>
                       
-                      {/* Outlets Card (NOW CLICKABLE WITH 0-TRX) */}
-                      <div onClick={() => setShowOutletsModal(true)} className="cursor-pointer bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 group h-full">
+                      <div onClick={() => setShowOutletsModal(true)} className="animate-fade-in-up stagger-6 cursor-pointer bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 group h-full">
                          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
                          <Store className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                         
                          <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
                              <div className="flex items-center gap-2 lg:gap-3">
                                  <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0"><Store size={18} strokeWidth={2.5}/></div>
-                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">
-                                     Outlets <MousePointer size={10} className="text-slate-300 group-hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 shrink-0 hidden lg:block"/>
-                                 </p>
+                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">Outlets <MousePointer size={10} className="text-slate-300 group-hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-0.5 shrink-0 hidden lg:block"/></p>
                              </div>
                          </div>
-
                          <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                              <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Managed</p>
                              <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{kpi?.totalMex || 0}</p>
-                             
                              <div className="flex items-center gap-3 mb-1 lg:mb-2">
                                  <div className="flex items-center gap-1.5">
                                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
@@ -1791,7 +1468,6 @@ export default function App() {
                                  </div>
                              </div>
                          </div>
-
                          <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10 gap-2">
                              <div className="flex items-center gap-1 lg:gap-1.5 flex-1 min-w-0">
                                  <span className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-slate-400 shrink-0"></span>
@@ -1808,10 +1484,8 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* CHARTS ROW 1 */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6 mt-6">
-                      {/* Top 10 MTD */}
-                      <div className="lg:col-span-2 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-full">
+                      <div className="animate-fade-in-up stagger-7 lg:col-span-2 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8 shrink-0 min-h-[44px]">
                             <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="text-[#00B14F] w-5 h-5"/> Top 10 Merchants <span className="text-slate-400 font-bold normal-case text-xs bg-slate-50 px-2 py-1 rounded-lg border border-slate-100 hidden sm:inline-block">(MTD Sales)</span></h3>
                         </div>
@@ -1826,7 +1500,6 @@ export default function App() {
                               <Bar dataKey="lmBs" name="LM Sales" fill={COLORS.slate500} radius={[6,6,0,0]} maxBarSize={28} cursor="pointer" />
                               <Bar dataKey="mtdBs" name="MTD Sales" fill={COLORS.primary} radius={[6,6,0,0]} maxBarSize={28} cursor="pointer" />
                               <Line type="monotone" dataKey="rrBs" name="Runrate" stroke={COLORS.growth} strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r: 6}} cursor="pointer">
-                                  {/* Label Trend Kustom di atas titik Runrate */}
                                   <LabelList 
                                       dataKey="rrVsLm" 
                                       position="top" 
@@ -1840,14 +1513,8 @@ export default function App() {
                                           const textStr = `${isPositive ? '+' : ''}${numVal.toFixed(0)}%`;
                                           return (
                                               <g>
-                                                  {/* Efek Highlight / Halo Putih */}
-                                                  <text x={x} y={y - 12} fill="none" stroke="#ffffff" strokeWidth={4} strokeLinejoin="round" fontSize={10} fontWeight="900" textAnchor="middle">
-                                                      {textStr}
-                                                  </text>
-                                                  {/* Teks Angka Utama */}
-                                                  <text x={x} y={y - 12} fill={fill} fontSize={10} fontWeight="900" textAnchor="middle">
-                                                      {textStr}
-                                                  </text>
+                                                  <text x={x} y={y - 12} fill="none" stroke="#ffffff" strokeWidth={4} strokeLinejoin="round" fontSize={10} fontWeight="900" textAnchor="middle">{textStr}</text>
+                                                  <text x={x} y={y - 12} fill={fill} fontSize={10} fontWeight="900" textAnchor="middle">{textStr}</text>
                                               </g>
                                           );
                                       }}
@@ -1858,15 +1525,13 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* Campaign Segmentation Chart */}
-                      <div className="bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-full">
+                      <div className="animate-fade-in-up stagger-8 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
                         <div className="flex justify-between items-center mb-8 shrink-0 min-h-[44px]">
                             <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Target className="text-indigo-500 w-5 h-5"/> Campaign Segment</h3>
-                            <span className="bg-indigo-50 text-indigo-700 font-black text-[10px] md:text-xs px-2.5 py-1 rounded-lg border border-indigo-100">
+                            <span className="bg-indigo-50 text-indigo-700 font-black text-[10px] md:text-xs px-2.5 py-1 rounded-lg border border-indigo-100 transition-transform hover:scale-105">
                                 {(( (kpi?.joiners || 0) / Math.max(1, (kpi?.joiners || 0) + campaignStats.zeroInvest)) * 100).toFixed(0)}% Rate
                             </span>
                         </div>
-                        
                         <div className="h-[250px] md:h-[320px] w-full mt-auto overflow-hidden">
                           <ResponsiveContainer width="100%" height="100%">
                             <BarChart 
@@ -1892,19 +1557,18 @@ export default function App() {
                                 label={{ position: 'right', fill: '#475569', fontSize: 12, fontWeight: 900 }}
                               >
                                 {campaignStats.classification.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                                  <Cell key={`cell-${index}`} fill={entry.fill} className="transition-all duration-300 hover:opacity-80" />
                                 ))}
                               </Bar>
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
-                        <p className="text-[10px] font-bold text-slate-400 text-center mt-4 bg-slate-50 py-2 rounded-xl">*Klik bar grafik untuk detail merchant</p>
+                        <p className="text-[10px] font-bold text-slate-400 text-center mt-4 bg-slate-50 py-2 rounded-xl">*Klik bar grafik untuk detail</p>
                       </div>
                     </div>
 
-                    {/* CHARTS ROW 2 */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6 mt-6">
-                      <div className="lg:col-span-2 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-full">
+                      <div className="animate-fade-in-up stagger-9 lg:col-span-2 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
                         <div className="flex justify-between items-center mb-8 shrink-0 min-h-[44px]">
                             <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Megaphone className="text-rose-500 w-5 h-5"/> Top 10 Ads Spender <span className="text-slate-400 font-bold normal-case text-xs bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">(vs LM & RR)</span></h3>
                         </div>
@@ -1919,7 +1583,6 @@ export default function App() {
                               <Bar dataKey="adsLM" name="Ads LM" fill={COLORS.slate500} radius={[6,6,0,0]} maxBarSize={32} cursor="pointer" />
                               <Bar dataKey="adsTotal" name="Ads MTD" fill="#fb923c" radius={[6,6,0,0]} maxBarSize={32} cursor="pointer" />
                               <Line type="monotone" dataKey="adsRR" name="Ads RR" stroke="#2dd4bf" strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r: 6}} cursor="pointer">
-                                 {/* Label Trend Ads Kustom */}
                                  <LabelList 
                                       dataKey="adsTotal" 
                                       position="top" 
@@ -1930,27 +1593,17 @@ export default function App() {
                                           if (!item) return null;
                                           
                                           let adsTrend = 0;
-                                          if (item.adsLM > 0) {
-                                              adsTrend = ((item.adsRR - item.adsLM) / item.adsLM) * 100;
-                                          } else if (item.adsRR > 0) {
-                                              adsTrend = 100;
-                                          }
+                                          if (item.adsLM > 0) adsTrend = ((item.adsRR - item.adsLM) / item.adsLM) * 100;
+                                          else if (item.adsRR > 0) adsTrend = 100;
                                           
                                           const isPositive = adsTrend >= 0;
-                                          // Warna untuk Ads: Naik (merah karena biaya naik), Turun (hijau karena hemat)
                                           const fill = isPositive ? '#ef4444' : '#10b981'; 
                                           const textStr = `${isPositive ? '+' : ''}${adsTrend.toFixed(0)}%`;
                                           
                                           return (
                                               <g>
-                                                  {/* Efek Highlight / Halo Putih */}
-                                                  <text x={x} y={y - 12} fill="none" stroke="#ffffff" strokeWidth={4} strokeLinejoin="round" fontSize={10} fontWeight="900" textAnchor="middle">
-                                                      {textStr}
-                                                  </text>
-                                                  {/* Teks Angka Utama */}
-                                                  <text x={x} y={y - 12} fill={fill} fontSize={10} fontWeight="900" textAnchor="middle">
-                                                      {textStr}
-                                                  </text>
+                                                  <text x={x} y={y - 12} fill="none" stroke="#ffffff" strokeWidth={4} strokeLinejoin="round" fontSize={10} fontWeight="900" textAnchor="middle">{textStr}</text>
+                                                  <text x={x} y={y - 12} fill={fill} fontSize={10} fontWeight="900" textAnchor="middle">{textStr}</text>
                                               </g>
                                           );
                                       }}
@@ -1961,9 +1614,8 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* Portfolio Health */}
-                      <div className="bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col justify-between h-full relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none"></div>
+                      <div className="animate-fade-in-up stagger-10 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col justify-between h-full relative overflow-hidden hover:shadow-2xl transition-shadow duration-500">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none transition-transform duration-700 hover:scale-110"></div>
                         
                         <div className="flex justify-between items-end mb-4 relative z-10 shrink-0 min-h-[44px]">
                             <div>
@@ -1972,7 +1624,6 @@ export default function App() {
                             </div>
                         </div>
 
-                        {/* Donut Chart Area */}
                         <div className="flex-1 w-full relative min-h-[180px] my-2">
                            <ResponsiveContainer width="100%" height="100%">
                               <PieChart>
@@ -1987,7 +1638,7 @@ export default function App() {
                                   stroke="none"
                                 >
                                   {chartsData.health.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} cursor="pointer" className="hover:opacity-80 transition-opacity" />
+                                    <Cell key={`cell-${index}`} fill={entry.color} cursor="pointer" className="hover:opacity-80 transition-all duration-300" />
                                   ))}
                                 </Pie>
                                 <RechartsTooltip 
@@ -1998,17 +1649,15 @@ export default function App() {
                               </PieChart>
                            </ResponsiveContainer>
                            
-                           {/* Center Label (Growing %) */}
-                           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none animate-in zoom-in-95 duration-700 delay-300">
                               <span className="text-3xl font-black text-[#00B14F] leading-none drop-shadow-sm">{chartsData.health[0].percentage}%</span>
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Growing</span>
                            </div>
                         </div>
 
-                        {/* Legend / Breakdown List */}
                         <div className="grid grid-cols-1 gap-2.5 relative z-10 mt-4 shrink-0">
                             {chartsData.health.map((h, i) => (
-                                <div key={i} className="flex items-center justify-between text-sm bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+                                <div key={i} className="flex items-center justify-between text-sm bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 hover:bg-slate-100/50 transition-colors">
                                     <div className="flex items-center gap-3">
                                         <div className="w-3.5 h-3.5 rounded-md shadow-sm" style={{ backgroundColor: h.color }} />
                                         <span className="font-bold text-slate-700 text-xs">{h.name}</span>
@@ -2019,29 +1668,23 @@ export default function App() {
                         </div>
                       </div>
                     </div>
-
                 </div>
               )}
 
-              {/* ========================================================= */}
               {/* TAB 2: MASTER DATASET */}
-              {/* ========================================================= */}
               {activeTab === 'data' && (
-                <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden animate-in fade-in duration-500 flex flex-col h-[80vh]">
+                <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500 ease-out fill-mode-forwards flex flex-col h-[80vh] absolute inset-0 w-full">
                   <div className="p-4 md:p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#f8fafc] shrink-0">
                     <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Table className="w-5 h-5 text-indigo-500"/> Master Data Directory</h3>
-                    
                     <div className="flex items-center gap-3 w-full sm:w-auto">
-                        {/* Priority Filter inside Master Data */}
                         <div className="flex items-center bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm flex-1 sm:flex-none hover:border-indigo-400 transition-colors focus-within:ring-2 focus-within:ring-indigo-100">
                            <Filter className="w-3.5 h-3.5 text-slate-400 mr-2" />
-                           <select value={selectedPriority} onChange={(e) => { setSelectedPriority(e.target.value); setSelectedMex(null); }} className="bg-transparent text-slate-700 text-xs font-bold focus:outline-none w-full sm:w-32 cursor-pointer appearance-none">
+                           <select value={selectedPriority} onChange={(e) => { setSelectedPriority(e.target.value); setSelectedMex(null); }} className="bg-transparent text-slate-700 text-xs font-bold focus:outline-none w-full sm:w-32 cursor-pointer appearance-none transition-colors">
                               {priorityOptions.map(p => <option key={p} value={p}>{p === 'All' ? 'Semua Priority' : `Priority: ${p}`}</option>)}
                            </select>
                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1 pointer-events-none" />
                         </div>
-                        
-                        <div className="bg-indigo-100 text-indigo-700 px-3 py-2 rounded-xl text-xs font-black shadow-sm shrink-0">
+                        <div className="bg-indigo-100 text-indigo-700 px-3 py-2 rounded-xl text-xs font-black shadow-sm shrink-0 transition-transform hover:scale-105">
                           {filtered.length} Toko
                         </div>
                     </div>
@@ -2049,7 +1692,7 @@ export default function App() {
                   
                   <div className="overflow-auto flex-1 custom-scrollbar">
                     {filtered.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                      <div className="flex flex-col items-center justify-center h-full text-slate-400 animate-in fade-in zoom-in-95 duration-300">
                         <Search className="w-12 h-12 mb-3 opacity-20" />
                         <p className="text-sm font-bold uppercase tracking-widest">Data tidak ditemukan.</p>
                       </div>
@@ -2080,17 +1723,17 @@ export default function App() {
                          </thead>
                          <tbody className="divide-y divide-slate-50">
                             {filtered.map((r, index) => (
-                              <tr key={r.id} onClick={() => setSelectedMex(r)} className="hover:bg-slate-50/80 transition-colors cursor-pointer group">
+                              <tr key={r.id} onClick={() => setSelectedMex(r)} className="hover:bg-slate-50/80 transition-colors cursor-pointer group animate-fade-in-up" style={{ animationDelay: `${Math.min(index * 20, 500)}ms` }}>
                                 <td className="px-4 py-3 text-center font-bold text-slate-400 text-xs">{index + 1}</td>
                                 <td className="px-4 py-3 min-w-[200px]">
                                   <p className="font-bold text-slate-800 text-xs md:text-sm group-hover:text-[#00B14F] truncate transition-colors">{r.name}</p>
                                   <div className="flex items-center gap-2 mt-0.5">
-                                    <p className="text-[10px] text-slate-400 font-mono bg-slate-100 px-1.5 py-0.5 rounded">{r.id}</p>
+                                    <p className="text-[10px] text-slate-400 font-mono bg-slate-100 px-1.5 py-0.5 rounded group-hover:bg-emerald-50 transition-colors">{r.id}</p>
                                   </div>
                                 </td>
                                 <td className="px-4 py-3 text-center hidden md:table-cell">
                                   {r.campaigns && r.campaigns !== '-' && !r.campaigns.toLowerCase().includes('no campaign') ? (
-                                    <div className="inline-flex items-center justify-center bg-indigo-50 p-1 rounded-md border border-indigo-100 shadow-sm" title="Active Campaign">
+                                    <div className="inline-flex items-center justify-center bg-indigo-50 p-1 rounded-md border border-indigo-100 shadow-sm group-hover:scale-110 transition-transform" title="Active Campaign">
                                         <Check className="w-4 h-4 text-indigo-600" strokeWidth={3} />
                                     </div>
                                   ) : (
@@ -2098,7 +1741,7 @@ export default function App() {
                                   )}
                                 </td>
                                 <td className="px-4 py-3 text-center">
-                                   <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-black shadow-sm ${r.rrBs > r.lmBs ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+                                   <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-black shadow-sm transition-transform group-hover:scale-105 ${r.rrBs > r.lmBs ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
                                       {r.rrBs > r.lmBs ? <ArrowUpRight className="w-3.5 h-3.5"/> : <ArrowDownRight className="w-3.5 h-3.5"/>}
                                       {Math.abs(r.rrVsLm).toFixed(0)}%
                                    </span>
@@ -2110,7 +1753,7 @@ export default function App() {
                                 </td>
                                 <td className="px-5 py-3 font-mono text-slate-800 font-black text-right text-xs md:text-sm">{formatCurrency(r.mtdBs)}</td>
                                 <td className="px-5 py-3 text-center">
-                                   <div className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${r.zeusStatus === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>{r.zeusStatus}</div>
+                                   <div className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-colors ${r.zeusStatus === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200' : 'bg-slate-100 text-slate-500'}`}>{r.zeusStatus}</div>
                                 </td>
                               </tr>
                             ))}
@@ -2125,28 +1768,20 @@ export default function App() {
             // =========================================================
             // VIEW MERCHANT DETAIL
             // =========================================================
-            <div className="animate-in slide-in-from-right-8 duration-500 space-y-5 md:space-y-6 pb-12">
+            <div className="animate-in fade-in slide-in-from-right-8 duration-500 ease-out space-y-5 md:space-y-6 pb-12 w-full">
 
-               {/* Profile Header */}
-               <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none"></div>
+               <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6 relative overflow-hidden animate-fade-in-up stagger-1">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none transition-transform duration-700 hover:scale-110"></div>
                   <div className="relative z-10 w-full lg:w-auto">
                      <div className="flex items-center gap-3 md:gap-4 mb-2.5">
-                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-emerald-50 to-emerald-100 text-[#00B14F] rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-emerald-200 shadow-sm">
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-emerald-50 to-emerald-100 text-[#00B14F] rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-emerald-200 shadow-sm transition-transform hover:rotate-6">
                            <Store className="w-5 h-5 md:w-6 md:h-6" />
                         </div>
                         <h2 className="text-xl md:text-2xl font-black text-slate-900 leading-tight tracking-tight">{selectedMex.name}</h2>
                      </div>
                      <div className="flex items-center gap-3 text-sm text-slate-600 font-medium ml-1 md:ml-[64px]">
-                        <div 
-                            className="flex items-center gap-1.5 cursor-help bg-slate-50 border border-slate-100 pl-1.5 pr-2.5 py-1 rounded-lg transition-colors hover:border-slate-200 shadow-sm" 
-                            title={selectedMex.zeusStatus === 'ACTIVE' ? 'Status: Aktif' : 'Status: Inactive'}
-                        >
-                            {selectedMex.zeusStatus === 'ACTIVE' ? (
-                                <CheckCircle className="w-4 h-4 text-[#00B14F]" />
-                            ) : (
-                                <AlertCircle className="w-4 h-4 text-slate-400" />
-                            )}
+                        <div className="flex items-center gap-1.5 cursor-help bg-slate-50 border border-slate-100 pl-1.5 pr-2.5 py-1 rounded-lg transition-colors hover:border-slate-200 shadow-sm" title={selectedMex.zeusStatus === 'ACTIVE' ? 'Status: Aktif' : 'Status: Inactive'}>
+                            {selectedMex.zeusStatus === 'ACTIVE' ? <CheckCircle className="w-4 h-4 text-[#00B14F]" /> : <AlertCircle className="w-4 h-4 text-slate-400" />}
                             <span className="font-mono text-slate-700 text-xs font-bold tracking-tight">{selectedMex.id}</span>
                         </div>
                         <span className="text-slate-400">•</span>
@@ -2154,108 +1789,60 @@ export default function App() {
                      </div>
                   </div>
                   
-                  {/* Action Buttons (Right side on desktop, bottom on mobile) */}
                   <div className="relative z-10 shrink-0 w-full lg:w-auto flex flex-col sm:flex-row items-center justify-start lg:justify-end gap-3 mt-4 lg:mt-0 pt-4 lg:pt-0 border-t border-slate-100 lg:border-none">
-                      
-                      {/* Tombol Hubungi WhatsApp (Sembunyikan di Mobile karena sudah ada di Bottom Bar) */}
-                      <button 
-                         onClick={() => {
-                             if (selectedMex.phone && selectedMex.phone !== '-') setShowWaModal(true);
-                         }} 
-                         className={`hidden sm:flex w-full sm:w-auto px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-all items-center justify-center gap-2 shadow-sm group ${selectedMex.phone && selectedMex.phone !== '-' ? 'bg-[#00B14F] hover:bg-emerald-600 text-white shadow-emerald-500/20' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}`}
-                         title={selectedMex.phone && selectedMex.phone !== '-' ? 'Hubungi via WhatsApp' : 'Nomor tidak tersedia'}
-                      >
+                      <button onClick={() => { if (selectedMex.phone && selectedMex.phone !== '-') setShowWaModal(true); }} className={`hidden sm:flex w-full sm:w-auto px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-all items-center justify-center gap-2 shadow-sm group active:scale-95 ${selectedMex.phone && selectedMex.phone !== '-' ? 'bg-[#00B14F] hover:bg-emerald-600 text-white shadow-emerald-500/20' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}`} title={selectedMex.phone && selectedMex.phone !== '-' ? 'Hubungi via WhatsApp' : 'Nomor tidak tersedia'}>
                          <MessageCircle size={16} className={selectedMex.phone && selectedMex.phone !== '-' ? "group-hover:scale-110 transition-transform" : ""} /> 
                          {selectedMex.phone && selectedMex.phone !== '-' ? 'Hubungi' : 'No. HP Kosong'}
                       </button>
-
-                      {/* Tombol Compare */}
                       {selectedMex.history && selectedMex.history.length > 0 && (
-                          <button 
-                             onClick={() => {
-                                 // Set default ke 3 bulan terakhir saat modal dibuka
-                                 const hist = selectedMex.history || [];
-                                 const defaultMonths = [
-                                     hist.length > 2 ? hist[hist.length - 3].month : '',
-                                     hist.length > 1 ? hist[hist.length - 2].month : '',
-                                     hist.length > 0 ? hist[hist.length - 1].month : ''
-                                 ];
-                                 setCompareMonths(defaultMonths);
-                                 setShowCompareModal(true);
-                             }} 
-                             className="w-full sm:w-auto bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border border-indigo-200 shadow-sm group"
-                          >
+                          <button onClick={() => { const hist = selectedMex.history || []; const defaultMonths = [ hist.length > 2 ? hist[hist.length - 3].month : '', hist.length > 1 ? hist[hist.length - 2].month : '', hist.length > 0 ? hist[hist.length - 1].month : '' ]; setCompareMonths(defaultMonths); setShowCompareModal(true); }} className="w-full sm:w-auto bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border border-indigo-200 shadow-sm group active:scale-95">
                              <BarChart2 size={16} className="group-hover:scale-110 transition-transform" /> Compare
                           </button>
                       )}
                   </div>
                </div>
 
-               {/* ========================================================= */}
-               {/* ENTERPRISE SAAS KPI CARDS (ULTRA CLEAN & PROFESSIONAL) */}
-               {/* ========================================================= */}
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                  
-                  {/* Card 1: Sales (Emerald) */}
-                  <div className="bg-white rounded-[28px] border border-slate-200 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1 group">
-                     {/* Left Accent Bar */}
+                  <div className="bg-white rounded-[28px] border border-slate-200 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1 group animate-fade-in-up stagger-2">
                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500"></div>
-                     {/* Subtle Watermark */}
                      <Activity className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-
                      <div className="flex items-start mb-5 pl-2 relative z-10">
                         <div className="flex items-center gap-3">
-                           <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                              <Activity size={18} strokeWidth={2.5} />
-                           </div>
+                           <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center transition-colors group-hover:bg-emerald-100"><Activity size={18} strokeWidth={2.5} /></div>
                            <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Sales</p>
                         </div>
                      </div>
-
                      <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                          <div className="flex items-center gap-2 mb-1">
                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">MTD Sales</p>
-                             <div className={`px-1.5 py-0.5 rounded-md text-[9px] font-black flex items-center gap-0.5 ${selectedMex.rrBs > selectedMex.lmBs ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                             <div className={`px-1.5 py-0.5 rounded-md text-[9px] font-black flex items-center gap-0.5 transition-colors ${selectedMex.rrBs > selectedMex.lmBs ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' : 'bg-rose-50 text-rose-600 group-hover:bg-rose-100'}`}>
                                 {selectedMex.rrBs > selectedMex.lmBs ? <ArrowUpRight size={10}/> : <ArrowDownRight size={10}/>} {Math.abs(selectedMex.rrVsLm).toFixed(1)}%
                              </div>
                          </div>
-                         <p className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-4">
-                             {formatCurrency(selectedMex.mtdBs)}
-                         </p>
-                         
+                         <p className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-4">{formatCurrency(selectedMex.mtdBs)}</p>
                          <div className="flex items-center gap-2 mb-2">
                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Projected Runrate:</span>
                              <span className="text-sm font-black text-slate-800">{formatCurrency(selectedMex.rrBs)}</span>
                          </div>
                      </div>
-
                      <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
                          <span className="text-[10px] font-bold text-slate-400 uppercase">Last Month</span>
                          <span className="text-xs font-black text-slate-700">{formatCurrency(selectedMex.lmBs)}</span>
                      </div>
                   </div>
 
-                  {/* Card 2: Campaigns (Amber) */}
-                  <div className="bg-white rounded-[28px] border border-slate-200 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 hover:-translate-y-1 group">
+                  <div className="bg-white rounded-[28px] border border-slate-200 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 hover:-translate-y-1 group animate-fade-in-up stagger-3">
                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500"></div>
-                     {/* Subtle Watermark */}
                      <Award className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-
                      <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
                         <div className="flex items-center gap-3">
-                           <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center">
-                              <Zap size={18} strokeWidth={2.5} />
-                           </div>
+                           <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center transition-colors group-hover:bg-amber-100"><Zap size={18} strokeWidth={2.5} /></div>
                            <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Campaigns</p>
                         </div>
                      </div>
-
                      <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Points</p>
-                         <p className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-4">
-                             {selectedMex.campaignPoint || 0}
-                         </p>
-
+                         <p className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-4">{selectedMex.campaignPoint || 0}</p>
                          <div>
                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Active List:</p>
                              <div className="flex flex-wrap gap-1.5">
@@ -2263,7 +1850,7 @@ export default function App() {
                                     <span className="text-slate-400 text-[10px] font-semibold italic">Tidak ada partisipasi</span>
                                 ) : (
                                     selectedMex.campaigns.split(/[|,]/).map(c => c.trim()).filter(Boolean).map((camp, idx) => (
-                                        <span key={idx} className="bg-slate-100 text-slate-600 px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider">
+                                        <span key={idx} className="bg-slate-100 text-slate-600 px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider transition-colors hover:bg-slate-200">
                                             {camp}
                                         </span>
                                     ))
@@ -2273,111 +1860,71 @@ export default function App() {
                      </div>
                   </div>
 
-                  {/* Card 3: Marketing (Rose) */}
-                  <div className="bg-white rounded-[28px] border border-slate-200 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-rose-500/5 hover:-translate-y-1 group">
+                  <div className="bg-white rounded-[28px] border border-slate-200 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-rose-500/5 hover:-translate-y-1 group animate-fade-in-up stagger-4">
                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500"></div>
-                     {/* Subtle Watermark */}
                      <Megaphone className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-
                      <div className="flex items-start mb-5 pl-2 relative z-10">
                         <div className="flex items-center gap-3">
-                           <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center">
-                              <Megaphone size={18} strokeWidth={2.5} />
-                           </div>
+                           <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center transition-colors group-hover:bg-rose-100"><Megaphone size={18} strokeWidth={2.5} /></div>
                            <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Marketing</p>
                         </div>
                      </div>
-
                      <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                          <div className="flex items-center gap-2 mb-1">
                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ads Spend (MTD)</p>
                              {(() => {
-                                 let adsTrend = 0;
-                                 if (selectedMex.adsLM > 0) adsTrend = ((selectedMex.adsRR - selectedMex.adsLM) / selectedMex.adsLM) * 100;
-                                 else if (selectedMex.adsRR > 0) adsTrend = 100;
-                                 const isAdsUp = adsTrend > 0;
-                                 return (
-                                     <div className={`px-1.5 py-0.5 rounded-md text-[9px] font-black flex items-center gap-0.5 ${!isAdsUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                                        {isAdsUp ? <ArrowUpRight size={10}/> : <ArrowDownRight size={10}/>} {Math.abs(adsTrend).toFixed(1)}%
-                                     </div>
-                                 );
+                                 let adsTrend = 0; if (selectedMex.adsLM > 0) adsTrend = ((selectedMex.adsRR - selectedMex.adsLM) / selectedMex.adsLM) * 100; else if (selectedMex.adsRR > 0) adsTrend = 100; const isAdsUp = adsTrend > 0;
+                                 return (<div className={`px-1.5 py-0.5 rounded-md text-[9px] font-black flex items-center gap-0.5 transition-colors ${!isAdsUp ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' : 'bg-rose-50 text-rose-600 group-hover:bg-rose-100'}`}>{isAdsUp ? <ArrowUpRight size={10}/> : <ArrowDownRight size={10}/>} {Math.abs(adsTrend).toFixed(1)}%</div>);
                              })()}
                          </div>
-                         <p className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-4">
-                             {formatCurrency(selectedMex.adsTotal)}
-                         </p>
-
-                         {/* Minimalist Breakdown */}
-                         <div className="flex justify-between items-center bg-slate-50 rounded-xl p-3 mb-1">
-                             <div className="flex flex-col">
-                                 <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Mobile</span>
-                                 <span className="text-[10px] font-black text-slate-700">{formatCurrency(selectedMex.adsMob || 0)}</span>
-                             </div>
+                         <p className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-4">{formatCurrency(selectedMex.adsTotal)}</p>
+                         <div className="flex justify-between items-center bg-slate-50 rounded-xl p-3 mb-1 transition-colors group-hover:bg-slate-100/50">
+                             <div className="flex flex-col"><span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Mobile</span><span className="text-[10px] font-black text-slate-700">{formatCurrency(selectedMex.adsMob || 0)}</span></div>
                              <div className="w-px h-6 bg-slate-200"></div>
-                             <div className="flex flex-col">
-                                 <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Web</span>
-                                 <span className="text-[10px] font-black text-slate-700">{formatCurrency(selectedMex.adsWeb || 0)}</span>
-                             </div>
+                             <div className="flex flex-col"><span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Web</span><span className="text-[10px] font-black text-slate-700">{formatCurrency(selectedMex.adsWeb || 0)}</span></div>
                              <div className="w-px h-6 bg-slate-200"></div>
-                             <div className="flex flex-col">
-                                 <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Direct</span>
-                                 <span className="text-[10px] font-black text-slate-700">{formatCurrency(selectedMex.adsDir || 0)}</span>
-                             </div>
+                             <div className="flex flex-col"><span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Direct</span><span className="text-[10px] font-black text-slate-700">{formatCurrency(selectedMex.adsDir || 0)}</span></div>
                          </div>
                      </div>
-
                      <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
                          <span className="text-[10px] font-bold text-slate-400 uppercase">Last Month Ads</span>
                          <span className="text-xs font-black text-slate-700">{formatCurrency(selectedMex.adsLM)}</span>
                      </div>
                   </div>
 
-                  {/* Card 4: MCA Config (Blue) */}
-                  <div className="bg-white rounded-[28px] border border-slate-200 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 group">
+                  <div className="bg-white rounded-[28px] border border-slate-200 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 group animate-fade-in-up stagger-5">
                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
-                     {/* Subtle Watermark */}
                      <Database className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-
                      <div className="flex items-start mb-5 pl-2 relative z-10">
                         <div className="flex items-center gap-3">
-                           <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center">
-                              <Database size={18} strokeWidth={2.5} />
-                           </div>
+                           <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center transition-colors group-hover:bg-blue-100"><Database size={18} strokeWidth={2.5} /></div>
                            <p className="text-xs font-black text-slate-500 uppercase tracking-widest">MCA Config</p>
                         </div>
                      </div>
-
                      <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                          {(() => {
                              const isPending = selectedMex.mcaDisburseStatus && String(selectedMex.mcaDisburseStatus).toLowerCase().includes('pending');
                              const textColor = isPending ? 'text-amber-500' : 'text-blue-500';
                              const labelText = isPending ? 'Pending Disbursed' : 'Disbursed';
-                             
                              return (
                                  <div className="mb-4">
                                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{labelText}</p>
-                                     <p className={`text-3xl lg:text-4xl font-black ${textColor} tracking-tight leading-none`}>
-                                         {formatCurrency(selectedMex.mcaAmount)}
-                                     </p>
+                                     <p className={`text-3xl lg:text-4xl font-black ${textColor} tracking-tight leading-none`}>{formatCurrency(selectedMex.mcaAmount)}</p>
                                  </div>
                              );
                          })()}
-
                          <div className="flex items-center gap-2 mb-2">
                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Limit Tersedia:</span>
                              <span className="text-sm font-black text-slate-800">{selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}</span>
                          </div>
                      </div>
-
                      <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
                          <span className="text-[10px] font-bold text-slate-400 uppercase">Eligibility</span>
                          <div className="flex items-center gap-1.5">
                              {selectedMex.mcaPriority && selectedMex.mcaPriority !== '-' && (
-                                 <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border ${getPriorityBadgeClass(selectedMex.mcaPriority)}`}>
-                                    {selectedMex.mcaPriority}
-                                 </span>
+                                 <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border ${getPriorityBadgeClass(selectedMex.mcaPriority)}`}>{selectedMex.mcaPriority}</span>
                              )}
-                             <span className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
+                             <span className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider transition-colors ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' : 'bg-slate-100 text-slate-500'}`}>
                                  {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'Eligible' : 'Not Eligible'}
                              </span>
                          </div>
@@ -2385,18 +1932,12 @@ export default function App() {
                   </div>
                </div>
 
-               {/* RESTRUCTURED ANALYTICS CHARTS */}
                {selectedMex.history && selectedMex.history.length > 0 && (
                    <div className="space-y-5 md:space-y-6">
-                       
-                       {/* ROW 1: 12-Month Review (Left) + Investment (Right) */}
                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6 mt-2">
-                           {/* 12-Month Review */}
-                           <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full">
+                           <div className="animate-fade-in-up stagger-6 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
                                 <div className="flex justify-between items-start md:items-center mb-8 gap-2 shrink-0 min-h-[44px]">
-                                   <div>
-                                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="text-blue-500 w-5 h-5"/> 12-Month Review</h3>
-                                   </div>
+                                   <div><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="text-blue-500 w-5 h-5"/> 12-Month Review</h3></div>
                                    {selectedMex.lastUpdate && (
                                        <div className="flex flex-col text-right justify-center bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100 shadow-sm shrink-0">
                                            <span className="text-[8px] md:text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Last Update</span>
@@ -2423,13 +1964,12 @@ export default function App() {
                                  </div>
                            </div>
 
-                           {/* 3. MERCHANT INVESTMENT */}
-                           <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full">
+                           <div className="animate-fade-in-up stagger-7 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
                                 <div className="flex justify-between items-start mb-8 shrink-0 min-h-[44px]">
                                    <div className="flex items-center gap-2">
                                       <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><DollarSign className="text-rose-500 w-5 h-5"/> Investment (MI)</h3>
                                    </div>
-                                   <div className="bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-100 flex items-center gap-1.5 shadow-sm">
+                                   <div className="bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-100 flex items-center gap-1.5 shadow-sm transition-transform hover:scale-105">
                                       <Percent className="w-3.5 h-3.5 text-rose-500"/>
                                       <span className="text-[11px] font-black text-rose-700" title="MI % dari Basket Size Bulan Terakhir">
                                           {selectedMex.history[selectedMex.history.length-1].mi_percentage}%
@@ -2443,7 +1983,6 @@ export default function App() {
                                           <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} height={20} dy={5} />
                                           <YAxis tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={60} />
                                           <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v) => formatCurrency(v)} labelFormatter={formatMonth}/>
-                                          
                                           <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold', width: '100%', left: 0, display: 'flex', justifyContent: 'center' }} iconType="circle" />
                                           
                                           <Bar dataKey="mfp" stackId="a" name="Local Promo" fill="#3b82f6" maxBarSize={32} />
@@ -2456,15 +1995,11 @@ export default function App() {
                            </div>
                        </div>
 
-                       {/* ROW 2: AOV & Orders (Left) + Promo Usage (Right) */}
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 mt-2">
-                            {/* 1. ORDERS TREND */}
-                            <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full">
+                            <div className="animate-fade-in-up stagger-8 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
                                 <div className="flex items-start gap-2 mb-8 shrink-0 min-h-[44px]">
                                    <ShoppingBag className="w-5 h-5 text-indigo-500 shrink-0"/>
-                                   <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-tight">
-                                       Completed Orders
-                                   </h3>
+                                   <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-tight">Completed Orders</h3>
                                 </div>
                                 <div className="h-[280px] md:h-[360px] w-full mt-auto">
                                   <ResponsiveContainer width="100%" height="100%">
@@ -2482,8 +2017,7 @@ export default function App() {
                                 </div>
                             </div>
 
-                            {/* 2. AOV & PROMO USAGE */}
-                            <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full">
+                            <div className="animate-fade-in-up stagger-9 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
                                 <div className="flex items-start gap-2 mb-8 shrink-0 min-h-[44px]">
                                    <Target className="w-5 h-5 text-teal-500 shrink-0"/>
                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-tight">
@@ -2505,7 +2039,6 @@ export default function App() {
                                           <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={40} />
                                           <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [n.includes('%') ? `${v}%` : formatCurrency(v), n]} labelFormatter={formatMonth}/>
                                           <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold', width: '100%', left: 0, display: 'flex', justifyContent: 'center' }} iconType="circle" />
-                                          
                                           <Area yAxisId="left" type="monotone" dataKey="aov" name="AOV" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorAov)">
                                               <LabelList dataKey="aov" position="top" offset={10} fontSize={9} fontWeight={800} fill="#6366f1" formatter={(v) => `${(v/1000).toFixed(0)}K`} />
                                           </Area>
@@ -2518,33 +2051,24 @@ export default function App() {
                    </div>
                )}
 
-               {/* NEW: CONTACT DETAILS AT THE BOTTOM */}
-               <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-5 md:p-8 mt-6">
+               <div className="animate-fade-in-up stagger-10 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-5 md:p-8 mt-6 hover:shadow-2xl transition-shadow duration-500">
                   <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
                      <Info className="w-5 h-5 text-indigo-500"/>
                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Informasi Kontak & Lokasi</h3>
                   </div>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-
-                      {/* Contact Box */}
-                      <div className="bg-slate-50 p-4 md:p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center gap-4">
+                      <div className="bg-slate-50 p-4 md:p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center gap-4 transition-colors hover:bg-slate-100/50">
                          <div className="flex items-start gap-3">
                             <Phone className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/>
                             <div className="flex flex-col">
                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Phone Number</span>
                                {selectedMex.phone && selectedMex.phone !== '-' ? (
-                                  <button 
-                                     onClick={() => setShowWaModal(true)}
-                                     className="text-sm md:text-base font-black text-slate-800 hover:text-[#00B14F] transition-colors flex items-center gap-1.5 group cursor-pointer text-left"
-                                     title="Pilih Template Pesan WhatsApp"
-                                  >
+                                  <button onClick={() => setShowWaModal(true)} className="text-sm md:text-base font-black text-slate-800 hover:text-[#00B14F] transition-colors flex items-center gap-1.5 group cursor-pointer text-left" title="Pilih Template Pesan WhatsApp">
                                      {selectedMex.phone}
                                      <MessageCircle className="w-3.5 h-3.5 text-[#00B14F] opacity-0 group-hover:opacity-100 transition-opacity" />
                                   </button>
-                               ) : (
-                                  <span className="text-sm md:text-base font-black text-slate-800">-</span>
-                               )}
+                               ) : (<span className="text-sm md:text-base font-black text-slate-800">-</span>)}
                             </div>
                          </div>
                          <div className="flex items-start gap-3">
@@ -2556,8 +2080,7 @@ export default function App() {
                          </div>
                       </div>
 
-                      {/* Address Box */}
-                      <div className="bg-slate-50 p-4 md:p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center gap-4 lg:col-span-2">
+                      <div className="bg-slate-50 p-4 md:p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center gap-4 lg:col-span-2 transition-colors hover:bg-slate-100/50">
                          <div className="flex items-start gap-3">
                             <MapPin className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/>
                             <div className="flex flex-col">
@@ -2580,34 +2103,24 @@ export default function App() {
                   </div>
                </div>
 
-               {/* ========================================================= */}
-               {/* MOBILE FLOATING ACTION BAR (THUMB-FRIENDLY NAV) */}
-               {/* ========================================================= */}
-               <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-[55] animate-in slide-in-from-bottom-10 fade-in duration-500">
-                   <div className="bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-xl p-2 rounded-2xl shadow-2xl border border-slate-700/50 flex items-center justify-between gap-2">
-                       <button 
-                           onClick={() => setSelectedMex(null)} 
-                           className="flex-1 py-3 px-4 flex items-center justify-center gap-2 text-white hover:bg-slate-800 dark:hover:bg-slate-700 rounded-xl transition-colors font-bold text-xs tracking-wide"
-                       >
-                           <ArrowLeft className="w-4 h-4" /> Kembali
+               {/* UNIVERSAL FLOATING ACTION BAR */}
+               <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[55] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${showFloatingBar ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-24 opacity-0 scale-90 pointer-events-none'}`}>
+                   <div className="bg-slate-900/90 dark:bg-slate-800/90 backdrop-blur-xl p-1.5 rounded-full shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] border border-slate-700/50 flex items-center justify-center gap-1.5">
+                       <button onClick={() => setSelectedMex(null)} className="w-12 h-12 flex items-center justify-center text-white hover:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition-all duration-300 active:scale-90" title="Kembali ke Dashboard">
+                           <ArrowLeft className="w-5 h-5" />
                        </button>
-                       <div className="w-px h-8 bg-slate-700"></div>
-                       <button 
-                           onClick={() => { if (selectedMex.phone && selectedMex.phone !== '-') setShowWaModal(true); }} 
-                           className={`flex-1 py-3 px-4 flex items-center justify-center gap-2 rounded-xl font-bold text-xs tracking-wide transition-colors ${selectedMex.phone && selectedMex.phone !== '-' ? 'bg-[#00B14F] text-white hover:bg-emerald-600 shadow-lg shadow-emerald-500/20' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`}
-                       >
-                           <MessageCircle className="w-4 h-4" /> Hubungi
+                       <div className="w-px h-6 bg-slate-700/80 shrink-0"></div>
+                       <button onClick={() => { if (selectedMex.phone && selectedMex.phone !== '-') setShowWaModal(true); }} className={`w-12 h-12 flex items-center justify-center rounded-full transition-all duration-300 active:scale-90 ${selectedMex.phone && selectedMex.phone !== '-' ? 'bg-[#00B14F] text-white hover:bg-emerald-600 shadow-[0_0_20px_-5px_rgba(0,177,79,0.5)]' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`} title="Hubungi via WhatsApp">
+                           <MessageCircle className="w-5 h-5" />
                        </button>
                    </div>
                </div>
 
             </div>
           )}
+          </div>
           
-          {/* ========================================================= */}
-          {/* SLEEK ENTERPRISE FOOTER */}
-          {/* ========================================================= */}
-          <footer className="mt-auto pt-8 pb-4 mt-10 w-full border-t border-slate-200 dark:border-slate-800/60">
+          <footer className="mt-auto pt-8 pb-4 mt-10 w-full border-t border-slate-200 dark:border-slate-800/60 relative z-10">
              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                  <div className="flex items-center gap-2.5">
                     <div className="flex h-2 w-2 relative">
@@ -2642,6 +2155,30 @@ export default function App() {
         .pb-safe { padding-bottom: max(2rem, env(safe-area-inset-bottom)); }
         * { font-feature-settings: "tnum" on, "lnum" on; }
         
+        /* --- HARDWARE-ACCELERATED TRANSITIONS --- */
+        @keyframes fadeInUpCustom {
+            from { opacity: 0; transform: translate3d(0, 20px, 0); }
+            to { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+        
+        .animate-fade-in-up {
+            opacity: 0;
+            animation: fadeInUpCustom 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            will-change: opacity, transform;
+        }
+        
+        /* Stagger Delays (0ms - 500ms) */
+        .stagger-1 { animation-delay: 50ms; }
+        .stagger-2 { animation-delay: 100ms; }
+        .stagger-3 { animation-delay: 150ms; }
+        .stagger-4 { animation-delay: 200ms; }
+        .stagger-5 { animation-delay: 250ms; }
+        .stagger-6 { animation-delay: 300ms; }
+        .stagger-7 { animation-delay: 350ms; }
+        .stagger-8 { animation-delay: 400ms; }
+        .stagger-9 { animation-delay: 450ms; }
+        .stagger-10 { animation-delay: 500ms; }
+
         @keyframes float-down { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(2.5px); } }
         .animate-float-down { animation: float-down 1.5s ease-in-out infinite; }
         
@@ -2671,7 +2208,7 @@ export default function App() {
         .dark-theme .bg-slate-100 { background-color: #1e293b !important; border-color: #334155 !important; color: #cbd5e1 !important; }
         .dark-theme .bg-slate-50\\/50 { background-color: rgba(30, 41, 59, 0.5) !important; border-color: #334155 !important; }
         .dark-theme .divide-slate-50 > :not([hidden]) ~ :not([hidden]) { border-color: #1e293b !important; }
-        .dark-theme .shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8) !important; }
+        .dark-theme .shadow-xl, .dark-theme .shadow-2xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8) !important; }
         .dark-theme input, .dark-theme select { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
         
         /* TINT BACKGROUNDS & BORDERS (Cards & Badges) */
