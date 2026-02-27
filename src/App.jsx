@@ -7,7 +7,7 @@ import {
   UploadCloud, TrendingUp, Database, Filter, Megaphone,
   Search, CheckCircle, AlertCircle, DollarSign, Activity, X,
   Store, ArrowUpRight, ArrowDownRight, Minus, Users, Info, ArrowLeft, Zap, MapPin, Phone, Smartphone, Mail, Award, LayoutDashboard, Table, ShoppingBag, Target, Percent, ExternalLink, Calculator,
-  ShoppingCart, Check, ArrowRight, Settings, List, Tags, Ticket, ChevronDown, Plus, MousePointer, Eye, RefreshCw, BarChart2, FileText, MessageCircle, Clock, ArrowUp, ArrowDown
+  ShoppingCart, Check, ArrowRight, Settings, List, Tags, Ticket, ChevronDown, Plus, MousePointer, Eye, RefreshCw, BarChart2, FileText, MessageCircle, Clock, ArrowUp, ArrowDown, Moon, Sun
 } from 'lucide-react';
 
 // ============================================================================
@@ -193,6 +193,16 @@ export default function App() {
 
   // STATE BARU: Konfigurasi sorting tabel Master Data
   const [sortConfig, setSortConfig] = useState({ key: 'mtdBs', direction: 'desc' });
+
+  // STATE BARU: Dark Mode
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+      const savedTheme = localStorage.getItem('am_dashboard_theme');
+      return savedTheme === 'dark';
+  });
+
+  useEffect(() => {
+      localStorage.setItem('am_dashboard_theme', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
 
   // --- LOGIKA TEMPLATE WHATSAPP ---
   const handleSendWA = (templateType) => {
@@ -967,7 +977,7 @@ export default function App() {
 
   // --- RENDER DASHBOARD UTAMA ---
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col font-sans overflow-hidden relative">
+    <div className={`min-h-screen ${isDarkMode ? 'dark-theme' : ''} bg-[#f8fafc] text-slate-900 flex flex-col font-sans overflow-hidden relative transition-colors duration-300`}>
       
       {/* DECORATIVE TOP BACKGROUND ANCHOR */}
       <div className="absolute top-0 left-0 right-0 h-[280px] md:h-[320px] bg-slate-900 z-0 rounded-b-[40px] shadow-lg">
@@ -1621,7 +1631,7 @@ export default function App() {
                                         <div className="relative z-10 flex flex-col mt-auto gap-4">
                                             
                                             {/* 1. HERO METRIC: Gross Sales */}
-                                            <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm relative overflow-hidden">
+                                            <div className="bg-emerald-50/60 border border-emerald-100/60 rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm relative overflow-hidden">
                                                 <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-100 rounded-bl-full opacity-50 -mr-2 -mt-2"></div>
                                                 <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Activity size={12}/> Gross Sales</p>
                                                 <p className="text-2xl font-black text-slate-800 tracking-tight mb-2">{formatCurrency(hist.basket_size)}</p>
@@ -1782,6 +1792,15 @@ export default function App() {
                        title="Update Data"
                    >
                        <RefreshCw className="w-3.5 h-3.5 lg:w-4 lg:h-4 group-hover:rotate-180 transition-transform duration-500" />
+                   </button>
+                   
+                   {/* THEME TOGGLE BUTTON */}
+                   <button 
+                       onClick={() => setIsDarkMode(!isDarkMode)} 
+                       className="group flex items-center justify-center bg-slate-700/50 hover:bg-indigo-500 text-slate-300 hover:text-white w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-lg lg:rounded-xl transition-all shadow-sm shrink-0 ml-1.5"
+                       title={isDarkMode ? "Beralih ke Light Mode" : "Beralih ke Dark Mode"}
+                   >
+                       {isDarkMode ? <Sun className="w-3.5 h-3.5 lg:w-4 lg:h-4 group-hover:rotate-90 transition-transform duration-500" /> : <Moon className="w-3.5 h-3.5 lg:w-4 lg:h-4 group-hover:-rotate-12 transition-transform duration-500" />}
                    </button>
                </div>
             </div>
@@ -2748,7 +2767,7 @@ export default function App() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
 
                       {/* Contact Box */}
-                      <div className="bg-gradient-to-br from-slate-50 to-white p-4 md:p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center gap-4">
+                      <div className="bg-slate-50 p-4 md:p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center gap-4">
                          <div className="flex items-start gap-3">
                             <Phone className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/>
                             <div className="flex flex-col">
@@ -2777,7 +2796,7 @@ export default function App() {
                       </div>
 
                       {/* Address Box */}
-                      <div className="bg-gradient-to-br from-slate-50 to-white p-4 md:p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center gap-4 lg:col-span-2">
+                      <div className="bg-slate-50 p-4 md:p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center gap-4 lg:col-span-2">
                          <div className="flex items-start gap-3">
                             <MapPin className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/>
                             <div className="flex flex-col">
@@ -2820,6 +2839,54 @@ export default function App() {
         
         @keyframes float-up { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
         .animate-float-up { animation: float-up 1.5s ease-in-out infinite; }
+
+        /* --- DARK MODE ENGINE --- */
+        .dark-theme { background-color: #020617 !important; color: #f8fafc !important; }
+        .dark-theme .bg-white { background-color: #0f172a !important; border-color: #1e293b !important; }
+        .dark-theme .bg-\\[\\#f8fafc\\] { background-color: #020617 !important; }
+        .dark-theme .text-slate-900, .dark-theme .text-slate-800 { color: #f8fafc !important; }
+        .dark-theme .text-slate-700 { color: #e2e8f0 !important; }
+        .dark-theme .text-slate-600 { color: #cbd5e1 !important; }
+        .dark-theme .text-slate-500 { color: #94a3b8 !important; }
+        .dark-theme .text-slate-400 { color: #64748b !important; }
+        .dark-theme .border-slate-100, .dark-theme .border-slate-200 { border-color: #1e293b !important; }
+        .dark-theme .border-slate-50 { border-color: #0f172a !important; }
+        .dark-theme .bg-slate-50 { background-color: #1e293b !important; border-color: #334155 !important; color: #cbd5e1 !important; }
+        .dark-theme .bg-slate-100 { background-color: #334155 !important; }
+        .dark-theme .bg-slate-50\\/50 { background-color: rgba(30, 41, 59, 0.5) !important; border-color: #334155 !important; }
+        .dark-theme .divide-slate-50 > :not([hidden]) ~ :not([hidden]) { border-color: #1e293b !important; }
+        .dark-theme .shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8) !important; }
+        .dark-theme input, .dark-theme select { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+        
+        /* TINT BACKGROUNDS & BORDERS (Cards & Badges) */
+        .dark-theme .bg-emerald-50\\/60, .dark-theme .bg-emerald-50 { background-color: rgba(6, 78, 59, 0.3) !important; border-color: rgba(6, 78, 59, 0.5) !important; }
+        .dark-theme .bg-teal-50\\/60, .dark-theme .bg-teal-50 { background-color: rgba(19, 78, 74, 0.3) !important; border-color: rgba(19, 78, 74, 0.5) !important; }
+        .dark-theme .bg-rose-50\\/60, .dark-theme .bg-rose-50, .dark-theme .bg-rose-50\\/50 { background-color: rgba(136, 19, 55, 0.3) !important; border-color: rgba(136, 19, 55, 0.5) !important; }
+        .dark-theme .bg-blue-50\\/60, .dark-theme .bg-blue-50, .dark-theme .bg-blue-50\\/50 { background-color: rgba(30, 58, 138, 0.3) !important; border-color: rgba(30, 58, 138, 0.5) !important; }
+        .dark-theme .bg-amber-50\\/60, .dark-theme .bg-amber-50 { background-color: rgba(120, 53, 15, 0.3) !important; border-color: rgba(120, 53, 15, 0.5) !important; }
+        .dark-theme .bg-indigo-50\\/60, .dark-theme .bg-indigo-50 { background-color: rgba(49, 46, 129, 0.3) !important; border-color: rgba(49, 46, 129, 0.5) !important; }
+        .dark-theme .bg-purple-50 { background-color: rgba(88, 28, 135, 0.3) !important; border-color: rgba(88, 28, 135, 0.5) !important; }
+
+        /* BRIGHTEN DARK TEXT COLORS ON DARK THEME */
+        .dark-theme .text-emerald-900, .dark-theme .text-emerald-800, .dark-theme .text-emerald-700 { color: #34d399 !important; }
+        .dark-theme .text-teal-900, .dark-theme .text-teal-800, .dark-theme .text-teal-700 { color: #2dd4bf !important; }
+        .dark-theme .text-rose-900, .dark-theme .text-rose-800, .dark-theme .text-rose-700 { color: #fb7185 !important; }
+        .dark-theme .text-blue-900, .dark-theme .text-blue-800, .dark-theme .text-blue-700 { color: #60a5fa !important; }
+        .dark-theme .text-amber-900, .dark-theme .text-amber-800, .dark-theme .text-amber-700 { color: #fbbf24 !important; }
+        .dark-theme .text-indigo-900, .dark-theme .text-indigo-800, .dark-theme .text-indigo-700 { color: #818cf8 !important; }
+        
+        /* Recharts Dark Mode Fixes */
+        .dark-theme .recharts-cartesian-grid-horizontal line, .dark-theme .recharts-cartesian-grid-vertical line { stroke: #1e293b !important; }
+        .dark-theme .recharts-text { fill: #94a3b8 !important; }
+        .dark-theme .recharts-default-tooltip { background-color: #0f172a !important; border-color: #1e293b !important; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8) !important; }
+        .dark-theme .recharts-tooltip-item { color: #f8fafc !important; }
+        .dark-theme .recharts-tooltip-cursor { fill: #1e293b !important; }
+        
+        /* Hover states in dark mode */
+        .dark-theme .hover\\:bg-slate-50:hover { background-color: #1e293b !important; }
+        .dark-theme .hover\\:bg-slate-50\\/80:hover { background-color: #1e293b !important; }
+        .dark-theme .hover\\:border-slate-300:hover { border-color: #475569 !important; }
+        .dark-theme .hover\\:border-slate-400:hover { border-color: #64748b !important; }
       `}} />
     </div>
   );
