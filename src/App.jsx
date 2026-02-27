@@ -1503,6 +1503,67 @@ export default function App() {
                 </div>
 
                 <div className="flex-1 overflow-auto p-4 md:p-6 bg-[#f8fafc] custom-scrollbar">
+                    
+                    {/* NEW: GRAFIK KOMPARASI */}
+                    {(() => {
+                        const validMonthsStr = compareMonths.filter(Boolean);
+                        if (validMonthsStr.length === 0) return null;
+
+                        // Urutkan bulan dari yang terlama ke terbaru
+                        const sortedMonths = [...validMonthsStr].sort((a, b) => new Date(a) - new Date(b));
+                        
+                        // Struktur Data: Bulan sebagai poros X untuk Stacking
+                        const compareChartData = sortedMonths.map(monthStr => {
+                            const hist = (selectedMex.history || []).find(h => h.month === monthStr);
+                            if (!hist) return null;
+                            return {
+                                name: formatMonth(hist.month),
+                                'Net Sales': hist.net_sales,
+                                'Promo Invest': hist.total_investment,
+                                'Gross Sales': hist.basket_size,
+                                'Orders': hist.completed_orders,
+                                'AOV': hist.aov
+                            };
+                        }).filter(Boolean);
+
+                        return (
+                            <div className="bg-white rounded-[28px] p-5 md:p-6 border border-slate-200 shadow-sm mb-5 md:mb-6 animate-in fade-in slide-in-from-top-4">
+                                <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <BarChart2 size={14} className="text-indigo-500" /> Komposisi Gross Sales (Bulan ke Bulan)
+                                </h4>
+                                <div className="w-full h-[200px] md:h-[250px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={compareChartData} margin={{ top: 25, right: 10, left: -20, bottom: 5 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                            <XAxis dataKey="name" tick={{ fill: '#1e293b', fontSize: 11, fontWeight: 900 }} tickLine={false} axisLine={false} />
+                                            
+                                            {/* Multi-YAxis agar skala bar tidak saling menindih */}
+                                            <YAxis yAxisId="left" tick={{ fill: COLORS.slate400, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} />
+                                            <YAxis yAxisId="right" orientation="right" tick={{ fill: '#f59e0b', fontSize: 10, fontWeight: 800 }} tickLine={false} axisLine={false} tickFormatter={(v) => fNum(v)} width={40} />
+                                            <YAxis yAxisId="rightAov" orientation="right" tick={{ fill: '#06b6d4', fontSize: 10, fontWeight: 800 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={40} />
+                                            
+                                            <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [n === 'Orders' ? fNum(v) : formatCurrency(v), n]} />
+                                            <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop: '10px' }} iconType="circle" />
+                                            
+                                            {/* Stack 1: Gross Sales (Net Sales + Promo Invest) */}
+                                            <Bar yAxisId="left" dataKey="Net Sales" stackId="a" fill="#10b981" maxBarSize={32} />
+                                            <Bar yAxisId="left" dataKey="Promo Invest" stackId="a" fill="#f43f5e" radius={[4,4,0,0]} maxBarSize={32}>
+                                                {/* Label Total Gross Sales melayang di ujung batang Stack */}
+                                                <LabelList dataKey="Gross Sales" position="top" offset={10} fontSize={10} fontWeight={900} fill="#1e293b" formatter={(v) => formatCurrency(v)} />
+                                            </Bar>
+                                            
+                                            {/* Bar 2: Orders */}
+                                            <Bar yAxisId="right" dataKey="Orders" name="Orders" fill="#f59e0b" radius={[4,4,0,0]} maxBarSize={32} />
+                                            
+                                            {/* Bar 3: AOV */}
+                                            <Bar yAxisId="rightAov" dataKey="AOV" name="AOV" fill="#06b6d4" radius={[4,4,0,0]} maxBarSize={32} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
                         {[0, 1, 2].map((colIdx) => {
                             const available = selectedMex.history || [];
@@ -1791,10 +1852,10 @@ export default function App() {
                       {/* Basketsize Card */}
                       <div className="bg-white p-5 md:p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col h-full relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
-                        <div className="flex justify-between items-start mb-5 relative z-10">
-                          <div className="flex items-center gap-2">
-                            <div className="p-2 bg-emerald-50 rounded-xl text-[#00B14F]"><Activity size={18} /></div>
-                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Basketsize</p>
+                        <div className="flex justify-between items-start gap-2 mb-5 relative z-10">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="p-2 bg-emerald-50 rounded-xl text-[#00B14F] shrink-0"><Activity size={18} /></div>
+                            <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest truncate">Basketsize</p>
                           </div>
                           {/* HIGHLIGHT TREND: BASKETSIZE */}
                           {(() => {
@@ -1803,8 +1864,8 @@ export default function App() {
                              else if (kpi?.rr > 0) trend = 100;
                              const isUp = trend >= 0;
                              return (
-                                 <div className={`flex items-center gap-1 text-xs font-black px-2.5 py-1.5 rounded-xl border-2 shadow-sm ${isUp ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
-                                     {isUp ? <ArrowUpRight className="w-4 h-4"/> : <ArrowDownRight className="w-4 h-4"/>}
+                                 <div className={`flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs font-black px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border-2 shadow-sm shrink-0 whitespace-nowrap ${isUp ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
+                                     {isUp ? <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4"/> : <ArrowDownRight className="w-3.5 h-3.5 sm:w-4 sm:h-4"/>}
                                      {Math.abs(trend).toFixed(1)}%
                                  </div>
                              );
@@ -1829,11 +1890,11 @@ export default function App() {
                       {/* Merchant Invest Card (NOW CLICKABLE) */}
                       <div onClick={() => setShowMiModal(true)} className="bg-white p-5 md:p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col h-full relative overflow-hidden group hover:-translate-y-1 hover:border-teal-400 cursor-pointer transition-all duration-300">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-teal-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
-                        <div className="flex justify-between items-start mb-5 relative z-10">
-                          <div className="flex items-center gap-2">
-                            <div className="p-2 bg-teal-50 rounded-xl text-teal-500 group-hover:bg-teal-100 transition-colors"><DollarSign size={18} /></div>
-                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                               Merch. Invest <MousePointer size={12} className="text-slate-300 group-hover:text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5"/>
+                        <div className="flex justify-between items-start gap-2 mb-5 relative z-10">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="p-2 bg-teal-50 rounded-xl text-teal-500 group-hover:bg-teal-100 transition-colors shrink-0"><DollarSign size={18} /></div>
+                            <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1 truncate">
+                               Merch. Invest <MousePointer size={12} className="text-slate-300 group-hover:text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 shrink-0"/>
                             </p>
                           </div>
                           {/* HIGHLIGHT TREND: MERCHANT INVEST (Reverse Color) */}
@@ -1843,8 +1904,8 @@ export default function App() {
                              else if (kpi?.miRr > 0) trend = 100;
                              const isUp = trend > 0;
                              return (
-                                 <div className={`flex items-center gap-1 text-xs font-black px-2.5 py-1.5 rounded-xl border-2 shadow-sm ${!isUp ? 'text-teal-600 bg-teal-50 border-teal-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
-                                     {isUp ? <ArrowUpRight className="w-4 h-4"/> : <ArrowDownRight className="w-4 h-4"/>}
+                                 <div className={`flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs font-black px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border-2 shadow-sm shrink-0 whitespace-nowrap ${!isUp ? 'text-teal-600 bg-teal-50 border-teal-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
+                                     {isUp ? <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4"/> : <ArrowDownRight className="w-3.5 h-3.5 sm:w-4 sm:h-4"/>}
                                      {Math.abs(trend).toFixed(1)}%
                                  </div>
                              );
@@ -1878,11 +1939,11 @@ export default function App() {
                       {/* Ads Spend Card (NOW CLICKABLE) */}
                       <div onClick={() => setShowAdsModal(true)} className="bg-white p-5 md:p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col h-full relative overflow-hidden group hover:-translate-y-1 hover:border-rose-400 cursor-pointer transition-all duration-300">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-rose-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
-                        <div className="flex justify-between items-start mb-5 relative z-10">
-                          <div className="flex items-center gap-2">
-                            <div className="p-2 bg-rose-50 rounded-xl text-rose-500 group-hover:bg-rose-100 transition-colors"><Megaphone size={18} /></div>
-                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                               Ads Spend <MousePointer size={12} className="text-slate-300 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5"/>
+                        <div className="flex justify-between items-start gap-2 mb-5 relative z-10">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="p-2 bg-rose-50 rounded-xl text-rose-500 group-hover:bg-rose-100 transition-colors shrink-0"><Megaphone size={18} /></div>
+                            <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1 truncate">
+                               Ads Spend <MousePointer size={12} className="text-slate-300 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 shrink-0"/>
                             </p>
                           </div>
                           {/* HIGHLIGHT TREND: ADS SPEND (Reverse Color) */}
@@ -1892,8 +1953,8 @@ export default function App() {
                              else if (kpi?.adsRr > 0) trend = 100;
                              const isUp = trend > 0;
                              return (
-                                 <div className={`flex items-center gap-1 text-xs font-black px-2.5 py-1.5 rounded-xl border-2 shadow-sm ${!isUp ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
-                                     {isUp ? <ArrowUpRight className="w-4 h-4"/> : <ArrowDownRight className="w-4 h-4"/>}
+                                 <div className={`flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs font-black px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border-2 shadow-sm shrink-0 whitespace-nowrap ${!isUp ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
+                                     {isUp ? <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4"/> : <ArrowDownRight className="w-3.5 h-3.5 sm:w-4 sm:h-4"/>}
                                      {Math.abs(trend).toFixed(1)}%
                                  </div>
                              );
@@ -2028,10 +2089,18 @@ export default function App() {
                                           const numVal = parseFloat(value);
                                           const isPositive = numVal >= 0;
                                           const fill = isPositive ? '#10b981' : '#ef4444';
+                                          const textStr = `${isPositive ? '+' : ''}${numVal.toFixed(0)}%`;
                                           return (
-                                              <text x={x} y={y - 12} fill={fill} fontSize={10} fontWeight="900" textAnchor="middle">
-                                                  {isPositive ? '+' : ''}{numVal.toFixed(0)}%
-                                              </text>
+                                              <g>
+                                                  {/* Efek Highlight / Halo Putih */}
+                                                  <text x={x} y={y - 12} fill="none" stroke="#ffffff" strokeWidth={4} strokeLinejoin="round" fontSize={10} fontWeight="900" textAnchor="middle">
+                                                      {textStr}
+                                                  </text>
+                                                  {/* Teks Angka Utama */}
+                                                  <text x={x} y={y - 12} fill={fill} fontSize={10} fontWeight="900" textAnchor="middle">
+                                                      {textStr}
+                                                  </text>
+                                              </g>
                                           );
                                       }}
                                   />
@@ -2122,11 +2191,19 @@ export default function App() {
                                           const isPositive = adsTrend >= 0;
                                           // Warna untuk Ads: Naik (merah karena biaya naik), Turun (hijau karena hemat)
                                           const fill = isPositive ? '#ef4444' : '#10b981'; 
+                                          const textStr = `${isPositive ? '+' : ''}${adsTrend.toFixed(0)}%`;
                                           
                                           return (
-                                              <text x={x} y={y - 12} fill={fill} fontSize={10} fontWeight="900" textAnchor="middle">
-                                                  {isPositive ? '+' : ''}{adsTrend.toFixed(0)}%
-                                              </text>
+                                              <g>
+                                                  {/* Efek Highlight / Halo Putih */}
+                                                  <text x={x} y={y - 12} fill="none" stroke="#ffffff" strokeWidth={4} strokeLinejoin="round" fontSize={10} fontWeight="900" textAnchor="middle">
+                                                      {textStr}
+                                                  </text>
+                                                  {/* Teks Angka Utama */}
+                                                  <text x={x} y={y - 12} fill={fill} fontSize={10} fontWeight="900" textAnchor="middle">
+                                                      {textStr}
+                                                  </text>
+                                              </g>
                                           );
                                       }}
                                   />
@@ -2371,13 +2448,13 @@ export default function App() {
                   {/* Card 1: Sales */}
                   <div className="bg-white rounded-[32px] shadow-lg shadow-slate-200/40 border border-slate-100 p-5 md:p-6 flex flex-col h-full group hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden">
                      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
-                     <div className="flex justify-between items-start mb-5 relative z-10">
-                         <div className="flex items-center gap-2">
-                            <div className="p-2 bg-emerald-50 rounded-xl text-[#00B14F]"><Activity size={16}/></div>
-                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Sales</p>
+                     <div className="flex justify-between items-start gap-2 mb-5 relative z-10">
+                         <div className="flex items-center gap-2 min-w-0">
+                            <div className="p-2 bg-emerald-50 rounded-xl text-[#00B14F] shrink-0"><Activity size={16}/></div>
+                            <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest truncate">Sales</p>
                          </div>
-                         <div className={`flex items-center gap-0.5 text-[10px] font-black px-2 py-0.5 rounded-lg border ${selectedMex.rrBs > selectedMex.lmBs ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
-                            {selectedMex.rrBs > selectedMex.lmBs ? <ArrowUpRight className="w-3 h-3"/> : <ArrowDownRight className="w-3 h-3"/>}
+                         <div className={`flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs font-black px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border shrink-0 whitespace-nowrap ${selectedMex.rrBs > selectedMex.lmBs ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
+                            {selectedMex.rrBs > selectedMex.lmBs ? <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5"/> : <ArrowDownRight className="w-3 h-3 sm:w-3.5 sm:h-3.5"/>}
                             {Math.abs(selectedMex.rrVsLm).toFixed(1)}%
                          </div>
                      </div>
@@ -2423,10 +2500,10 @@ export default function App() {
                   {/* Card 3: Marketing */}
                   <div className="bg-white rounded-[32px] shadow-lg shadow-slate-200/40 border border-slate-100 p-5 md:p-6 flex flex-col h-full group hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden">
                      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-rose-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
-                     <div className="flex justify-between items-start mb-6 relative z-10">
-                         <div className="flex items-center gap-2">
-                             <div className="p-2 bg-rose-50 rounded-xl text-rose-500"><Megaphone size={16}/></div>
-                             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Marketing</p>
+                     <div className="flex justify-between items-start gap-2 mb-6 relative z-10">
+                         <div className="flex items-center gap-2 min-w-0">
+                             <div className="p-2 bg-rose-50 rounded-xl text-rose-500 shrink-0"><Megaphone size={16}/></div>
+                             <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest truncate">Marketing</p>
                          </div>
                          {(() => {
                             let adsTrend = 0;
@@ -2437,8 +2514,8 @@ export default function App() {
                             }
                             const isAdsUp = adsTrend > 0;
                             return (
-                                <div className={`flex items-center gap-0.5 text-[10px] font-black px-2 py-0.5 rounded-lg border ${!isAdsUp ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
-                                   {isAdsUp ? <ArrowUpRight className="w-3 h-3"/> : <ArrowDownRight className="w-3 h-3"/>}
+                                <div className={`flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs font-black px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border shrink-0 whitespace-nowrap ${!isAdsUp ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100'}`}>
+                                   {isAdsUp ? <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5"/> : <ArrowDownRight className="w-3 h-3 sm:w-3.5 sm:h-3.5"/>}
                                    {Math.abs(adsTrend).toFixed(1)}%
                                 </div>
                             );
@@ -2479,7 +2556,7 @@ export default function App() {
                   {/* Card 4: MCA */}
                   <div className="bg-white rounded-[32px] shadow-lg shadow-slate-200/40 border border-slate-100 p-5 md:p-6 flex flex-col h-full group hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden">
                      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-100 to-transparent rounded-bl-full opacity-40 -mr-4 -mt-4 group-hover:scale-125 transition-transform duration-700"></div>
-                     <div className="flex justify-between items-start mb-6 relative z-10">
+                     <div className="flex justify-between items-start mb-5 relative z-10">
                          <div className="flex items-center gap-2">
                              <div className="p-2 bg-blue-50 rounded-xl text-blue-500"><Database size={16}/></div>
                              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">MCA Config</p>
@@ -2490,9 +2567,25 @@ export default function App() {
                              </span>
                          )}
                      </div>
-                     <div className="relative z-10 mb-4">
-                         <span className="text-2xl md:text-3xl font-black text-blue-600 tracking-tight leading-none block mb-1">{formatCurrency(selectedMex.mcaAmount)}</span>
-                         <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Dana Cair</span>
+                     
+                     <div className="relative z-10 flex flex-col gap-3 mb-2">
+                         {(() => {
+                             const isPending = selectedMex.mcaDisburseStatus && String(selectedMex.mcaDisburseStatus).toLowerCase().includes('pending');
+                             return (
+                                 <div className={`p-3 rounded-2xl border ${isPending ? 'bg-amber-50/60 border-amber-100/60' : 'bg-blue-50/60 border-blue-100/60'}`}>
+                                     <span className={`text-[10px] font-black uppercase tracking-widest block mb-1 ${isPending ? 'text-amber-600' : 'text-blue-600'}`}>
+                                         {isPending ? 'Pending Disbursed' : 'Disbursed'}
+                                     </span>
+                                     <span className={`text-2xl md:text-3xl font-black tracking-tight leading-none block ${isPending ? 'text-amber-600' : 'text-blue-600'}`}>
+                                         {formatCurrency(selectedMex.mcaAmount)}
+                                     </span>
+                                 </div>
+                             );
+                         })()}
+                         <div className="px-3">
+                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Limit Tersedia</span>
+                             <span className="text-2xl md:text-3xl font-black text-blue-900 tracking-tight leading-none block">{selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}</span>
+                         </div>
                      </div>
                      
                      <div className="mt-auto relative z-10 flex flex-col">
@@ -2502,16 +2595,11 @@ export default function App() {
                                <span className="text-[9px] font-bold truncate">Drop Off: {selectedMex.mcaDropOff}</span>
                             </div>
                          )}
-                         <div className="flex gap-2 pt-4 border-t border-slate-50">
-                             <div className="flex-1 min-w-0 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col justify-center">
-                               <span className="text-[9px] text-slate-400 font-bold uppercase mb-0.5 truncate">Limit Tersedia</span>
-                               <span className="text-xs font-black text-slate-700 truncate" title={selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}>{selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}</span>
-                             </div>
-                             <div className="flex items-center justify-center p-2 min-w-0 shrink-0">
-                               <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase border truncate ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
-                                   {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'Eligible' : 'Not Eligible'}
-                               </span>
-                             </div>
+                         <div className="flex justify-between items-center pt-4 border-t border-slate-50">
+                             <span className="text-[10px] font-bold text-slate-400 uppercase">Eligibility</span>
+                             <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase border truncate ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
+                                 {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'Eligible' : 'Not Eligible'}
+                             </span>
                          </div>
                      </div>
                   </div>
