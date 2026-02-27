@@ -7,7 +7,7 @@ import {
   UploadCloud, TrendingUp, Database, Filter, Megaphone,
   Search, CheckCircle, AlertCircle, DollarSign, Activity, X,
   Store, ArrowUpRight, ArrowDownRight, Minus, Users, Info, ArrowLeft, Zap, MapPin, Phone, Smartphone, Mail, Award, LayoutDashboard, Table, ShoppingBag, Target, Percent, ExternalLink, Calculator,
-  ShoppingCart, Check, ArrowRight, Settings, List, Tags, Ticket, ChevronDown, Plus, MousePointer, Eye, RefreshCw, BarChart2, FileText, MessageCircle, Clock, ArrowUp, ArrowDown, Moon, Sun, ChevronLeft, ChevronRight
+  ShoppingCart, Check, ArrowRight, Settings, List, Tags, Ticket, ChevronDown, Plus, MousePointer, Eye, RefreshCw, BarChart2, FileText, MessageCircle, Clock, ArrowUp, ArrowDown, Moon, Sun, ChevronLeft, ChevronRight, Sparkles, Copy
 } from 'lucide-react';
 
 // ============================================================================
@@ -208,6 +208,11 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
+  // AI State
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResponse, setAiResponse] = useState('');
+
   const [isDarkMode, setIsDarkMode] = useState(() => {
       const savedTheme = localStorage.getItem('am_dashboard_theme');
       return savedTheme === 'dark';
@@ -231,6 +236,89 @@ export default function App() {
       setLastScrollY(currentScrollY);
   };
 
+  // ============================================================================
+  // GEMINI AI INTEGRATION
+  // ============================================================================
+  const handleGenerateAIInsight = async () => {
+      if (!selectedMex) return;
+      setAiModalOpen(true);
+      setAiLoading(true);
+      setAiResponse('');
+      
+      const prompt = `Tolong analisis data merchant e-commerce ini dan berikan insight strategis untuk Account Manager.
+Data Merchant:
+- Nama: ${selectedMex.name}
+- Total Omset MTD: ${formatCurrency(selectedMex.mtdBs)}
+- Proyeksi Runrate (Bulan ini): ${formatCurrency(selectedMex.rrBs)}
+- Tren Omset (Runrate vs Bulan Lalu): ${selectedMex.rrVsLm.toFixed(1)}%
+- Total Pengeluaran Iklan MTD: ${formatCurrency(selectedMex.adsTotal)}
+- Sisa Limit Pinjaman Modal (MCA): ${formatCurrency(selectedMex.mcaWlLimit)}
+- Kampanye/Promo Aktif: ${selectedMex.campaigns}
+- Status Toko: ${selectedMex.zeusStatus}
+
+Tolong berikan balasan dalam format berikut secara persis (tanpa salam pembuka):
+### 📊 Ringkasan Performa
+(Buat 1 paragraf analisis cerdas dan menonjolkan masalah atau pencapaian utama berdasarkan data)
+
+### 💡 Rekomendasi Strategi
+(Berikan 2-3 poin aksi konkret yang harus dilakukan AM ke merchant ini)
+
+### 💬 Draf Pesan WhatsApp
+(Buat 1 paragraf draf chat WA yang ramah, personal, asyik, dan persuasif tanpa terlalu kaku, siap salin-tempel untuk dikirim AM ke pemilik toko ini.)`;
+
+      const apiKey = ""; // Gemini Runtime API Key
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+      const payload = {
+          contents: [{ parts: [{ text: prompt }] }],
+          systemInstruction: { parts: [{ text: "Anda adalah asisten konsultan bisnis ahli dan data analis untuk platform e-commerce. Anda bisa membaca tren dan memberikan strategi bisnis yang brilian." }] }
+      };
+
+      let delay = 1000;
+      let success = false;
+      
+      // Exponential Backoff Retry Mechanism (max 5 retries)
+      for (let i = 0; i < 5; i++) {
+          try {
+              const res = await fetch(url, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload)
+              });
+              if (!res.ok) throw new Error('API Error');
+              const result = await res.json();
+              const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (text) {
+                  setAiResponse(text);
+                  success = true;
+                  break;
+              } else {
+                  throw new Error('Format Data AI Salah');
+              }
+          } catch (error) {
+              if (i === 4) {
+                  setAiResponse("Maaf, gagal menghubungi server Gemini AI setelah beberapa percobaan. Silakan coba lagi nanti.");
+              }
+              await new Promise(resolve => setTimeout(resolve, delay));
+              delay *= 2;
+          }
+      }
+      setAiLoading(false);
+  };
+
+  const handleCopyText = (text) => {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+          document.execCommand('copy');
+      } catch (err) {
+          console.error('Gagal menyalin', err);
+      }
+      document.body.removeChild(textArea);
+  };
+
+  // --- LOGIKA TEMPLATE WHATSAPP MANUAL ---
   const handleSendWA = (templateType) => {
       if (!selectedMex || !selectedMex.phone) return;
       
@@ -863,7 +951,89 @@ export default function App() {
          <div className="absolute inset-x-0 bottom-0 h-[40vh] fade-bottom"></div>
       </div>
 
-      {/* MODAL TEMPLATE WHATSAPP */}
+      {/* MODAL AI INSIGHT (GEMINI) */}
+      {aiModalOpen && (
+        <div className="fixed inset-0 z-[8000] flex items-center justify-center p-4 sm:p-6">
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity duration-300 ease-out animate-in fade-in" onClick={() => setAiModalOpen(false)} />
+            <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-300 ease-out overflow-hidden">
+                
+                {/* Header Modal AI */}
+                <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 relative z-10">
+                   <div>
+                      <h3 className="font-black text-lg md:text-xl text-purple-900 dark:text-purple-300 flex items-center gap-2">
+                         <Sparkles className="w-5 h-5 text-purple-500"/>
+                         Gemini AI Insight
+                      </h3>
+                      <p className="text-xs text-purple-600/80 dark:text-purple-400/80 font-medium mt-1">Analisis Strategis untuk {selectedMex?.name}</p>
+                   </div>
+                   <button onClick={() => setAiModalOpen(false)} className="p-2 bg-white/50 dark:bg-slate-800/50 text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-xl transition-colors"><X size={20}/></button>
+                </div>
+
+                {/* Content Modal AI */}
+                <div className="flex-1 overflow-auto p-5 md:p-8 custom-scrollbar bg-white dark:bg-slate-900 text-sm">
+                    {aiLoading ? (
+                        <div className="flex flex-col items-center justify-center h-full min-h-[250px] space-y-4">
+                            <div className="relative flex items-center justify-center w-16 h-16">
+                                <div className="absolute inset-0 border-4 border-purple-200 dark:border-purple-900/50 rounded-full"></div>
+                                <div className="absolute inset-0 border-4 border-purple-600 rounded-full border-t-transparent animate-spin"></div>
+                                <Sparkles className="w-6 h-6 text-purple-600 animate-pulse" />
+                            </div>
+                            <div className="text-center">
+                                <p className="font-bold text-slate-700 dark:text-slate-300">Gemini sedang menganalisis...</p>
+                                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-purple-400 dark:text-purple-500 mt-2 animate-pulse">Memproses Metrik & Performa</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-4 text-slate-600 dark:text-slate-300">
+                            {aiResponse.split('\n').map((line, i) => {
+                                if (line.startsWith('### ')) {
+                                    return <h3 key={i} className="text-sm font-black text-slate-800 dark:text-white mt-6 mb-2 flex items-center gap-2">{line.replace('### ', '')}</h3>;
+                                }
+                                if (line.trim() === '') return <br key={i} />;
+                                
+                                // Handling bold text logic simple
+                                const parts = line.split(/(\*\*.*?\*\*)/g);
+                                return (
+                                    <p key={i} className="leading-relaxed">
+                                        {parts.map((part, j) => 
+                                            part.startsWith('**') && part.endsWith('**') 
+                                            ? <strong key={j} className="text-slate-800 dark:text-white">{part.slice(2, -2)}</strong> 
+                                            : part
+                                        )}
+                                    </p>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+
+                {/* Footer Modal AI */}
+                {!aiLoading && (
+                    <div className="p-4 md:p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 shrink-0 flex items-center justify-end gap-3">
+                        <button onClick={() => handleCopyText(aiResponse)} className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-colors shadow-sm">
+                            <Copy size={16} /> Salin Insight
+                        </button>
+                        <button onClick={() => {
+                            let waDraft = '';
+                            const splitKey = '### 💬 Draf Pesan WhatsApp';
+                            if (aiResponse.includes(splitKey)) waDraft = aiResponse.split(splitKey)[1]?.trim();
+                            else waDraft = aiResponse; 
+
+                            if (waDraft && selectedMex?.phone && selectedMex.phone !== '-') {
+                                window.open(`https://wa.me/${selectedMex.phone.replace(/\D/g, '')}?text=${encodeURIComponent(waDraft.replace(/\*\*/g, ''))}`, '_blank');
+                            } else if (selectedMex?.phone === '-') {
+                                alert("Nomor HP Merchant Tidak Tersedia.");
+                            }
+                        }} className="bg-[#00B14F] hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm shadow-emerald-500/20 active:scale-95">
+                            <MessageCircle size={16} /> Buka di WA
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+      )}
+
+      {/* MODAL TEMPLATE WHATSAPP MANUAL */}
       {showWaModal && selectedMex && (
         <div className="fixed inset-0 z-[7000] flex items-center justify-center p-4 sm:p-6">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 ease-out animate-in fade-in" onClick={() => setShowWaModal(false)} />
@@ -1999,10 +2169,16 @@ export default function App() {
                   </div>
                   
                   <div className="relative z-10 shrink-0 w-full lg:w-auto flex flex-col sm:flex-row items-center justify-start lg:justify-end gap-3 mt-4 lg:mt-0 pt-4 lg:pt-0 border-t border-slate-100 lg:border-none">
+                      {/* Tombol AI Insight */}
+                      <button onClick={handleGenerateAIInsight} className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-sm shadow-purple-500/20 active:scale-95 group">
+                         <Sparkles size={16} className="group-hover:scale-110 transition-transform text-purple-200" /> AI Insight ✨
+                      </button>
+
                       <button onClick={() => { if (selectedMex.phone && selectedMex.phone !== '-') setShowWaModal(true); }} className={`hidden sm:flex w-full sm:w-auto px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-all items-center justify-center gap-2 shadow-sm group active:scale-95 ${selectedMex.phone && selectedMex.phone !== '-' ? 'bg-[#00B14F] hover:bg-emerald-600 text-white shadow-emerald-500/20' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}`} title={selectedMex.phone && selectedMex.phone !== '-' ? 'Hubungi via WhatsApp' : 'Nomor tidak tersedia'}>
                          <MessageCircle size={16} className={selectedMex.phone && selectedMex.phone !== '-' ? "group-hover:scale-110 transition-transform" : ""} /> 
                          {selectedMex.phone && selectedMex.phone !== '-' ? 'Hubungi' : 'No. HP Kosong'}
                       </button>
+
                       {selectedMex.history && selectedMex.history.length > 0 && (
                           <button onClick={() => { const hist = selectedMex.history || []; const defaultMonths = [ hist.length > 2 ? hist[hist.length - 3].month : '', hist.length > 1 ? hist[hist.length - 2].month : '', hist.length > 0 ? hist[hist.length - 1].month : '' ]; setCompareMonths(defaultMonths); setShowCompareModal(true); }} className="w-full sm:w-auto bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border border-indigo-200 shadow-sm group active:scale-95">
                              <BarChart2 size={16} className="group-hover:scale-110 transition-transform" /> Compare
@@ -2317,6 +2493,10 @@ export default function App() {
                    <div className="bg-slate-900/90 dark:bg-slate-800/90 backdrop-blur-xl p-1.5 rounded-full shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] border border-slate-700/50 flex items-center justify-center gap-1.5">
                        <button onClick={() => setSelectedMex(null)} className="w-12 h-12 flex items-center justify-center text-white hover:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition-all duration-300 active:scale-90" title="Kembali ke Dashboard">
                            <ArrowLeft className="w-5 h-5" />
+                       </button>
+                       <div className="w-px h-6 bg-slate-700/80 shrink-0"></div>
+                       <button onClick={handleGenerateAIInsight} className="w-12 h-12 flex items-center justify-center rounded-full transition-all duration-300 active:scale-90 bg-slate-800 hover:bg-purple-600 text-purple-400 hover:text-white shadow-lg" title="Tanya AI Insight ✨">
+                           <Sparkles className="w-5 h-5" />
                        </button>
                        <div className="w-px h-6 bg-slate-700/80 shrink-0"></div>
                        <button onClick={() => { if (selectedMex.phone && selectedMex.phone !== '-') setShowWaModal(true); }} className={`w-12 h-12 flex items-center justify-center rounded-full transition-all duration-300 active:scale-90 ${selectedMex.phone && selectedMex.phone !== '-' ? 'bg-[#00B14F] text-white hover:bg-emerald-600 shadow-[0_0_20px_-5px_rgba(0,177,79,0.5)]' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`} title="Hubungi via WhatsApp">
