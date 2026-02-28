@@ -212,9 +212,19 @@ export default function App() {
           case 'inactive': templates = [`Halo kak ${owner}! Saya cek ${mexName} offline nih. Ada kendala kak?`, `Siang kak ${owner}, notis ${mexName} belum aktif. Kalau ada kendala kabari ya.`]; break;
           case 'report': 
               const rrBsFormatted = formatCurrencyFull(selectedMex.rrBs || 0);
-              const lastOrders = selectedMex.history && selectedMex.history.length > 0 ? selectedMex.history[selectedMex.history.length-1].completed_orders : 0;
-              const aovFormatted = selectedMex.history && selectedMex.history.length > 0 ? formatCurrencyFull(selectedMex.history[selectedMex.history.length-1].aov) : 'Rp 0';
-              const promoPct = selectedMex.history && selectedMex.history.length > 0 ? selectedMex.history[selectedMex.history.length-1].promo_order_pct : 0;
+              const lastHist = selectedMex.history && selectedMex.history.length > 0 ? selectedMex.history[selectedMex.history.length-1] : null;
+              
+              const lastOrders = lastHist ? lastHist.completed_orders : 0;
+              const aovFormatted = lastHist ? formatCurrencyFull(lastHist.aov) : 'Rp 0';
+              const promoPct = lastHist ? lastHist.promo_order_pct : 0;
+              const roas = (lastHist && lastHist.ads_total_hist > 0) ? (lastHist.ads_sales / lastHist.ads_total_hist).toFixed(1) : 0;
+              const adsOrders = lastHist ? lastHist.ads_orders : 0;
+
+              let metricsText = `📈 Estimasi Omset: *${rrBsFormatted}*\n🛍️ Total Pesanan: *${lastOrders} Orders*\n💰 Rata-rata Pesanan: *${aovFormatted}*\n✨ Minat Promo: *${promoPct}%*`;
+              if (roas > 0 || adsOrders > 0) {
+                  metricsText += `\n🎯 Pesanan dari Iklan: *${adsOrders} Orders*`;
+                  metricsText += `\n📢 ROAS Iklan: *${roas}x*`;
+              }
               
               let ctaText = "";
               if (selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not')) {
@@ -224,7 +234,7 @@ export default function App() {
               }
               
               templates = [
-                  `Halo kak ${owner}! Saya ${amShort} (AM Grab).\n\nBerikut adalah ringkasan performa *${mexName}* bulan ini:\n📈 Estimasi Omset: *${rrBsFormatted}*\n🛍️ Total Pesanan: *${lastOrders} Orders*\n💰 Rata-rata Pesanan: *${aovFormatted}*\n✨ Minat Promo: *${promoPct}%*\n\n${ctaText}\n\n_(Saya juga melampirkan gambar ringkasan visualnya di atas 👆)_\n\nKapan ada waktu luang untuk bahas ini kak?`
+                  `Halo kak ${owner}! Saya ${amShort} (AM Grab).\n\nBerikut adalah ringkasan performa *${mexName}* bulan ini:\n${metricsText}\n\n${ctaText}\n\n_(Saya juga melampirkan gambar ringkasan visualnya di atas 👆)_\n\nKapan ada waktu luang untuk bahas ini kak?`
               ];
               break;
           default: templates = [`Halo kak ${owner}, saya ${amShort} (Grab). Boleh ngobrol bentar soal performa ${mexName}?`, `Siang kak ${owner}! Ingin diskusi penjualan ${mexName}. Kapan ada waktu luang?`];
@@ -239,7 +249,6 @@ export default function App() {
       if (!selectedMex || !selectedMex.phone || selectedMex.phone === '-') return;
       setIsCapturing(true);
       try {
-          // Injeksi html2canvas secara dinamis tanpa perlu npm install
           if (!window.html2canvas) {
               await new Promise((resolve, reject) => {
                   const script = document.createElement('script');
@@ -249,33 +258,24 @@ export default function App() {
                   document.head.appendChild(script);
               });
           }
-          
-          // Beri jeda sejenak agar chart animasi selesai render
           await new Promise(r => setTimeout(r, 400));
-          
           const element = presentationRef.current;
           if (element) {
               const canvas = await window.html2canvas(element, {
-                  scale: 2, // Resolusi tinggi agar jernih di WA
+                  scale: 2, 
                   useCORS: true,
                   backgroundColor: '#f8fafc',
-                  windowWidth: window.innerWidth > 800 ? window.innerWidth : 800 // Paksakan tata letak agak lebar agar rapi
+                  windowWidth: window.innerWidth > 800 ? window.innerWidth : 800
               });
-              
               const imgData = canvas.toDataURL('image/png');
-              
-              // Memicu unduhan gambar
               const link = document.createElement('a');
               link.download = `Laporan_Performa_${selectedMex.name.replace(/\s+/g, '_')}.png`;
               link.href = imgData;
               link.click();
-              
-              // Langsung arahkan ke WhatsApp
               handleSendWA('report');
           }
       } catch (err) {
           console.error("Gagal melakukan screenshot:", err);
-          // Fallback: Jika screenshot gagal, tetap kirim pesan WA-nya
           handleSendWA('report');
       } finally {
           setIsCapturing(false);
@@ -340,7 +340,6 @@ export default function App() {
             localStorage.setItem('am_dashboard_last_update', updateStr); setGlobalLastUpdate(updateStr);
         }
         
-        // Ambil data catatan (notes) yang sudah ada sebelumnya dari IndexedDB agar tidak hilang
         const existingData = await loadFromIndexedDB('am_dashboard_data');
         const existingNotesMap = new Map();
         if (existingData && Array.isArray(existingData)) {
@@ -405,7 +404,7 @@ export default function App() {
             longitude: obj['Longitude'] || obj['Long'] || obj['Lng'] || (vals[15] !== undefined ? String(vals[15]).trim() : ''),
             lastUpdate: '', campaignPoint: cleanNumber(pointHeader ? obj[pointHeader] : 0), 
             history: [],
-            notes: existingNotesMap.get(mexId) || [] // <- Menyisipkan catatan lama (jika ada) ke data baru
+            notes: existingNotesMap.get(mexId) || [] 
           });
         }
 
@@ -431,13 +430,18 @@ export default function App() {
                         const promoOrders = cleanNumber(vals[hPromoOrdersIdx]);
                         const adsTotalHist = cleanNumber(vals[hAdsWebIdx]) + cleanNumber(vals[hAdsMobIdx]) + cleanNumber(vals[hAdsDirIdx]);
                         const totalInvestment = cleanNumber(vals[hMfcIdx]) + cleanNumber(vals[hMfpIdx]) + cleanNumber(vals[hCpoIdx]) + cleanNumber(vals[hGmsIdx]) + cleanNumber(vals[hCommIdx]) + adsTotalHist;
+                        
+                        // EKSTRAKSI KOLOM V (21) DAN W (22) UNTUK ADS ORDERS & ADS SALES (ROAS)
+                        const adsOrdersHist = vals.length > 21 ? cleanNumber(vals[21]) : 0;
+                        const adsSalesHist = vals.length > 22 ? cleanNumber(vals[22]) : 0;
 
                         parsedDataMap.get(mexId).history.push({
                             month: vals[hMonthIdx], basket_size: baseBs, net_sales: baseBs - totalInvestment,
                             total_orders: totalOrders, completed_orders: hCompletedOrdersIdx !== -1 ? cleanNumber(vals[hCompletedOrdersIdx]) : totalOrders,
                             orders_with_promo: promoOrders, promo_order_pct: totalOrders > 0 ? parseFloat(((promoOrders / totalOrders) * 100).toFixed(1)) : 0,
                             aov: cleanNumber(vals[hAovIdx]), mfc: cleanNumber(vals[hMfcIdx]), mfp: cleanNumber(vals[hMfpIdx]), cpo: cleanNumber(vals[hCpoIdx]), gms: cleanNumber(vals[hGmsIdx]), basic_commission: cleanNumber(vals[hCommIdx]), ads_total_hist: adsTotalHist,
-                            mi_percentage: baseBs > 0 ? parseFloat(((totalInvestment / baseBs) * 100).toFixed(1)) : 0, total_investment: totalInvestment
+                            mi_percentage: baseBs > 0 ? parseFloat(((totalInvestment / baseBs) * 100).toFixed(1)) : 0, total_investment: totalInvestment,
+                            ads_orders: adsOrdersHist, ads_sales: adsSalesHist // Disimpan ke history state
                         });
                     }
                 }
@@ -471,7 +475,11 @@ export default function App() {
           const hist = m.map(mon => {
               baseBs = Math.max(1000000, baseBs * (1 + (Math.random() * 0.4 - 0.2)));
               const ord = Math.floor(baseBs / 40000);
-              return { month: mon, basket_size: baseBs, net_sales: baseBs * 0.8, total_orders: ord, completed_orders: ord, orders_with_promo: Math.floor(ord*0.5), promo_order_pct: 50, aov: 40000, mfc: 0, mfp: 0, cpo: 0, gms: 0, basic_commission: 0, ads_total_hist: 0, mi_percentage: 12, total_investment: 0 };
+              const adsTotalHist = Math.random() > 0.3 ? Math.floor(Math.random() * 500000) + 100000 : 0;
+              const adsSales = adsTotalHist > 0 ? adsTotalHist * (Math.random() * 5 + 1.5) : 0; // ROAS 1.5x - 6.5x
+              const adsOrders = Math.floor(adsSales / 40000);
+
+              return { month: mon, basket_size: baseBs, net_sales: baseBs * 0.8, total_orders: ord, completed_orders: ord, orders_with_promo: Math.floor(ord*0.5), promo_order_pct: 50, aov: 40000, mfc: 0, mfp: 0, cpo: 0, gms: 0, basic_commission: 0, ads_total_hist: adsTotalHist, mi_percentage: 12, total_investment: 0, ads_orders: adsOrders, ads_sales: adsSales };
           });
           return {
             id: `6-C${Math.random().toString(36).substr(2, 9).toUpperCase()}`, name: `Merchant ${String.fromCharCode(65 + (i % 26))} - Kota`, amName: amNames[i % 4], ownerName: `Ona`,
@@ -645,6 +653,8 @@ export default function App() {
 
   // --- RENDERING PRESENTATION MODE ---
   if (showPresentation && selectedMex) {
+      const lastHist = selectedMex.history && selectedMex.history.length > 0 ? selectedMex.history[selectedMex.history.length-1] : null;
+
       return (
           <div className="fixed inset-0 z-[9999] bg-slate-50 overflow-y-auto font-sans flex flex-col hide-scrollbar animate-in slide-in-from-bottom-full duration-500 ease-out">
               <div className="bg-white border-b border-slate-200 px-4 md:px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
@@ -671,7 +681,7 @@ export default function App() {
                  </div>
               </div>
 
-              <div className="max-w-5xl mx-auto w-full p-4 md:p-10 flex-1 flex flex-col">
+              <div className="max-w-6xl mx-auto w-full p-4 md:p-10 flex-1 flex flex-col">
                  
                  {/* KONTEN YANG AKAN DI-SCREENSHOT */}
                  <div ref={presentationRef} className="space-y-6 md:space-y-8 bg-slate-50 p-2 md:p-6 rounded-3xl">
@@ -680,51 +690,85 @@ export default function App() {
                          <p className="text-sm text-slate-500 font-medium max-w-2xl mx-auto">Berikut adalah ringkasan performa <strong className="text-slate-700">{selectedMex.name}</strong> saat ini.</p>
                      </div>
 
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
+                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+                         {/* Card 1: Omset */}
+                         <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
                              <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
-                             <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-3"><Activity size={20} strokeWidth={2.5}/></div>
-                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Estimasi Omset (MTD)</p>
+                             <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-3"><Activity size={20} strokeWidth={2.5}/></div>
+                             <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Estimasi Omset</p>
                              <p className="text-lg sm:text-xl xl:text-2xl font-black text-slate-900 px-1 break-words leading-tight">{formatCurrencyFull(selectedMex.rrBs)}</p>
                              <div className={`mt-2 px-2.5 py-1 rounded-full text-[10px] font-black flex items-center gap-1 ${selectedMex.rrBs > selectedMex.lmBs ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
                                  {selectedMex.rrBs > selectedMex.lmBs ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(selectedMex.rrVsLm).toFixed(1)}% vs LM
                              </div>
                          </div>
                          
-                         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
+                         {/* Card 2: Pesanan */}
+                         <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
                              <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-500"></div>
-                             <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-3"><ShoppingBag size={20} strokeWidth={2.5}/></div>
-                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Pesanan</p>
-                             {selectedMex.history && selectedMex.history.length > 0 ? (
-                                 <p className="text-xl lg:text-2xl font-black text-slate-900">{selectedMex.history[selectedMex.history.length-1].completed_orders} <span className="text-[11px] text-slate-500 font-bold ml-1">Orders</span></p>
+                             <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-3"><ShoppingBag size={20} strokeWidth={2.5}/></div>
+                             <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Pesanan</p>
+                             {lastHist ? (
+                                 <p className="text-lg sm:text-xl xl:text-2xl font-black text-slate-900 px-1 break-words leading-tight">{lastHist.completed_orders} <span className="text-[10px] md:text-[11px] text-slate-500 font-bold ml-1">Orders</span></p>
                              ) : (
                                  <p className="text-xl lg:text-2xl font-black text-slate-300">-</p>
                              )}
-                             <p className="text-[9px] text-slate-500 font-medium mt-2">Transaksi sukses (Bulan terakhir)</p>
+                             <p className="text-[8px] md:text-[9px] text-slate-500 font-medium mt-2">Bulan lalu</p>
                          </div>
 
-                         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
+                         {/* Card 3: AOV */}
+                         <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
                              <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-purple-400 to-pink-500"></div>
-                             <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center mb-3"><Target size={20} strokeWidth={2.5}/></div>
-                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Rata-rata Pesanan (AOV)</p>
-                             {selectedMex.history && selectedMex.history.length > 0 ? (
-                                 <p className="text-lg sm:text-xl xl:text-2xl font-black text-slate-900 px-1 break-words leading-tight">{formatCurrencyFull(selectedMex.history[selectedMex.history.length-1].aov)}</p>
+                             <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center mb-3"><Target size={20} strokeWidth={2.5}/></div>
+                             <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Rata-rata Nilai Pesanan</p>
+                             {lastHist ? (
+                                 <p className="text-lg sm:text-xl xl:text-2xl font-black text-slate-900 px-1 break-words leading-tight">{formatCurrencyFull(lastHist.aov)}</p>
                              ) : (
                                  <p className="text-xl lg:text-2xl font-black text-slate-300">-</p>
                              )}
-                             <p className="text-[9px] text-slate-500 font-medium mt-2">Nilai per transaksi</p>
+                             <p className="text-[8px] md:text-[9px] text-slate-500 font-medium mt-2">Nilai per transaksi</p>
                          </div>
                          
-                         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
+                         {/* Card 4: Minat Promo */}
+                         <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
                              <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-amber-400 to-orange-500"></div>
-                             <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mb-3"><ThumbsUp size={20} strokeWidth={2.5}/></div>
-                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tingkat Minat Promo</p>
-                             {selectedMex.history && selectedMex.history.length > 0 ? (
-                                 <p className="text-xl lg:text-2xl font-black text-slate-900">{selectedMex.history[selectedMex.history.length-1].promo_order_pct}%</p>
+                             <div className="w-10 h-10 md:w-12 md:h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mb-3"><ThumbsUp size={20} strokeWidth={2.5}/></div>
+                             <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tingkat Minat Promo</p>
+                             {lastHist ? (
+                                 <p className="text-lg sm:text-xl xl:text-2xl font-black text-slate-900 px-1 break-words leading-tight">{lastHist.promo_order_pct}%</p>
                              ) : (
                                  <p className="text-xl lg:text-2xl font-black text-slate-300">-</p>
                              )}
-                             <p className="text-[10px] text-slate-500 font-medium mt-3">Pelanggan berbelanja menggunakan promo</p>
+                             <p className="text-[8px] md:text-[9px] text-slate-500 font-medium mt-2">Pesanan dengan diskon</p>
+                         </div>
+
+                         {/* Card 5: ROAS Iklan (BARU) */}
+                         <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
+                             <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-rose-400 to-red-500"></div>
+                             <div className="w-10 h-10 md:w-12 md:h-12 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mb-3"><Megaphone size={20} strokeWidth={2.5}/></div>
+                             <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Return On Ad Spend</p>
+                             {lastHist && lastHist.ads_total_hist > 0 ? (
+                                 <p className="text-lg sm:text-xl xl:text-2xl font-black text-slate-900 px-1 break-words leading-tight">{(lastHist.ads_sales / lastHist.ads_total_hist).toFixed(1)}x</p>
+                             ) : (
+                                 <p className="text-xl lg:text-2xl font-black text-slate-300">-</p>
+                             )}
+                             <p className="text-[8px] md:text-[9px] text-slate-500 font-medium mt-2">Performa iklan bulan lalu</p>
+                         </div>
+
+                         {/* Card 6: Pesanan dari Iklan (BARU) */}
+                         <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
+                             <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-blue-500"></div>
+                             <div className="w-10 h-10 md:w-12 md:h-12 bg-cyan-50 text-cyan-600 rounded-full flex items-center justify-center mb-3"><MousePointer size={20} strokeWidth={2.5}/></div>
+                             <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pesanan dari Iklan</p>
+                             {lastHist && lastHist.ads_orders > 0 ? (
+                                 <p className="text-lg sm:text-xl xl:text-2xl font-black text-slate-900 px-1 break-words leading-tight">{lastHist.ads_orders} <span className="text-[10px] md:text-[11px] text-slate-500 font-bold ml-1">Orders</span></p>
+                             ) : (
+                                 <p className="text-xl lg:text-2xl font-black text-slate-300">-</p>
+                             )}
+                             {lastHist && lastHist.completed_orders > 0 && lastHist.ads_orders > 0 ? (
+                                 <p className="text-[8px] md:text-[9px] text-slate-500 font-medium mt-2">{((lastHist.ads_orders / lastHist.completed_orders) * 100).toFixed(1)}% dari total pesanan</p>
+                             ) : (
+                                 <p className="text-[8px] md:text-[9px] text-slate-500 font-medium mt-2">Bulan lalu</p>
+                             )}
                          </div>
                      </div>
 
@@ -759,59 +803,28 @@ export default function App() {
 
                          {/* PENAWARAN 2: CAMPAIGN / ADS (Beradaptasi otomatis 4 Level Funneling) */}
                          {(() => {
-                             // Ambil array campaign dan bersihkan string-nya
                              const campsRaw = (!selectedMex.campaigns || selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || selectedMex.campaigns.toLowerCase().includes('no'))
                                  ? []
                                  : selectedMex.campaigns.split(/[|,]/).map(c => c.trim().toLowerCase()).filter(Boolean);
 
-                             // Cek apakah ada Main Campaign (Booster / Cuan / GMS)
                              const isMainCamp = (c) => c.includes('booster') || c.includes('cuan') || c.includes('gms');
                              const hasMainCampaign = campsRaw.some(isMainCamp);
-                             
-                             // Cek apakah ada Local/Tactical Campaign (yang bukan Main Campaign)
                              const hasLocalCampaign = campsRaw.some(c => !isMainCamp(c));
-                             
-                             // Cek Ads
                              const isNoAds = (selectedMex.adsTotal || 0) <= 0 && (selectedMex.adsLM || 0) <= 0;
                              
-                             let title = '';
-                             let desc = '';
-                             let statusLabel = '';
-                             let statusValue = '';
-                             let icon = null;
-                             let theme = {};
+                             let title = ''; let desc = ''; let statusLabel = ''; let statusValue = ''; let icon = null; let theme = {};
 
                              if (!hasMainCampaign) {
-                                 // LEVEL 1: Belum ikut Campaign Utama
-                                 title = 'Gabung Diskon Puas';
-                                 desc = 'Tingkatkan visibilitas toko & pikat lebih banyak pelanggan baru di kota Anda.';
-                                 statusLabel = 'Status Campaign';
-                                 statusValue = 'Belum Aktif';
-                                 icon = <Zap size={28} />;
+                                 title = 'Gabung Diskon Puas'; desc = 'Tingkatkan visibilitas toko & pikat lebih banyak pelanggan baru di kota Anda.'; statusLabel = 'Status Campaign'; statusValue = 'Belum Aktif'; icon = <Zap size={28} />;
                                  theme = { from: 'from-purple-500', to: 'to-pink-500', shadow: 'shadow-purple-500/30', glow: 'shadow-[0_8px_30px_rgba(168,85,247,0.15)]', border: 'border-purple-200', tagBg: 'bg-purple-100', tagText: 'text-purple-700', boxBg: 'bg-purple-50/80', boxBorder: 'border-purple-100', valText: 'text-purple-600', valLabel: 'text-purple-500' };
                              } else if (!hasLocalCampaign) {
-                                 // LEVEL 2: Sudah Main Campaign, Belum Local Campaign
-                                 title = 'Ikuti Local Campaign';
-                                 desc = 'Maksimalkan momentum dengan promo taktis khusus wilayah sekitar restoran Anda.';
-                                 statusLabel = 'Local Promo';
-                                 statusValue = 'Belum Aktif';
-                                 icon = <Target size={28} />;
+                                 title = 'Ikuti Local Campaign'; desc = 'Maksimalkan momentum dengan promo taktis khusus wilayah sekitar restoran Anda.'; statusLabel = 'Local Promo'; statusValue = 'Belum Aktif'; icon = <Target size={28} />;
                                  theme = { from: 'from-blue-500', to: 'to-cyan-500', shadow: 'shadow-blue-500/30', glow: 'shadow-[0_8px_30px_rgba(59,130,246,0.15)]', border: 'border-blue-200', tagBg: 'bg-blue-100', tagText: 'text-blue-700', boxBg: 'bg-blue-50/80', boxBorder: 'border-blue-100', valText: 'text-blue-600', valLabel: 'text-blue-500' };
                              } else if (isNoAds) {
-                                 // LEVEL 3: Sudah Main & Local, Belum Ads
-                                 title = 'Maksimalkan Iklan (Ads)';
-                                 desc = 'Toko Anda sudah punya promo menarik lengkap, yuk boost posisi agar selalu tampil teratas!';
-                                 statusLabel = 'Status Iklan';
-                                 statusValue = 'Belum Aktif';
-                                 icon = <Megaphone size={28} />;
+                                 title = 'Maksimalkan Iklan (Ads)'; desc = 'Toko Anda sudah punya promo menarik lengkap, yuk boost posisi agar selalu tampil teratas!'; statusLabel = 'Status Iklan'; statusValue = 'Belum Aktif'; icon = <Megaphone size={28} />;
                                  theme = { from: 'from-orange-400', to: 'to-red-500', shadow: 'shadow-orange-500/30', glow: 'shadow-[0_8px_30px_rgba(249,115,22,0.15)]', border: 'border-orange-200', tagBg: 'bg-orange-100', tagText: 'text-orange-700', boxBg: 'bg-orange-50/80', boxBorder: 'border-orange-100', valText: 'text-orange-600', valLabel: 'text-orange-500' };
                              } else {
-                                 // LEVEL 4: Sudah ikut semuanya
-                                 title = 'Top Performance Partner 🏆';
-                                 desc = 'Luar biasa! Anda telah memaksimalkan Campaign & Iklan. Pertahankan momentum juara ini.';
-                                 statusLabel = 'Status Toko';
-                                 statusValue = 'All-Star Active';
-                                 icon = <Award size={28} />;
+                                 title = 'Top Performance Partner 🏆'; desc = 'Luar biasa! Anda telah memaksimalkan Campaign & Iklan. Pertahankan momentum juara ini.'; statusLabel = 'Status Toko'; statusValue = 'All-Star Active'; icon = <Award size={28} />;
                                  theme = { from: 'from-emerald-400', to: 'to-teal-500', shadow: 'shadow-emerald-500/30', glow: 'shadow-[0_8px_30px_rgba(16,185,129,0.15)]', border: 'border-emerald-200', tagBg: 'bg-emerald-100', tagText: 'text-emerald-700', boxBg: 'bg-emerald-50/80', boxBorder: 'border-emerald-100', valText: 'text-emerald-600', valLabel: 'text-emerald-500' };
                              }
 
