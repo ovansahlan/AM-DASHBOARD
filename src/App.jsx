@@ -608,7 +608,7 @@ export default function App() {
                          <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
                          <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-3"><Activity size={20} strokeWidth={2.5}/></div>
                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Estimasi Omset (MTD)</p>
-                         <p className="text-xl lg:text-2xl font-black text-slate-900 truncate w-full px-2" title={formatCurrencyFull(selectedMex.rrBs)}>{formatCurrencyFull(selectedMex.rrBs)}</p>
+                         <p className="text-lg sm:text-xl xl:text-2xl font-black text-slate-900 px-1 break-words leading-tight">{formatCurrencyFull(selectedMex.rrBs)}</p>
                          <div className={`mt-2 px-2.5 py-1 rounded-full text-[10px] font-black flex items-center gap-1 ${selectedMex.rrBs > selectedMex.lmBs ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
                              {selectedMex.rrBs > selectedMex.lmBs ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(selectedMex.rrVsLm).toFixed(1)}% vs LM
                          </div>
@@ -631,7 +631,7 @@ export default function App() {
                          <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center mb-3"><Target size={20} strokeWidth={2.5}/></div>
                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Rata-rata Pesanan (AOV)</p>
                          {selectedMex.history && selectedMex.history.length > 0 ? (
-                             <p className="text-xl lg:text-2xl font-black text-slate-900 truncate w-full px-2" title={formatCurrencyFull(selectedMex.history[selectedMex.history.length-1].aov)}>{formatCurrencyFull(selectedMex.history[selectedMex.history.length-1].aov)}</p>
+                             <p className="text-lg sm:text-xl xl:text-2xl font-black text-slate-900 px-1 break-words leading-tight">{formatCurrencyFull(selectedMex.history[selectedMex.history.length-1].aov)}</p>
                          ) : (
                              <p className="text-xl lg:text-2xl font-black text-slate-300">-</p>
                          )}
@@ -647,12 +647,48 @@ export default function App() {
                          ) : (
                              <p className="text-xl lg:text-2xl font-black text-slate-300">-</p>
                          )}
-                         <p className="text-[9px] text-slate-500 font-medium mt-2">Pesanan menggunakan promo</p>
+                         <p className="text-[10px] text-slate-500 font-medium mt-3">Pelanggan berbelanja menggunakan promo</p>
                      </div>
                  </div>
 
+                 <div className="animate-fade-in-up stagger-3">
+                     {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? (
+                         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+                             <div className="flex items-center gap-3 md:gap-4">
+                                 <div className="w-10 h-10 md:w-12 md:h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center shrink-0">
+                                     <Database size={20} />
+                                 </div>
+                                 <div className="text-left">
+                                     <h4 className="text-sm md:text-base font-black text-amber-900 leading-tight mb-0.5">Penawaran Grab Modal Mantul</h4>
+                                     <p className="text-xs text-amber-700/80 font-medium">Toko Anda terpilih mendapatkan fasilitas dana siaga.</p>
+                                 </div>
+                             </div>
+                             <div className="sm:text-right bg-white px-4 py-2 rounded-xl border border-amber-100 w-full sm:w-auto shrink-0">
+                                 <p className="text-[9px] font-bold uppercase tracking-widest text-amber-500 mb-0.5">Limit Tersedia</p>
+                                 <p className="text-lg md:text-xl font-black text-amber-600">{formatCurrencyFull(selectedMex.mcaWlLimit)}</p>
+                             </div>
+                         </div>
+                     ) : (
+                         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+                             <div className="flex items-center gap-3 md:gap-4">
+                                 <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center shrink-0">
+                                     <Zap size={20} />
+                                 </div>
+                                 <div className="text-left">
+                                     <h4 className="text-sm md:text-base font-black text-slate-800 leading-tight mb-0.5">Gabung Mega Campaign</h4>
+                                     <p className="text-xs text-slate-500 font-medium">Tingkatkan visibilitas dan jangkau lebih banyak pelanggan.</p>
+                                 </div>
+                             </div>
+                             <div className="sm:text-right bg-white px-4 py-2 rounded-xl border border-slate-100 w-full sm:w-auto">
+                                 <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Status Saat Ini</p>
+                                 <p className="text-xs md:text-sm font-black text-slate-700">{selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || selectedMex.campaigns.toLowerCase().includes('no') ? 'Belum Ada Campaign' : selectedMex.campaigns}</p>
+                             </div>
+                         </div>
+                     )}
+                 </div>
+
                  {selectedMex.history && selectedMex.history.length > 0 && (
-                     <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 animate-fade-in-up stagger-3">
+                     <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 animate-fade-in-up stagger-4">
                          <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2 mb-6"><GrowthIcon className="text-[#00B14F] w-5 h-5"/> Perjalanan Bisnis (12 Bulan)</h3>
                          <div className="h-[250px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
@@ -673,39 +709,6 @@ export default function App() {
                          </div>
                      </div>
                  )}
-
-                 <div className="space-y-6 animate-fade-in-up stagger-4 max-w-3xl mx-auto mt-8">
-                     {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? (
-                         <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-3xl p-6 md:p-8 text-white shadow-2xl relative overflow-hidden flex flex-col justify-center text-center">
-                             <div className="absolute bottom-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-[80px] pointer-events-none"></div>
-                             <div className="relative z-10">
-                                 <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-5 border border-white/30 shadow-inner">
-                                     <Database size={32} className="text-white" />
-                                 </div>
-                                 <p className="text-[10px] font-black uppercase tracking-widest text-orange-200 mb-2">Penawaran Eksklusif Terbatas</p>
-                                 <h4 className="text-2xl md:text-3xl font-black mb-3 tracking-tight">Grab Modal Mantul</h4>
-                                 <p className="text-sm text-orange-100 mb-6 max-w-lg mx-auto">Toko Anda terpilih untuk mendapatkan fasilitas dana siaga demi memperlancar operasional bisnis.</p>
-                                 <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl inline-block mx-auto min-w-[250px]">
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-orange-200 mb-1">Limit Tersedia Hingga</p>
-                                    <p className="text-2xl md:text-3xl font-black text-white">{formatCurrencyFull(selectedMex.mcaWlLimit)}</p>
-                                 </div>
-                             </div>
-                         </div>
-                     ) : (
-                         <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden flex flex-col justify-center text-center">
-                             <div className="w-16 h-16 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-5 border border-purple-100 shadow-inner">
-                                 <Zap size={32} />
-                             </div>
-                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Tingkatkan Visibilitas</p>
-                             <h4 className="text-2xl md:text-3xl font-black text-slate-900 mb-3 tracking-tight">Gabung Mega Campaign</h4>
-                             <p className="text-sm text-slate-500 mb-6 max-w-md mx-auto leading-relaxed">Jangan lewatkan momentum gajian bulan ini. Gabung <strong>Campaign</strong> resmi Grab untuk jangkau ribuan pelanggan baru di kota Anda.</p>
-                             <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl inline-block mx-auto w-full max-w-sm">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Status Saat Ini</p>
-                                <p className="text-sm font-black text-slate-700">{selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || selectedMex.campaigns.toLowerCase().includes('no') ? 'Belum Ada Campaign Aktif' : selectedMex.campaigns}</p>
-                             </div>
-                         </div>
-                     )}
-                 </div>
 
               </div>
           </div>
