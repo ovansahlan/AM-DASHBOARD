@@ -6,8 +6,8 @@ import {
 import { 
   UploadCloud, TrendingUp, Database, Filter, Megaphone,
   Search, CheckCircle, AlertCircle, DollarSign, Activity, X,
-  Store, ArrowUpRight, ArrowDownRight, Users, Info, ArrowLeft, Zap, MapPin, Phone, Smartphone, Mail, Award, LayoutDashboard, Table, ShoppingBag, Target, Percent, ExternalLink,
-  Check, ChevronDown, MousePointer, RefreshCw, BarChart2, FileText, MessageCircle, Clock, ArrowUp, ArrowDown, Moon, Sun, ChevronLeft, ChevronRight
+  Store, ArrowUpRight, ArrowDownRight, Users, Info, ArrowLeft, Zap, MapPin, Phone, Smartphone, Mail, Award, LayoutDashboard, Table, ShoppingBag, Target, Percent, ExternalLink, Calculator,
+  Check, ChevronDown, MousePointer, RefreshCw, BarChart2, FileText, MessageCircle, Clock, ArrowUp, ArrowDown, Moon, Sun, ChevronLeft, ChevronRight, MonitorPlay, ThumbsUp, TrendingUp as GrowthIcon, StickyNote, Plus, Trash2, Calendar
 } from 'lucide-react';
 
 // ============================================================================
@@ -178,12 +178,19 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
+  // State untuk Note/Catatan
+  const [noteText, setNoteText] = useState('');
+
+  // PRESENTATION MODE STATE
+  const [showPresentation, setShowPresentation] = useState(false);
+
   const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('am_dashboard_theme') === 'dark');
 
   useEffect(() => { localStorage.setItem('am_dashboard_theme', isDarkMode ? 'dark' : 'light'); }, [isDarkMode]);
-  useEffect(() => { setShowFloatingBar(true); }, [selectedMex]);
+  useEffect(() => { setShowFloatingBar(true); setShowPresentation(false); }, [selectedMex]);
 
   const handleMainScroll = (e) => {
+      if(showPresentation) return;
       const currentScrollY = e.target.scrollTop;
       if (currentScrollY > lastScrollY && currentScrollY > 20) setShowFloatingBar(false);
       else setShowFloatingBar(true);
@@ -268,6 +275,17 @@ export default function App() {
             localStorage.setItem('am_dashboard_last_update', updateStr); setGlobalLastUpdate(updateStr);
         }
         
+        // Ambil data catatan (notes) yang sudah ada sebelumnya dari IndexedDB agar tidak hilang
+        const existingData = await loadFromIndexedDB('am_dashboard_data');
+        const existingNotesMap = new Map();
+        if (existingData && Array.isArray(existingData)) {
+            existingData.forEach(d => {
+                if (d.notes && d.notes.length > 0) {
+                    existingNotesMap.set(d.id, d.notes);
+                }
+            });
+        }
+
         let masterHeaderIdx = -1; let masterRawHeaders = [];
         for (let i = 0; i < Math.min(20, masterLines.length); i++) {
           const test = (masterLines[i] || []).map(h => h ? String(h).trim().replace(/[\r\n]+/g, ' ') : '');
@@ -320,7 +338,9 @@ export default function App() {
             city: obj['City Mex'], address: obj['Adress'] || obj['Address'], phone: obj['Phone zeus'], email: obj['Email zeus'],
             latitude: obj['Latitude'] || obj['Lat'] || (vals[14] !== undefined ? String(vals[14]).trim() : ''), 
             longitude: obj['Longitude'] || obj['Long'] || obj['Lng'] || (vals[15] !== undefined ? String(vals[15]).trim() : ''),
-            lastUpdate: '', campaignPoint: cleanNumber(pointHeader ? obj[pointHeader] : 0), history: [] 
+            lastUpdate: '', campaignPoint: cleanNumber(pointHeader ? obj[pointHeader] : 0), 
+            history: [],
+            notes: existingNotesMap.get(mexId) || [] // <- Menyisipkan catatan lama (jika ada) ke data baru
           });
         }
 
@@ -393,11 +413,37 @@ export default function App() {
             lmBs: lm, mtdBs: rr * 0.7, rrBs: rr, rrVsLm: ((rr - lm) / lm) * 100, lmMi: 0, mtdMi: 0, rrMi: 0, adsLM: 0, adsTotal: 0, adsMob: 0, adsWeb: 0, adsDir: 0, adsRR: 0,
             mcaAmount: mca, mcaWlLimit: mca > 0 ? mca * 1.5 : 0, mcaWlClass: mca > 0 ? 'Repeat' : '-Not in WL', mcaPriority: mca > 0 ? 'P1' : '-', mcaDropOff: '-', mcaDisburseStatus: mca > 0 ? 'Disbursed' : '', disbursedDate: mca > 0 ? `15-Feb-26` : '',
             zeusStatus: Math.random() > 0.15 ? 'ACTIVE' : 'INACTIVE', joinDate: `12-Jan-22`, campaigns: Math.random() < 0.2 ? 'No Campaign' : camps[Math.floor(Math.random()*5)], commission: '20%',
-            city: 'Kota', address: 'Jalan', phone: '+628123456789', email: 'test@mail.com', latitude: '', longitude: '', lastUpdate: '22 Feb', campaignPoint: 100, history: hist 
+            city: 'Kota', address: 'Jalan', phone: '+628123456789', email: 'test@mail.com', latitude: '', longitude: '', lastUpdate: '22 Feb', campaignPoint: 100, history: hist, notes: [] 
           };
         });
         saveToLocal(genData); 
      }, 600); 
+  };
+
+  const handleSaveNote = async () => {
+      if (!noteText.trim() || !selectedMex) return;
+      const newNote = {
+          id: Date.now().toString(),
+          date: new Date().toISOString(),
+          text: noteText.trim()
+      };
+      const updatedMex = { ...selectedMex, notes: [newNote, ...(selectedMex.notes || [])] };
+      const updatedData = data.map(m => m.id === updatedMex.id ? updatedMex : m);
+      
+      setSelectedMex(updatedMex);
+      setData(updatedData);
+      setNoteText('');
+      await saveToIndexedDB('am_dashboard_data', updatedData);
+  };
+
+  const handleDeleteNote = async (noteId) => {
+      if (!selectedMex) return;
+      const updatedMex = { ...selectedMex, notes: selectedMex.notes.filter(n => n.id !== noteId) };
+      const updatedData = data.map(m => m.id === updatedMex.id ? updatedMex : m);
+      
+      setSelectedMex(updatedMex);
+      setData(updatedData);
+      await saveToIndexedDB('am_dashboard_data', updatedData);
   };
 
   const amOptions = useMemo(() => ['All', ...Array.from(new Set(data.map(d => d.amName).filter(Boolean))).sort()], [data]);
@@ -531,6 +577,141 @@ export default function App() {
       </div>
     );
   }
+
+  // --- RENDERING PRESENTATION MODE ---
+  if (showPresentation && selectedMex) {
+      return (
+          <div className="fixed inset-0 z-[9999] bg-slate-50 overflow-y-auto font-sans flex flex-col hide-scrollbar animate-in slide-in-from-bottom-full duration-500 ease-out">
+              <div className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
+                 <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#00B14F] rounded-xl flex items-center justify-center shadow-md">
+                        <Activity className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-lg font-black text-slate-900 leading-tight">Laporan Eksklusif Partner Grab</h1>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{selectedMex.name}</p>
+                    </div>
+                 </div>
+                 <button onClick={() => setShowPresentation(false)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs uppercase tracking-widest rounded-xl transition-colors flex items-center gap-2">
+                     <X size={16} /> Tutup
+                 </button>
+              </div>
+
+              <div className="max-w-5xl mx-auto w-full p-6 md:p-10 flex-1 space-y-8 pb-32">
+                 <div className="text-center space-y-3 mb-8 animate-fade-in-up stagger-1">
+                     <h2 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">Halo, {selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Kak'}</h2>
+                     <p className="text-sm text-slate-500 font-medium max-w-2xl mx-auto">Berikut adalah ringkasan performa <strong className="text-slate-700">{selectedMex.name}</strong> saat ini.</p>
+                 </div>
+
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 animate-fade-in-up stagger-2">
+                     <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
+                         <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
+                         <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-3"><Activity size={20} strokeWidth={2.5}/></div>
+                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Estimasi Omset (MTD)</p>
+                         <p className="text-xl lg:text-2xl font-black text-slate-900 truncate w-full px-2" title={formatCurrencyFull(selectedMex.rrBs)}>{formatCurrencyFull(selectedMex.rrBs)}</p>
+                         <div className={`mt-2 px-2.5 py-1 rounded-full text-[10px] font-black flex items-center gap-1 ${selectedMex.rrBs > selectedMex.lmBs ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                             {selectedMex.rrBs > selectedMex.lmBs ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(selectedMex.rrVsLm).toFixed(1)}% vs LM
+                         </div>
+                     </div>
+                     
+                     <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
+                         <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-500"></div>
+                         <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-3"><ShoppingBag size={20} strokeWidth={2.5}/></div>
+                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Pesanan</p>
+                         {selectedMex.history && selectedMex.history.length > 0 ? (
+                             <p className="text-xl lg:text-2xl font-black text-slate-900">{selectedMex.history[selectedMex.history.length-1].completed_orders} <span className="text-[11px] text-slate-500 font-bold ml-1">Orders</span></p>
+                         ) : (
+                             <p className="text-xl lg:text-2xl font-black text-slate-300">-</p>
+                         )}
+                         <p className="text-[9px] text-slate-500 font-medium mt-2">Transaksi sukses (Bulan terakhir)</p>
+                     </div>
+
+                     <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
+                         <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-purple-400 to-pink-500"></div>
+                         <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center mb-3"><Target size={20} strokeWidth={2.5}/></div>
+                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Rata-rata Pesanan (AOV)</p>
+                         {selectedMex.history && selectedMex.history.length > 0 ? (
+                             <p className="text-xl lg:text-2xl font-black text-slate-900 truncate w-full px-2" title={formatCurrencyFull(selectedMex.history[selectedMex.history.length-1].aov)}>{formatCurrencyFull(selectedMex.history[selectedMex.history.length-1].aov)}</p>
+                         ) : (
+                             <p className="text-xl lg:text-2xl font-black text-slate-300">-</p>
+                         )}
+                         <p className="text-[9px] text-slate-500 font-medium mt-2">Nilai per transaksi</p>
+                     </div>
+                     
+                     <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
+                         <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-amber-400 to-orange-500"></div>
+                         <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mb-3"><ThumbsUp size={20} strokeWidth={2.5}/></div>
+                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tingkat Minat Promo</p>
+                         {selectedMex.history && selectedMex.history.length > 0 ? (
+                             <p className="text-xl lg:text-2xl font-black text-slate-900">{selectedMex.history[selectedMex.history.length-1].promo_order_pct}%</p>
+                         ) : (
+                             <p className="text-xl lg:text-2xl font-black text-slate-300">-</p>
+                         )}
+                         <p className="text-[9px] text-slate-500 font-medium mt-2">Pesanan menggunakan promo</p>
+                     </div>
+                 </div>
+
+                 {selectedMex.history && selectedMex.history.length > 0 && (
+                     <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 animate-fade-in-up stagger-3">
+                         <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2 mb-6"><GrowthIcon className="text-[#00B14F] w-5 h-5"/> Perjalanan Bisnis (12 Bulan)</h3>
+                         <div className="h-[250px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={selectedMex.history.slice(-12)}>
+                                    <defs>
+                                        <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#00B14F" stopOpacity={0.3}/>
+                                            <stop offset="95%" stopColor="#00B14F" stopOpacity={0}/>
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <XAxis dataKey="month" tickFormatter={formatMonth} tick={{fontSize: 10, fill: '#64748b', fontWeight: 'bold'}} axisLine={false} tickLine={false} dy={10} />
+                                    <YAxis tickFormatter={(v) => `${(v/1000000).toFixed(0)}Jt`} tick={{fontSize: 10, fill: '#64748b', fontWeight: 'bold'}} axisLine={false} tickLine={false} dx={-10} />
+                                    <RechartsTooltip cursor={{stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4'}} contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)'}} formatter={(v) => formatCurrencyFull(v)} labelFormatter={formatMonth}/>
+                                    <Area type="monotone" dataKey="basket_size" name="Total Omset" stroke="#00B14F" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                         </div>
+                     </div>
+                 )}
+
+                 <div className="space-y-6 animate-fade-in-up stagger-4 max-w-3xl mx-auto mt-8">
+                     {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? (
+                         <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-3xl p-6 md:p-8 text-white shadow-2xl relative overflow-hidden flex flex-col justify-center text-center">
+                             <div className="absolute bottom-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-[80px] pointer-events-none"></div>
+                             <div className="relative z-10">
+                                 <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-5 border border-white/30 shadow-inner">
+                                     <Database size={32} className="text-white" />
+                                 </div>
+                                 <p className="text-[10px] font-black uppercase tracking-widest text-orange-200 mb-2">Penawaran Eksklusif Terbatas</p>
+                                 <h4 className="text-2xl md:text-3xl font-black mb-3 tracking-tight">Grab Modal Mantul</h4>
+                                 <p className="text-sm text-orange-100 mb-6 max-w-lg mx-auto">Toko Anda terpilih untuk mendapatkan fasilitas dana siaga demi memperlancar operasional bisnis.</p>
+                                 <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl inline-block mx-auto min-w-[250px]">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-orange-200 mb-1">Limit Tersedia Hingga</p>
+                                    <p className="text-2xl md:text-3xl font-black text-white">{formatCurrencyFull(selectedMex.mcaWlLimit)}</p>
+                                 </div>
+                             </div>
+                         </div>
+                     ) : (
+                         <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden flex flex-col justify-center text-center">
+                             <div className="w-16 h-16 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-5 border border-purple-100 shadow-inner">
+                                 <Zap size={32} />
+                             </div>
+                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Tingkatkan Visibilitas</p>
+                             <h4 className="text-2xl md:text-3xl font-black text-slate-900 mb-3 tracking-tight">Gabung Mega Campaign</h4>
+                             <p className="text-sm text-slate-500 mb-6 max-w-md mx-auto leading-relaxed">Jangan lewatkan momentum gajian bulan ini. Gabung <strong>Campaign</strong> resmi Grab untuk jangkau ribuan pelanggan baru di kota Anda.</p>
+                             <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl inline-block mx-auto w-full max-w-sm">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Status Saat Ini</p>
+                                <p className="text-sm font-black text-slate-700">{selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || selectedMex.campaigns.toLowerCase().includes('no') ? 'Belum Ada Campaign Aktif' : selectedMex.campaigns}</p>
+                             </div>
+                         </div>
+                     )}
+                 </div>
+
+              </div>
+          </div>
+      );
+  }
+  // --- END PRESENTATION MODE ---
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark-theme' : ''} bg-[#f8fafc] text-slate-900 flex flex-col font-sans overflow-hidden relative transition-colors duration-300`}>
@@ -1020,7 +1201,7 @@ export default function App() {
                                 {hist ? (
                                     <div className="relative z-10 flex flex-col mt-auto gap-2.5 md:gap-4">
                                         <div className="bg-emerald-600/70 border border-emerald-500/50 rounded-xl md:rounded-2xl p-2.5 md:p-4 flex flex-col items-center justify-center text-center shadow-inner backdrop-blur-sm relative overflow-hidden">
-                                            <div className="absolute top-0 right-0 w-12 h-12 md:w-16 md:h-16 bg-white/10 rounded-bl-full opacity-50 -mr-2 -mt-2 pointer-events-none"></div>
+                                            <div className="absolute top-0 right-0 w-12 h-12 md:w-16 h-16 bg-white/10 rounded-bl-full opacity-50 -mr-2 -mt-2 pointer-events-none"></div>
                                             <p className="text-[9px] md:text-[10px] font-black text-emerald-50 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Activity size={12}/> Gross Sales</p>
                                             <p className="text-lg md:text-2xl font-black text-white tracking-tight mb-1.5 md:mb-2 truncate w-full px-1" title={formatCurrency(hist.basket_size)}>{formatCurrency(hist.basket_size)}</p>
                                             {renderGrowthBadge(getGrowth(hist.basket_size, prev?.basket_size))}
@@ -1104,7 +1285,7 @@ export default function App() {
                         <button onClick={() => setSelectedMex(null)} className="hover:text-[#00B14F] transition-colors flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm active:scale-95">
                            <ArrowLeft className="w-3.5 h-3.5" /> Beranda
                         </button>
-                        <span className="text-slate-300 dark:text-slate-600">/</span>
+                        <span className="text-slate-300 dark:text-slate-600">{'/'}</span>
                         <span className="text-slate-800 dark:text-slate-200 truncate">{selectedMex.name}</span>
                     </div>
                  )}
@@ -1726,10 +1907,6 @@ export default function App() {
                   </div>
                   
                   <div className="relative z-10 shrink-0 w-full lg:w-auto flex flex-col sm:flex-row items-center justify-start lg:justify-end gap-3 mt-4 lg:mt-0 pt-4 lg:pt-0 border-t border-slate-100 lg:border-none">
-                      <button onClick={() => { if (selectedMex.phone && selectedMex.phone !== '-') setShowWaModal(true); }} className={`hidden sm:flex w-full sm:w-auto px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-all items-center justify-center gap-2 shadow-sm group active:scale-95 ${selectedMex.phone && selectedMex.phone !== '-' ? 'bg-[#00B14F] hover:bg-emerald-600 text-white shadow-emerald-500/20' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}`} title={selectedMex.phone && selectedMex.phone !== '-' ? 'Hubungi via WhatsApp' : 'Nomor tidak tersedia'}>
-                         <MessageCircle size={16} className={selectedMex.phone && selectedMex.phone !== '-' ? "group-hover:scale-110 transition-transform" : ""} /> 
-                         {selectedMex.phone && selectedMex.phone !== '-' ? 'Hubungi' : 'No. HP Kosong'}
-                      </button>
                       {selectedMex.history && selectedMex.history.length > 0 && (
                           <button onClick={() => { const hist = selectedMex.history || []; const defaultMonths = [ hist.length > 2 ? hist[hist.length - 3].month : '', hist.length > 1 ? hist[hist.length - 2].month : '', hist.length > 0 ? hist[hist.length - 1].month : '' ]; setCompareMonths(defaultMonths); setShowCompareModal(true); }} className="w-full sm:w-auto bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border border-indigo-200 shadow-sm group active:scale-95">
                              <BarChart2 size={16} className="group-hover:scale-110 transition-transform" /> Compare
@@ -1755,7 +1932,7 @@ export default function App() {
                              <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest">MTD Sales</p>
                              {(() => {
                                  let trend = 0; if (selectedMex.lmBs > 0) trend = ((selectedMex.rrBs - selectedMex.lmBs) / selectedMex.lmBs) * 100; else if (selectedMex.rrBs > 0) trend = 100; const isUp = trend >= 0;
-                                 return (<div className={`px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black flex items-center gap-0.5 w-fit transition-colors ${isUp ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' : 'bg-rose-50 text-rose-600 group-hover:bg-rose-100'}`}>{isUp ? <ArrowUpRight size={10}/> : <ArrowDownRight size={10}/>} {Math.abs(trend).toFixed(1)}%</div>);
+                                 return (<div className={`px-1.5 py-0.5 rounded-md text-[8px] md:text-[9px] font-black flex items-center gap-0.5 w-fit transition-colors ${isUp ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' : 'bg-rose-50 text-rose-600 group-hover:bg-rose-100'}`}>{isUp ? <ArrowUpRight size={10}/> : <ArrowDownRight size={10}/>} {Math.abs(trend).toFixed(1)}%</div>);
                              })()}
                          </div>
                          <p className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-slate-900 tracking-tight leading-none mb-2 md:mb-4 truncate" title={formatCurrency(selectedMex.mtdBs)}>{formatCurrency(selectedMex.mtdBs)}</p>
@@ -1825,10 +2002,9 @@ export default function App() {
                              })()}
                          </div>
                          <p className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-slate-900 tracking-tight leading-none mb-2 md:mb-4 truncate" title={formatCurrency(selectedMex.adsTotal)}>{formatCurrency(selectedMex.adsTotal)}</p>
-                         
                          <div className="flex flex-col lg:flex-row lg:items-center gap-0.5 lg:gap-2 mb-1 md:mb-2">
-                             <span className="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Projected:</span>
-                             <span className="text-[10px] md:text-sm font-black text-slate-800 truncate">{formatCurrency(selectedMex.adsRR)}</span>
+                             <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Projected:</span>
+                             <span className="text-[11px] sm:text-xs md:text-sm font-black text-slate-800 truncate">{formatCurrency(selectedMex.adsRR)}</span>
                          </div>
                      </div>
                      <div className="mt-auto pt-2 md:pt-4 border-t border-slate-100 flex flex-col lg:flex-row lg:justify-between lg:items-center pl-1.5 md:pl-2 relative z-10 gap-0.5">
@@ -1865,7 +2041,7 @@ export default function App() {
                          </div>
                      </div>
                      <div className="mt-auto pt-2 md:pt-4 border-t border-slate-100 flex flex-col lg:flex-row lg:justify-between lg:items-center pl-1.5 md:pl-2 relative z-10 gap-1.5">
-                         <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Eligibility</span>
+                         <span className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase">Eligibility</span>
                          <div className="flex flex-wrap items-center gap-1">
                              {selectedMex.mcaPriority && selectedMex.mcaPriority !== '-' && (
                                  <span className={`px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black uppercase tracking-widest border ${getPriorityBadgeClass(selectedMex.mcaPriority)}`}>{selectedMex.mcaPriority}</span>
@@ -2049,11 +2225,71 @@ export default function App() {
                   </div>
                </div>
 
+               {/* FITUR BARU: ACTIVITY & NOTES SECTION */}
+               <div className="animate-fade-in-up stagger-10 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 mt-6 hover:shadow-2xl transition-shadow duration-500">
+                   <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                       <div className="flex items-center gap-2">
+                           <StickyNote className="w-5 h-5 text-amber-500"/>
+                           <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Catatan Visit & Aktivitas</h3>
+                       </div>
+                       <span className="bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg text-[10px] font-black border border-amber-200 shadow-sm">{selectedMex.notes?.length || 0} Catatan</span>
+                   </div>
+                   
+                   <div className="flex flex-col lg:flex-row gap-6">
+                       <div className="w-full lg:w-1/3 flex flex-col gap-3">
+                           <textarea 
+                               value={noteText}
+                               onChange={e => setNoteText(e.target.value)}
+                               placeholder="Tulis hasil meeting, keluhan merchant, atau rencana follow-up di sini..."
+                               className="w-full h-32 md:h-40 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs md:text-sm text-slate-700 font-medium focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-400/10 transition-all resize-none custom-scrollbar"
+                           />
+                           <button 
+                               onClick={handleSaveNote}
+                               disabled={!noteText.trim()}
+                               className="w-full bg-amber-500 hover:bg-amber-600 text-white font-black text-xs py-3.5 rounded-xl transition-all shadow-md shadow-amber-500/20 disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2 active:scale-95"
+                           >
+                               <Plus size={16}/> Tambah Catatan
+                           </button>
+                       </div>
+                       
+                       <div className="w-full lg:w-2/3 h-48 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-3">
+                           {(!selectedMex.notes || selectedMex.notes.length === 0) ? (
+                               <div className="flex-1 flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200 p-6 h-full min-h-[120px]">
+                                   <FileText className="w-8 h-8 mb-2 opacity-20" />
+                                   <p className="text-[10px] font-bold uppercase tracking-widest">Belum ada catatan.</p>
+                                   <p className="text-xs text-slate-400 mt-1 font-medium text-center">Catat aktivitas Anda dengan toko ini agar tidak lupa.</p>
+                               </div>
+                           ) : (
+                               selectedMex.notes.map((note, idx) => (
+                                   <div key={note.id} style={{ animationDelay: `${idx * 50}ms` }} className="bg-white border border-slate-200 p-4 md:p-5 rounded-2xl shadow-sm flex gap-4 group hover:border-amber-300 transition-colors animate-fade-in-up">
+                                       <div className="w-10 h-10 bg-amber-50 rounded-full flex items-center justify-center shrink-0 border border-amber-100">
+                                           <Calendar size={16} className="text-amber-500" />
+                                       </div>
+                                       <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                           <p className="text-[9px] md:text-[10px] font-black text-slate-400 mb-1 flex items-center gap-1.5 uppercase tracking-widest">
+                                               {new Date(note.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                           </p>
+                                           <p className="text-xs md:text-sm text-slate-700 font-medium whitespace-pre-wrap leading-relaxed break-words">{note.text}</p>
+                                       </div>
+                                       <button onClick={() => handleDeleteNote(note.id)} className="text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors self-start p-2 md:opacity-0 md:group-hover:opacity-100" title="Hapus catatan">
+                                           <Trash2 size={16}/>
+                                       </button>
+                                   </div>
+                               ))
+                           )}
+                       </div>
+                   </div>
+               </div>
+
                {/* UNIVERSAL FLOATING ACTION BAR */}
                <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[55] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${showFloatingBar ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-24 opacity-0 scale-90 pointer-events-none'}`}>
                    <div className="bg-slate-900/90 dark:bg-slate-800/90 backdrop-blur-xl p-1.5 rounded-full shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] border border-slate-700/50 flex items-center justify-center gap-1.5">
                        <button onClick={() => setSelectedMex(null)} className="w-12 h-12 flex items-center justify-center text-white hover:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition-all duration-300 active:scale-90" title="Kembali ke Dashboard">
                            <ArrowLeft className="w-5 h-5" />
+                       </button>
+                       <div className="w-px h-6 bg-slate-700/80 shrink-0"></div>
+                       <button onClick={() => setShowPresentation(true)} className="w-12 h-12 flex items-center justify-center text-slate-900 bg-white hover:bg-slate-100 rounded-full transition-all duration-300 active:scale-90 shadow-lg" title="Mulai Presentasi">
+                           <MonitorPlay className="w-5 h-5" />
                        </button>
                        <div className="w-px h-6 bg-slate-700/80 shrink-0"></div>
                        <button onClick={() => { if (selectedMex.phone && selectedMex.phone !== '-') setShowWaModal(true); }} className={`w-12 h-12 flex items-center justify-center rounded-full transition-all duration-300 active:scale-90 ${selectedMex.phone && selectedMex.phone !== '-' ? 'bg-[#00B14F] text-white hover:bg-emerald-600 shadow-[0_0_20px_-5px_rgba(0,177,79,0.5)]' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`} title="Hubungi via WhatsApp">
@@ -2129,13 +2365,13 @@ export default function App() {
         .dark-theme .bg-slate-50\\/50 { background-color: rgba(30, 41, 59, 0.5) !important; border-color: #334155 !important; }
         .dark-theme .divide-slate-50 > :not([hidden]) ~ :not([hidden]) { border-color: #1e293b !important; }
         .dark-theme .shadow-xl, .dark-theme .shadow-2xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8) !important; }
-        .dark-theme input, .dark-theme select { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+        .dark-theme input, .dark-theme select, .dark-theme textarea { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
         
         .dark-theme .bg-emerald-50\\/60, .dark-theme .bg-emerald-50 { background-color: rgba(6, 78, 59, 0.3) !important; border-color: rgba(6, 78, 59, 0.5) !important; }
         .dark-theme .bg-teal-50\\/60, .dark-theme .bg-teal-50 { background-color: rgba(19, 78, 74, 0.3) !important; border-color: rgba(19, 78, 74, 0.5) !important; }
         .dark-theme .bg-rose-50\\/60, .dark-theme .bg-rose-50, .dark-theme .bg-rose-50\\/50 { background-color: rgba(136, 19, 55, 0.3) !important; border-color: rgba(136, 19, 55, 0.5) !important; }
         .dark-theme .bg-blue-50\\/60, .dark-theme .bg-blue-50, .dark-theme .bg-blue-50\\/50 { background-color: rgba(30, 58, 138, 0.3) !important; border-color: rgba(30, 58, 138, 0.5) !important; }
-        .dark-theme .bg-amber-50\\/60, .dark-theme .bg-amber-50 { background-color: rgba(120, 53, 15, 0.3) !important; border-color: rgba(120, 53, 15, 0.5) !important; }
+        .dark-theme .bg-amber-50\\/60, .dark-theme .bg-amber-50, .dark-theme .bg-amber-100 { background-color: rgba(120, 53, 15, 0.3) !important; border-color: rgba(120, 53, 15, 0.5) !important; }
         .dark-theme .bg-indigo-50\\/60, .dark-theme .bg-indigo-50 { background-color: rgba(49, 46, 129, 0.3) !important; border-color: rgba(49, 46, 129, 0.5) !important; }
         .dark-theme .bg-purple-50 { background-color: rgba(88, 28, 135, 0.3) !important; border-color: rgba(88, 28, 135, 0.5) !important; }
 
