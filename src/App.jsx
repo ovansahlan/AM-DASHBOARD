@@ -1,58 +1,43 @@
 import React, { useState, useEffect, useMemo, Fragment } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, 
-  ComposedChart, Line, Cell, AreaChart, Area, LineChart, LabelList, PieChart, Pie
+  ComposedChart, Line, Cell, AreaChart, Area, LabelList, PieChart, Pie
 } from 'recharts';
 import { 
   UploadCloud, TrendingUp, Database, Filter, Megaphone,
   Search, CheckCircle, AlertCircle, DollarSign, Activity, X,
-  Store, ArrowUpRight, ArrowDownRight, Minus, Users, Info, ArrowLeft, Zap, MapPin, Phone, Smartphone, Mail, Award, LayoutDashboard, Table, ShoppingBag, Target, Percent, ExternalLink, Calculator,
-  ShoppingCart, Check, ArrowRight, Settings, List, Tags, Ticket, ChevronDown, Plus, MousePointer, Eye, RefreshCw, BarChart2, FileText, MessageCircle, Clock, ArrowUp, ArrowDown, Moon, Sun, ChevronLeft, ChevronRight
+  Store, ArrowUpRight, ArrowDownRight, Users, Info, ArrowLeft, Zap, MapPin, Phone, Smartphone, Mail, Award, LayoutDashboard, Table, ShoppingBag, Target, Percent, ExternalLink,
+  Check, ChevronDown, MousePointer, RefreshCw, BarChart2, FileText, MessageCircle, Clock, ArrowUp, ArrowDown, Moon, Sun, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 // ============================================================================
-// UTILS & CONSTANTS (DASHBOARD)
+// UTILS & CONSTANTS
 // ============================================================================
 const cleanNumber = (val) => {
   if (val === null || val === undefined || val === '') return 0;
   if (typeof val === 'number') return val;
-  
-  // Hapus simbol panah, persen, dan spasi
   let str = String(val).trim().replace(/[▲▼%\s]/g, ''); 
   if (!str) return 0;
-  
-  // Hitung jumlah titik dan koma
   const commaCount = (str.match(/,/g) || []).length;
   const dotCount = (str.match(/\./g) || []).length;
   
   if (commaCount > 0 && dotCount > 0) {
-     if (str.lastIndexOf(',') > str.lastIndexOf('.')) {
-         str = str.replace(/\./g, '').replace(',', '.');
-     } else {
-         str = str.replace(/,/g, '');
-     }
+     if (str.lastIndexOf(',') > str.lastIndexOf('.')) str = str.replace(/\./g, '').replace(',', '.');
+     else str = str.replace(/,/g, '');
   } else if (commaCount > 0) {
-     if (commaCount > 1) {
-         str = str.replace(/,/g, ''); 
-     } else {
+     if (commaCount > 1) str = str.replace(/,/g, ''); 
+     else {
          const parts = str.split(',');
-         if (parts[1] && parts[1].length === 3) {
-             str = str.replace(',', ''); 
-         } else {
-             str = str.replace(',', '.'); 
-         }
+         if (parts[1] && parts[1].length === 3) str = str.replace(',', ''); 
+         else str = str.replace(',', '.'); 
      }
   } else if (dotCount > 0) {
-     if (dotCount > 1) {
-         str = str.replace(/\./g, ''); 
-     } else {
+     if (dotCount > 1) str = str.replace(/\./g, ''); 
+     else {
          const parts = str.split('.');
-         if (parts[1] && parts[1].length === 3) {
-             str = str.replace(/\./g, ''); 
-         } 
+         if (parts[1] && parts[1].length === 3) str = str.replace(/\./g, ''); 
      }
   }
-  
   str = str.replace(/[^0-9.-]/g, '');
   const num = parseFloat(str);
   return isNaN(num) ? 0 : num;
@@ -63,6 +48,10 @@ const formatCurrency = (val) => {
   if (val >= 1000000) return `Rp ${(val / 1000000).toFixed(1)}M`;
   if (val >= 1000) return `Rp ${(val / 1000).toFixed(0)}K`;
   return `Rp ${val}`;
+};
+
+const formatCurrencyFull = (val) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
 };
 
 const formatMonth = (dateStr) => {
@@ -77,9 +66,8 @@ const COLORS = {
   decline: '#ef4444',   
   finance: '#f59e0b',   
   lastMonth: '#fb923c', 
-  white: '#ffffff',
-  slate900: '#0f172a',
   slate500: '#64748b',
+  slate400: '#94a3b8',
   netSales: '#10b981', 
   basketSize: '#3b82f6' 
 };
@@ -87,16 +75,13 @@ const COLORS = {
 const getMerchantSegment = (campaignsStr) => {
   const c = campaignsStr ? String(campaignsStr).trim().toLowerCase() : '';
   if (!c || c === '-' || c === '0' || c.includes('no campaign')) return '0 Invest';
-  
   const camps = c.split(/[|,]/).map(x => x.trim()).filter(Boolean);
   let hasGMS = false, hasBoosterPlus = false, hasLocal = false;
-  
   camps.forEach(camp => {
     if (camp.includes('gms')) hasGMS = true;
     else if (camp.includes('booster+')) hasBoosterPlus = true;
     else hasLocal = true;
   });
-  
   if (hasBoosterPlus) return 'Booster+';
   if (hasGMS && hasLocal) return 'GMS & Local';
   if (hasGMS && !hasLocal) return 'GMS Only';
@@ -117,58 +102,46 @@ const getShortAMName = (fullName) => {
     const amFull = (fullName || 'AM').trim();
     const amFullLower = amFull.toLowerCase();
     let amShort = amFull.split(' ')[0]; 
-    
     if (amFullLower.includes('novan')) return 'Novan';
     if (amFullLower.includes('reginaldo') || amFullLower.includes('aldo')) return 'Aldo';
     if (amFullLower.includes('dadan')) return 'Dadan';
     if (amFullLower.includes('hikam')) return 'Hikam';
-    
     return amShort;
 };
 
 // ============================================================================
-// UTILS: INDEXEDDB BROWSER STORAGE (Anti-Quota Exceeded)
+// INDEXEDDB BROWSER STORAGE
 // ============================================================================
 const DB_NAME = 'AmDashboardDB';
 const STORE_NAME = 'merchantsStore';
-const DB_VERSION = 1;
-
-const initDB = () => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onerror = (e) => reject(e.target.error);
-    request.onsuccess = (e) => resolve(e.target.result);
-    request.onupgradeneeded = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME);
+const initDB = () => new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onerror = e => reject(e.target.error);
+    request.onsuccess = e => resolve(e.target.result);
+    request.onupgradeneeded = e => {
+      if (!e.target.result.objectStoreNames.contains(STORE_NAME)) {
+        e.target.result.createObjectStore(STORE_NAME);
       }
     };
-  });
-};
-
+});
 const saveToIndexedDB = async (key, data) => {
   const db = await initDB();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([STORE_NAME], 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.put(data, key);
+    const request = transaction.objectStore(STORE_NAME).put(data, key);
     request.onsuccess = () => resolve();
-    request.onerror = (e) => reject(e.target.error);
+    request.onerror = e => reject(e.target.error);
   });
 };
-
 const loadFromIndexedDB = async (key) => {
   const db = await initDB();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([STORE_NAME], 'readonly');
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.get(key);
-    request.onsuccess = (e) => resolve(e.target.result);
-    request.onerror = (e) => reject(e.target.error);
+    const request = transaction.objectStore(STORE_NAME).get(key);
+    request.onsuccess = e => resolve(e.target.result);
+    request.onerror = e => reject(e.target.error);
   });
 };
-
 const fNum = (n) => Math.round(n || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
 export default function App() {
@@ -184,16 +157,14 @@ export default function App() {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMex, setSelectedMex] = useState(null);
-  
   const [selectedAM, setSelectedAM] = useState('All'); 
   const [selectedPriority, setSelectedPriority] = useState('All');
-  
   const [activeTab, setActiveTab] = useState('overview'); 
+  
   const [activeSegmentModal, setActiveSegmentModal] = useState(null);
   const [showWaModal, setShowWaModal] = useState(false);
   const [showMcaModal, setShowMcaModal] = useState(false);
   const [showCompareModal, setShowCompareModal] = useState(false);
-  
   const [showMiModal, setShowMiModal] = useState(false);
   const [showOutletsModal, setShowOutletsModal] = useState(false);
   const [showAdsModal, setShowAdsModal] = useState(false);
@@ -204,72 +175,35 @@ export default function App() {
 
   const [compareMonths, setCompareMonths] = useState(['', '', '']);
   const [sortConfig, setSortConfig] = useState({ key: 'mtdBs', direction: 'desc' });
-  
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-      const savedTheme = localStorage.getItem('am_dashboard_theme');
-      return savedTheme === 'dark';
-  });
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('am_dashboard_theme') === 'dark');
 
-  useEffect(() => {
-      localStorage.setItem('am_dashboard_theme', isDarkMode ? 'dark' : 'light');
-  }, [isDarkMode]);
-
-  useEffect(() => {
-      setShowFloatingBar(true);
-  }, [selectedMex]);
+  useEffect(() => { localStorage.setItem('am_dashboard_theme', isDarkMode ? 'dark' : 'light'); }, [isDarkMode]);
+  useEffect(() => { setShowFloatingBar(true); }, [selectedMex]);
 
   const handleMainScroll = (e) => {
       const currentScrollY = e.target.scrollTop;
-      if (currentScrollY > lastScrollY && currentScrollY > 20) {
-          setShowFloatingBar(false);
-      } else {
-          setShowFloatingBar(true);
-      }
+      if (currentScrollY > lastScrollY && currentScrollY > 20) setShowFloatingBar(false);
+      else setShowFloatingBar(true);
       setLastScrollY(currentScrollY);
   };
 
   const handleSendWA = (templateType) => {
       if (!selectedMex || !selectedMex.phone) return;
-      
       const phone = selectedMex.phone.replace(/\D/g, ''); 
       const owner = selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Mitra Grab';
       const amShort = getShortAMName(selectedMex.amName);
       const mexName = selectedMex.name;
-      
-      let mcaLimit = '';
-      if (selectedMex.mcaWlLimit >= 1000000) {
-          const valJuta = selectedMex.mcaWlLimit / 1000000;
-          mcaLimit = `Rp ${Number.isInteger(valJuta) ? valJuta : valJuta.toFixed(1).replace('.', ',')} Juta`;
-      } else {
-          mcaLimit = `Rp ${fNum(selectedMex.mcaWlLimit)}`;
-      }
+      let mcaLimit = selectedMex.mcaWlLimit >= 1000000 ? `Rp ${Number.isInteger(selectedMex.mcaWlLimit/1000000) ? selectedMex.mcaWlLimit/1000000 : (selectedMex.mcaWlLimit/1000000).toFixed(1).replace('.', ',')} Juta` : `Rp ${fNum(selectedMex.mcaWlLimit)}`;
 
       let templates = [];
       switch(templateType) {
-          case 'promo':
-              templates = [
-                  `Halo kak ${owner}! Saya ${amShort} dari Grab.\n\nAda program Promo spesial nih yang pas banget buat naikin orderan di *${mexName}*. Boleh kita bahas via telpon kak?`,
-                  `Selamat pagi/siang kak ${owner}, saya ${amShort} (Grab).\n\nKhusus untuk *${mexName}*, kita ada kuota promo eksklusif loh. Mau saya bantu jelaskan detailnya?`,
-                  `Halo kak ${owner}, dengan ${amShort} dari Grab.\n\nYuk boost lagi penjualan *${mexName}* pakai promo terbaru dari Grab! Kalau kakak berminat, boleh kita ngobrol sebentar?`,
-              ]; break;
-          case 'mca':
-              templates = [
-                  `Halo kak ${owner}!\nSaya ${amShort} dari Grab.\n\nRamadan dan Lebaran sering menjadi periode dengan potensi peningkatan penjualan.\n\nUntuk mendukung kesiapan usaha *${mexName}* di momen ini, tersedia program *Grab Modal Mantul* dengan detail:\n- Estimasi pendanaan hingga *${mcaLimit}*\n- Penyesuaian dengan evaluasi dan ketentuan yang berlaku.\n\nSilakan cek detail penawaran yang tersedia melalui aplikasi GrabMerchant ya kak!`,
-                  `Selamat siang kak ${owner}!\nSaya ${amShort} dari Grab.\n\nPeriode Ramadan dan Lebaran dapat menjadi momentum pertumbuhan usaha.\n\nUntuk mendukung kebutuhan *${mexName}*, tersedia program *Grab Modal Mantul*:\n- Estimasi pendanaan hingga *${mcaLimit}*\n- Nominal mengikuti hasil evaluasi sistem.\n\nSilakan cek ketersediaannya di aplikasi GrabMerchant sekarang juga.`
-              ]; break;
-          case 'inactive':
-              templates = [
-                  `Halo kak ${owner}! Saya ${amShort} dari Grab.\n\nSaya cek *${mexName}* lagi offline nih. Apakah ada kendala operasional atau di aplikasinya kak? Biar saya bantu.`,
-                  `Selamat siang kak ${owner}, saya ${amShort} (Grab).\n\nNotis *${mexName}* belum aktif nih kak. Kalau ada masalah sama device/aplikasi, kabarin saya ya.`
-              ]; break;
-          default:
-              templates = [
-                  `Halo kak ${owner}, saya ${amShort} dari Grab.\n\nBoleh minta waktunya sebentar untuk ngobrolin performa *${mexName}* belakangan ini?`,
-                  `Selamat siang kak ${owner}! Saya ${amShort} (AM Grab).\n\nIngin diskusi sedikit tentang penjualan *${mexName}*. Kapan sekiranya kakak ada waktu luang?`
-              ];
+          case 'promo': templates = [`Halo kak ${owner}! Saya ${amShort} (Grab). Ada program Promo spesial buat ${mexName}. Boleh bahas via telpon?`, `Selamat pagi kak ${owner}, saya ${amShort}. Khusus ${mexName} ada kuota promo. Mau dibantu?`]; break;
+          case 'mca': templates = [`Halo kak ${owner}! Ada program Grab Modal Mantul s/d ${mcaLimit} untuk ${mexName}. Cek aplikasi ya!`, `Siang kak ${owner}! Yuk kembangin ${mexName} dengan Modal Mantul s/d ${mcaLimit}. Cek GrabMerchant!`]; break;
+          case 'inactive': templates = [`Halo kak ${owner}! Saya cek ${mexName} offline nih. Ada kendala kak?`, `Siang kak ${owner}, notis ${mexName} belum aktif. Kalau ada kendala kabari ya.`]; break;
+          default: templates = [`Halo kak ${owner}, saya ${amShort} (Grab). Boleh ngobrol bentar soal performa ${mexName}?`, `Siang kak ${owner}! Ingin diskusi penjualan ${mexName}. Kapan ada waktu luang?`];
       }
       const randomText = templates[Math.floor(Math.random() * templates.length)];
       window.open(`https://wa.me/${phone}?text=${encodeURIComponent(randomText)}`, '_blank');
@@ -282,8 +216,7 @@ export default function App() {
             const saved = await loadFromIndexedDB('am_dashboard_data');
             if (saved && saved.length > 0) {
                 saved.sort((a, b) => a.name.localeCompare(b.name));
-                setData(saved);
-                setIsForceUpload(false);
+                setData(saved); setIsForceUpload(false);
                 const savedUpdate = localStorage.getItem('am_dashboard_last_update');
                 if (savedUpdate) setGlobalLastUpdate(savedUpdate);
             }
@@ -298,20 +231,14 @@ export default function App() {
       try {
           await new Promise(resolve => setTimeout(resolve, 500));
           await saveToIndexedDB('am_dashboard_data', finalData);
-          setData(finalData);
-          setIsForceUpload(false);
-      } catch (e) {
-          setErrorMsg("Gagal menyimpan data (File terlalu besar/Error): " + e.message);
-      }
+          setData(finalData); setIsForceUpload(false);
+      } catch (e) { setErrorMsg("Gagal menyimpan data: " + e.message); }
       setLoading(false);
   };
 
   const parseCSVString = (str) => {
     const firstLine = str.split('\n')[0] || '';
-    const commaCount = (firstLine.match(/,/g) || []).length;
-    const semicolonCount = (firstLine.match(/;/g) || []).length;
-    const delimiter = semicolonCount > commaCount ? ';' : ',';
-
+    const delimiter = (firstLine.match(/;/g) || []).length > (firstLine.match(/,/g) || []).length ? ';' : ',';
     const arr = []; let quote = false; let row = 0, col = 0;
     for (let c = 0; c < str.length; c++) {
       let cc = str[c], nc = str[c+1];
@@ -329,25 +256,16 @@ export default function App() {
   const parseAndSave = async (masterText, histText) => {
     try {
         const masterLines = parseCSVString(masterText);
-        
         const firstRow = masterLines[0] || [];
-        let extractedDate = '';
-        let extractedMonth = '';
-        if (String(firstRow[45]).trim().toUpperCase() === 'MTD') {
-            extractedDate = String(firstRow[46]).trim(); 
-            extractedMonth = String(firstRow[47]).trim(); 
-        } else {
+        let extractedDate = ''; let extractedMonth = '';
+        if (String(firstRow[45]).trim().toUpperCase() === 'MTD') { extractedDate = String(firstRow[46]).trim(); extractedMonth = String(firstRow[47]).trim(); } 
+        else {
             const fallbackIdx = firstRow.lastIndexOf('MTD');
-            if (fallbackIdx !== -1) {
-                extractedDate = String(firstRow[fallbackIdx + 1]).trim();
-                extractedMonth = String(firstRow[fallbackIdx + 2]).trim();
-            }
+            if (fallbackIdx !== -1) { extractedDate = String(firstRow[fallbackIdx + 1]).trim(); extractedMonth = String(firstRow[fallbackIdx + 2]).trim(); }
         }
-        
         if (extractedDate) {
             const updateStr = `${extractedDate} ${extractedMonth || 'Feb'}`.trim();
-            localStorage.setItem('am_dashboard_last_update', updateStr);
-            setGlobalLastUpdate(updateStr);
+            localStorage.setItem('am_dashboard_last_update', updateStr); setGlobalLastUpdate(updateStr);
         }
         
         let masterHeaderIdx = -1; let masterRawHeaders = [];
@@ -355,8 +273,7 @@ export default function App() {
           const test = (masterLines[i] || []).map(h => h ? String(h).trim().replace(/[\r\n]+/g, ' ') : '');
           if (test.includes('Mex ID')) { masterRawHeaders = test; masterHeaderIdx = i; break; }
         }
-
-        if (masterHeaderIdx === -1) throw new Error("Kolom 'Mex ID' tidak ditemukan di data Master Outlet."); 
+        if (masterHeaderIdx === -1) throw new Error("Kolom 'Mex ID' tidak ditemukan."); 
 
         const masterHeaders = []; const mCounts = {};
         masterRawHeaders.forEach(h => {
@@ -372,335 +289,142 @@ export default function App() {
         const lmAIdx = mtdAIdx > 0 ? mtdAIdx - 1 : -1;
         const mtdMiIdx = masterHeaders.findIndex(h => h.includes('MTD (MI)') || h.includes('MTD\n(MI)'));
         const lmMiIdx = mtdMiIdx > 0 ? mtdMiIdx - 1 : -1;
-
-        const prioHeader = masterHeaders.find(h => {
-            const lh = h.toLowerCase();
-            return lh.includes('priority') || lh.includes('prio') || lh.includes('framework');
-        });
-
-        const pointHeader = masterHeaders.find(h => {
-            const lh = h.toLowerCase();
-            return lh.includes('total point') || lh.includes('point');
-        });
+        const prioHeader = masterHeaders.find(h => h.toLowerCase().includes('priority') || h.toLowerCase().includes('prio') || h.toLowerCase().includes('framework'));
+        const pointHeader = masterHeaders.find(h => h.toLowerCase().includes('total point') || h.toLowerCase().includes('point'));
 
         let parsedDataMap = new Map();
-
         for (let i = masterHeaderIdx + 1; i < masterLines.length; i++) {
           const vals = masterLines[i];
           if (!vals || !vals[mIdx] || vals[mIdx].toLowerCase() === 'mex id') continue;
-          let obj = {};
-          masterHeaders.forEach((h, idx) => { if(h) obj[h] = vals[idx] !== undefined ? String(vals[idx]).trim() : ''; });
+          let obj = {}; masterHeaders.forEach((h, idx) => { if(h) obj[h] = vals[idx] !== undefined ? String(vals[idx]).trim() : ''; });
           
           const mexId = obj['Mex ID'];
-          let prioVal = (prioHeader && obj[prioHeader]) ? String(obj[prioHeader]).trim() : '-';
-          if (!prioVal || prioVal === '') prioVal = '-';
-          
-          const lmBsVal = cleanNumber(vals[lmBIdx]);
-          const mtdBsVal = cleanNumber(obj['MTD (BS)'] || obj['MTD\n(BS)']);
-          const rrBsVal = cleanNumber(obj['RR (BS)'] || obj['RR\n(BS)']);
-          
-          let calcRrVsLm = 0;
-          if (lmBsVal > 0) {
-              calcRrVsLm = ((rrBsVal - lmBsVal) / lmBsVal) * 100;
-          } else if (rrBsVal > 0) {
-              calcRrVsLm = 100;
-          }
+          const lmBsVal = cleanNumber(vals[lmBIdx]); const mtdBsVal = cleanNumber(obj['MTD (BS)'] || obj['MTD\n(BS)']); const rrBsVal = cleanNumber(obj['RR (BS)'] || obj['RR\n(BS)']);
+          let calcRrVsLm = lmBsVal > 0 ? ((rrBsVal - lmBsVal) / lmBsVal) * 100 : (rrBsVal > 0 ? 100 : 0);
           
           parsedDataMap.set(mexId, {
-            id: mexId,
-            name: obj['Mex Name'],
-            amName: obj['AM Name'] || 'Unassigned',
+            id: mexId, name: obj['Mex Name'], amName: obj['AM Name'] || 'Unassigned',
             ownerName: vals[10] !== undefined && String(vals[10]).trim() !== '' ? String(vals[10]).trim() : '-',
-            lmBs: lmBsVal,
-            mtdBs: mtdBsVal,
-            rrBs: rrBsVal,
-            rrVsLm: calcRrVsLm,
-            lmMi: cleanNumber(vals[lmMiIdx]),
-            mtdMi: cleanNumber(obj['MTD (MI)'] || obj['MTD\n(MI)']),
-            rrMi: cleanNumber(obj['RR (MI)'] || obj['RR\n(MI)']),
-            adsLM: cleanNumber(vals[lmAIdx]),
-            adsTotal: cleanNumber(obj['Total MTD (Ads)'] || obj['Total MTD\n(Ads)']),
-            adsRR: cleanNumber(obj['RR (Ads)']),
+            lmBs: lmBsVal, mtdBs: mtdBsVal, rrBs: rrBsVal, rrVsLm: calcRrVsLm,
+            lmMi: cleanNumber(vals[lmMiIdx]), mtdMi: cleanNumber(obj['MTD (MI)'] || obj['MTD\n(MI)']), rrMi: cleanNumber(obj['RR (MI)'] || obj['RR\n(MI)']),
+            adsLM: cleanNumber(vals[lmAIdx]), adsTotal: cleanNumber(obj['Total MTD (Ads)'] || obj['Total MTD\n(Ads)']), adsRR: cleanNumber(obj['RR (Ads)']),
             adsMob: cleanNumber(obj['Ads Mobile'] || obj['Ads mobile'] || obj['MTD Ads Mobile'] || obj['Ads Mob']),
             adsWeb: cleanNumber(obj['Ads Web'] || obj['Ads web'] || obj['MTD Ads Web']),
             adsDir: cleanNumber(obj['Ads Direct'] || obj['Ads direct'] || obj['MTD Ads Direct'] || obj['Ads Dir']),
-            mcaAmount: cleanNumber(obj['MCA Amount']),
-            mcaWlLimit: cleanNumber(obj['MCA WL']),
+            mcaAmount: cleanNumber(obj['MCA Amount']), mcaWlLimit: cleanNumber(obj['MCA WL']),
             mcaWlClass: obj['MCA WL Classification'] || '-Not in WL',
-            mcaPriority: prioVal,
+            mcaPriority: (prioHeader && obj[prioHeader]) ? String(obj[prioHeader]).trim() : '-',
             mcaDropOff: obj['Drop Off Screen'] && String(obj['Drop Off Screen']).trim().toUpperCase() !== 'FALSE' ? String(obj['Drop Off Screen']).trim() : '-',
-            mcaDisburseStatus: obj['Disburse Status'] || '',
-            disbursedDate: obj['Disbursed date'],
-            zeusStatus: obj['Zeus'],
-            joinDate: obj['Join Date'],
-            campaigns: obj['Campaign'] || '',
-            commission: obj['Base Commission'],
-            city: obj['City Mex'],
-            address: obj['Adress'] || obj['Address'],
-            phone: obj['Phone zeus'],
-            email: obj['Email zeus'],
+            mcaDisburseStatus: obj['Disburse Status'] || '', disbursedDate: obj['Disbursed date'],
+            zeusStatus: obj['Zeus'], joinDate: obj['Join Date'], campaigns: obj['Campaign'] || '', commission: obj['Base Commission'],
+            city: obj['City Mex'], address: obj['Adress'] || obj['Address'], phone: obj['Phone zeus'], email: obj['Email zeus'],
             latitude: obj['Latitude'] || obj['Lat'] || (vals[14] !== undefined ? String(vals[14]).trim() : ''), 
             longitude: obj['Longitude'] || obj['Long'] || obj['Lng'] || (vals[15] !== undefined ? String(vals[15]).trim() : ''),
-            lastUpdate: '', 
-            campaignPoint: cleanNumber(pointHeader ? obj[pointHeader] : 0), 
-            history: [] 
+            lastUpdate: '', campaignPoint: cleanNumber(pointHeader ? obj[pointHeader] : 0), history: [] 
           });
         }
 
         if (histText) {
             const histLines = parseCSVString(histText);
             const histHeaders = (histLines[0] || []).map(h => h ? String(h).trim() : '');
-            
-            const hMexIdx = histHeaders.indexOf('merchant_id');
-            const hMonthIdx = histHeaders.indexOf('first_day_of_month');
-            const hBsIdx = histHeaders.indexOf('basket_size');
-            const hTotalOrdersIdx = histHeaders.indexOf('total_orders');
-            const hCompletedOrdersIdx = histHeaders.indexOf('completed_orders');
-            const hPromoOrdersIdx = histHeaders.indexOf('orders_with_promo_mfp_gms');
-            const hAovIdx = histHeaders.indexOf('aov');
-            const hMfcIdx = histHeaders.indexOf('mfc_mex_spend');
-            const hMfpIdx = histHeaders.indexOf('mfp_mex_spend');
-            const hCpoIdx = histHeaders.indexOf('cpo');
-            const hGmsIdx = histHeaders.indexOf('gms');
-            const hCommIdx = histHeaders.indexOf('basic_commission');
-            const hAdsWebIdx = histHeaders.indexOf('ads_web');
-            const hAdsMobIdx = histHeaders.indexOf('ads_mobile');
-            const hAdsDirIdx = histHeaders.indexOf('ads_direct');
+            const hMexIdx = histHeaders.indexOf('merchant_id'); const hMonthIdx = histHeaders.indexOf('first_day_of_month');
+            const hBsIdx = histHeaders.indexOf('basket_size'); const hTotalOrdersIdx = histHeaders.indexOf('total_orders');
+            const hCompletedOrdersIdx = histHeaders.indexOf('completed_orders'); const hPromoOrdersIdx = histHeaders.indexOf('orders_with_promo_mfp_gms');
+            const hAovIdx = histHeaders.indexOf('aov'); const hMfcIdx = histHeaders.indexOf('mfc_mex_spend');
+            const hMfpIdx = histHeaders.indexOf('mfp_mex_spend'); const hCpoIdx = histHeaders.indexOf('cpo');
+            const hGmsIdx = histHeaders.indexOf('gms'); const hCommIdx = histHeaders.indexOf('basic_commission');
+            const hAdsWebIdx = histHeaders.indexOf('ads_web'); const hAdsMobIdx = histHeaders.indexOf('ads_mobile'); const hAdsDirIdx = histHeaders.indexOf('ads_direct');
 
             if (hMexIdx !== -1 && hMonthIdx !== -1) {
                 for (let i = 1; i < histLines.length; i++) {
                     const vals = histLines[i];
                     if (!vals || !vals[hMexIdx]) continue;
                     const mexId = String(vals[hMexIdx]).trim();
-                    
                     if (parsedDataMap.has(mexId)) {
-                        if (vals[0] && String(vals[0]).trim() !== '') {
-                            parsedDataMap.get(mexId).lastUpdate = String(vals[0]).trim();
-                        }
-                        
-                        const baseBs = cleanNumber(vals[hBsIdx]);
-                        const totalOrders = cleanNumber(vals[hTotalOrdersIdx]);
-                        const completedOrders = hCompletedOrdersIdx !== -1 ? cleanNumber(vals[hCompletedOrdersIdx]) : totalOrders;
+                        if (vals[0] && String(vals[0]).trim() !== '') parsedDataMap.get(mexId).lastUpdate = String(vals[0]).trim();
+                        const baseBs = cleanNumber(vals[hBsIdx]); const totalOrders = cleanNumber(vals[hTotalOrdersIdx]);
                         const promoOrders = cleanNumber(vals[hPromoOrdersIdx]);
-                        const promoPct = totalOrders > 0 ? ((promoOrders / totalOrders) * 100).toFixed(1) : 0;
-                        
-                        const mfc = cleanNumber(vals[hMfcIdx]);
-                        const mfp = cleanNumber(vals[hMfpIdx]);
-                        const cpoVal = cleanNumber(vals[hCpoIdx]);
-                        const gmsVal = cleanNumber(vals[hGmsIdx]);
-                        const basicComm = cleanNumber(vals[hCommIdx]);
-                        const adsWeb = cleanNumber(vals[hAdsWebIdx]);
-                        const adsMob = cleanNumber(vals[hAdsMobIdx]);
-                        const adsDir = cleanNumber(vals[hAdsDirIdx]);
-                        const adsTotalHist = adsWeb + adsMob + adsDir;
-                        
-                        const totalInvestment = mfc + mfp + cpoVal + gmsVal + basicComm + adsTotalHist;
-                        const netSales = baseBs - totalInvestment;
-                        const miPercentage = baseBs > 0 ? ((totalInvestment / baseBs) * 100).toFixed(1) : 0;
+                        const adsTotalHist = cleanNumber(vals[hAdsWebIdx]) + cleanNumber(vals[hAdsMobIdx]) + cleanNumber(vals[hAdsDirIdx]);
+                        const totalInvestment = cleanNumber(vals[hMfcIdx]) + cleanNumber(vals[hMfpIdx]) + cleanNumber(vals[hCpoIdx]) + cleanNumber(vals[hGmsIdx]) + cleanNumber(vals[hCommIdx]) + adsTotalHist;
 
                         parsedDataMap.get(mexId).history.push({
-                            month: vals[hMonthIdx],
-                            basket_size: baseBs,
-                            net_sales: netSales,
-                            total_orders: totalOrders,
-                            completed_orders: completedOrders,
-                            orders_with_promo: promoOrders,
-                            promo_order_pct: parseFloat(promoPct),
-                            aov: cleanNumber(vals[hAovIdx]),
-                            mfc: mfc,
-                            mfp: mfp,
-                            cpo: cpoVal,
-                            gms: gmsVal,
-                            basic_commission: basicComm,
-                            ads_total_hist: adsTotalHist,
-                            mi_percentage: parseFloat(miPercentage),
-                            total_investment: totalInvestment
+                            month: vals[hMonthIdx], basket_size: baseBs, net_sales: baseBs - totalInvestment,
+                            total_orders: totalOrders, completed_orders: hCompletedOrdersIdx !== -1 ? cleanNumber(vals[hCompletedOrdersIdx]) : totalOrders,
+                            orders_with_promo: promoOrders, promo_order_pct: totalOrders > 0 ? parseFloat(((promoOrders / totalOrders) * 100).toFixed(1)) : 0,
+                            aov: cleanNumber(vals[hAovIdx]), mfc: cleanNumber(vals[hMfcIdx]), mfp: cleanNumber(vals[hMfpIdx]), cpo: cleanNumber(vals[hCpoIdx]), gms: cleanNumber(vals[hGmsIdx]), basic_commission: cleanNumber(vals[hCommIdx]), ads_total_hist: adsTotalHist,
+                            mi_percentage: baseBs > 0 ? parseFloat(((totalInvestment / baseBs) * 100).toFixed(1)) : 0, total_investment: totalInvestment
                         });
                     }
                 }
             }
         }
-
-        const finalData = Array.from(parsedDataMap.values()).map(merchant => {
-            if (merchant.history.length > 0) merchant.history.sort((a, b) => new Date(a.month) - new Date(b.month));
-            return merchant;
-        });
-
+        const finalData = Array.from(parsedDataMap.values()).map(m => { if (m.history.length > 0) m.history.sort((a, b) => new Date(a.month) - new Date(b.month)); return m; });
         await saveToLocal(finalData);
-
-    } catch (err) {
-        setErrorMsg(err.message || "Gagal memproses data. Pastikan format benar.");
-        setLoading(false);
-    }
+    } catch (err) { setErrorMsg(err.message || "Gagal memproses data."); setLoading(false); }
   };
 
   const handleProcessFiles = async () => {
     setLoading(true); setErrorMsg('');
     try {
         const masterText = await fileMaster.text();
-        let histText = null;
-        if (fileHistory) histText = await fileHistory.text();
+        const histText = fileHistory ? await fileHistory.text() : null;
         await parseAndSave(masterText, histText);
-    } catch (err) {
-        setErrorMsg("Gagal membaca file dari komputer Anda.");
-        setLoading(false);
-    }
+    } catch (err) { setErrorMsg("Gagal membaca file."); setLoading(false); }
   };
 
   const loadDemo = () => { 
      setLoading(true); 
      setTimeout(() => { 
-        const amNames = ['Muhamad Novan Nufulfattah Sahlan', 'Mohammad Reginaldo', 'Dadan Nurdiansyah', 'Saeful Hikam'];
-        const possibleCampaigns = ['GMS Booster', 'GMS Cuan', 'Free Ongkir', 'WEEKENDFEST', 'Booster+'];
-        const months = ['2025-01-01','2025-02-01','2025-03-01','2025-04-01','2025-05-01','2025-06-01','2025-07-01','2025-08-01','2025-09-01','2025-10-01','2025-11-01','2025-12-01','2026-01-01','2026-02-01'];
-
+        const amNames = ['Novan', 'Aldo', 'Dadan', 'Hikam'];
+        const camps = ['GMS', 'Cuan', 'Ongkir', 'WEEKENDFEST', 'Booster+'];
+        const m = ['2025-01-01','2025-02-01','2025-03-01','2025-04-01','2025-05-01','2025-06-01','2025-07-01','2025-08-01','2025-09-01','2025-10-01','2025-11-01','2025-12-01','2026-01-01','2026-02-01'];
         const genData = Array.from({ length: 150 }).map((_, i) => {
-          const isGrowing = Math.random() > 0.4;
           const lm = Math.floor(Math.random() * 50000000) + 5000000;
-          const rr = isGrowing ? lm * (1 + Math.random() * 0.5) : lm * (1 - Math.random() * 0.3);
-          const mtd = rr * 0.7;
-          
+          const rr = Math.random() > 0.4 ? lm * (1 + Math.random() * 0.5) : lm * (1 - Math.random() * 0.3);
           const mca = Math.random() > 0.8 ? Math.floor(Math.random() * 50000000) + 10000000 : 0;
-          const mcaLimit = mca > 0 ? mca * 1.5 : (Math.random() > 0.85 ? 25000000 : 0);
-          
-          let assignedCampaigns = [];
-          const campaignRoll = Math.random();
-          if (campaignRoll < 0.2) assignedCampaigns = ['No Campaign'];
-          else if (campaignRoll < 0.35) assignedCampaigns = [possibleCampaigns[0]];
-          else if (campaignRoll < 0.5) assignedCampaigns = [possibleCampaigns[4]];
-          else if (campaignRoll < 0.7) assignedCampaigns = [possibleCampaigns[1], possibleCampaigns[3]];
-          else assignedCampaigns = [possibleCampaigns[2], possibleCampaigns[3]];
-
           let baseBs = Math.floor(Math.random() * 15000000) + 5000000;
-          const history = months.map(m => {
-              const trend = 1 + (Math.random() * 0.4 - 0.2); 
-              baseBs = Math.max(1000000, baseBs * trend);
-              const totalOrders = Math.floor(baseBs / (30000 + Math.random() * 50000));
-              const promoOrders = Math.floor(totalOrders * (Math.random() * 0.8)); 
-              return {
-                  month: m,
-                  basket_size: baseBs,
-                  net_sales: baseBs * 0.8,
-                  total_orders: totalOrders,
-                  completed_orders: totalOrders,
-                  orders_with_promo: promoOrders,
-                  promo_order_pct: totalOrders > 0 ? parseFloat(((promoOrders / totalOrders) * 100).toFixed(1)) : 0,
-                  aov: totalOrders > 0 ? Math.floor(baseBs / totalOrders) : 0,
-                  mfc: 0, mfp: 0, cpo: 0, gms: 0, basic_commission: 0, ads_total_hist: 0, mi_percentage: 12, total_investment: 0
-              };
+          const hist = m.map(mon => {
+              baseBs = Math.max(1000000, baseBs * (1 + (Math.random() * 0.4 - 0.2)));
+              const ord = Math.floor(baseBs / 40000);
+              return { month: mon, basket_size: baseBs, net_sales: baseBs * 0.8, total_orders: ord, completed_orders: ord, orders_with_promo: Math.floor(ord*0.5), promo_order_pct: 50, aov: 40000, mfc: 0, mfp: 0, cpo: 0, gms: 0, basic_commission: 0, ads_total_hist: 0, mi_percentage: 12, total_investment: 0 };
           });
-
           return {
-            id: `6-C${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
-            name: `Merchant ${String.fromCharCode(65 + (i % 26))} - ${['Bandung', 'Jakarta', 'Sukabumi', 'Bali'][i % 4]}`,
-            amName: amNames[i % 4],
-            ownerName: `Ona ${String.fromCharCode(65 + (i % 26))}`,
-            lmBs: lm, mtdBs: mtd, rrBs: rr, rrVsLm: ((rr - lm) / lm) * 100,
-            lmMi: 0, mtdMi: 0, rrMi: 0,
-            adsLM: Math.floor(Math.random() * 12000000), 
-            adsTotal: Math.floor(Math.random() * 8000000),
-            adsMob: 0, adsWeb: 0, adsDir: 0,
-            adsRR: Math.floor(Math.random() * 15000000),
-            mcaAmount: mca, 
-            mcaWlLimit: mcaLimit, 
-            mcaWlClass: mcaLimit > 0 ? 'Repeat' : '-Not in WL',
-            mcaPriority: mcaLimit > 0 ? 'P1' : '-',
-            mcaDropOff: '-',
-            mcaDisburseStatus: mca > 0 ? 'Disbursed' : '',
-            disbursedDate: mca > 0 ? `15-Feb-26` : '',
-            zeusStatus: Math.random() > 0.15 ? 'ACTIVE' : 'INACTIVE',
-            joinDate: `12-Jan-22`,
-            campaigns: assignedCampaigns.join(' | '),
-            commission: '20%',
-            city: ['Bandung', 'Jakarta', 'Sukabumi', 'Bali'][i % 4],
-            address: `Jl. Sudirman No. ${Math.floor(Math.random() * 100)}`,
-            phone: `+62 812-${Math.floor(Math.random() * 9000)}-${Math.floor(Math.random() * 9000)}`,
-            email: `contact@merchant${i}.com`,
-            latitude: '-6.2', longitude: '106.8',
-            lastUpdate: '22 Feb 2026',
-            campaignPoint: Math.random() > 0.7 ? Math.floor(Math.random() * 500) : 0,
-            history: history 
+            id: `6-C${Math.random().toString(36).substr(2, 9).toUpperCase()}`, name: `Merchant ${String.fromCharCode(65 + (i % 26))} - Kota`, amName: amNames[i % 4], ownerName: `Ona`,
+            lmBs: lm, mtdBs: rr * 0.7, rrBs: rr, rrVsLm: ((rr - lm) / lm) * 100, lmMi: 0, mtdMi: 0, rrMi: 0, adsLM: 0, adsTotal: 0, adsMob: 0, adsWeb: 0, adsDir: 0, adsRR: 0,
+            mcaAmount: mca, mcaWlLimit: mca > 0 ? mca * 1.5 : 0, mcaWlClass: mca > 0 ? 'Repeat' : '-Not in WL', mcaPriority: mca > 0 ? 'P1' : '-', mcaDropOff: '-', mcaDisburseStatus: mca > 0 ? 'Disbursed' : '', disbursedDate: mca > 0 ? `15-Feb-26` : '',
+            zeusStatus: Math.random() > 0.15 ? 'ACTIVE' : 'INACTIVE', joinDate: `12-Jan-22`, campaigns: Math.random() < 0.2 ? 'No Campaign' : camps[Math.floor(Math.random()*5)], commission: '20%',
+            city: 'Kota', address: 'Jalan', phone: '+628123456789', email: 'test@mail.com', latitude: '', longitude: '', lastUpdate: '22 Feb', campaignPoint: 100, history: hist 
           };
         });
-        
         saveToLocal(genData); 
      }, 600); 
   };
 
   const amOptions = useMemo(() => ['All', ...Array.from(new Set(data.map(d => d.amName).filter(Boolean))).sort()], [data]);
   const priorityOptions = useMemo(() => ['All', ...Array.from(new Set(data.map(d => d.mcaPriority).filter(p => p && p !== '-'))).sort()], [data]);
-
-  const activeData = useMemo(() => {
-     let filtered = data;
-     if (selectedAM !== 'All') filtered = filtered.filter(d => d.amName === selectedAM);
-     return filtered;
-  }, [data, selectedAM]);
+  const activeData = useMemo(() => selectedAM !== 'All' ? data.filter(d => d.amName === selectedAM) : data, [data, selectedAM]);
 
   const campaignStats = useMemo(() => {
-    let zeroInvest = 0, gmsOnly = 0, gmsLocal = 0, boosterPlus = 0, localOnly = 0;
-    let joiners = 0;
-    const counts = {};
-
+    let zeroInvest = 0, gmsOnly = 0, gmsLocal = 0, boosterPlus = 0, localOnly = 0, joiners = 0; const counts = {};
     activeData.forEach(d => {
-      const segment = getMerchantSegment(d.campaigns);
-      
-      if (segment === '0 Invest') {
-        zeroInvest++;
-      } else {
-        joiners++;
-        const c = d.campaigns ? String(d.campaigns).trim().toLowerCase() : '';
-        const camps = c.split(/[|,]/).map(x => x.trim()).filter(Boolean);
-        camps.forEach(camp => { counts[camp] = (counts[camp] || 0) + 1; });
-      }
-
-      if (segment === 'Booster+') boosterPlus++;
-      else if (segment === 'GMS & Local') gmsLocal++;
-      else if (segment === 'GMS Only') gmsOnly++;
-      else if (segment === 'Local Only') localOnly++;
+      const seg = getMerchantSegment(d.campaigns);
+      if (seg === '0 Invest') zeroInvest++;
+      else { joiners++; const camps = (d.campaigns || '').split(/[|,]/).map(x => x.trim()).filter(Boolean); camps.forEach(c => counts[c] = (counts[c] || 0) + 1); }
+      if (seg === 'Booster+') boosterPlus++; else if (seg === 'GMS & Local') gmsLocal++; else if (seg === 'GMS Only') gmsOnly++; else if (seg === 'Local Only') localOnly++;
     });
-
-    const classification = [
-      { name: 'GMS Only', count: gmsOnly, fill: '#0ea5e9' },       
-      { name: 'GMS & Local', count: gmsLocal, fill: '#8b5cf6' },  
-      { name: 'Booster+', count: boosterPlus, fill: '#f59e0b' },  
-      { name: 'Local Only', count: localOnly, fill: '#10b981' },  
-      { name: '0 Invest', count: zeroInvest, fill: '#cbd5e1' }   
-    ];
-
-    return { joiners, zeroInvest, classification, list: Object.entries(counts).map(([name, count]) => ({ name, count })) };
+    return { joiners, zeroInvest, classification: [ { name: 'GMS Only', count: gmsOnly, fill: '#0ea5e9' }, { name: 'GMS & Local', count: gmsLocal, fill: '#8b5cf6' }, { name: 'Booster+', count: boosterPlus, fill: '#f59e0b' }, { name: 'Local Only', count: localOnly, fill: '#10b981' }, { name: '0 Invest', count: zeroInvest, fill: '#cbd5e1' } ], list: Object.entries(counts).map(([name, count]) => ({ name, count })) };
   }, [activeData]);
 
-  const filteredSegmentMerchants = useMemo(() => {
-     if (!activeSegmentModal) return [];
-     return activeData.filter(m => getMerchantSegment(m.campaigns) === activeSegmentModal)
-                      .sort((a, b) => b.mtdBs - a.mtdBs); 
-  }, [activeData, activeSegmentModal]);
-
-  const disbursedMerchants = useMemo(() => {
-     return activeData
-         .filter(m => m.mcaAmount > 0 && (
-             (m.disbursedDate && String(m.disbursedDate).trim() !== '-') || 
-             (m.mcaDisburseStatus && String(m.mcaDisburseStatus).toLowerCase().includes('pending'))
-         ))
-         .sort((a, b) => {
-             const dateA = new Date(a.disbursedDate);
-             const dateB = new Date(b.disbursedDate);
-             if (!isNaN(dateA) && !isNaN(dateB)) return dateB - dateA;
-             return String(b.disbursedDate || '').localeCompare(String(a.disbursedDate || ''));
-         });
-  }, [activeData]);
-
+  const filteredSegmentMerchants = useMemo(() => activeSegmentModal ? activeData.filter(m => getMerchantSegment(m.campaigns) === activeSegmentModal).sort((a, b) => b.mtdBs - a.mtdBs) : [], [activeData, activeSegmentModal]);
+  const disbursedMerchants = useMemo(() => activeData.filter(m => m.mcaAmount > 0 && ((m.disbursedDate && String(m.disbursedDate).trim() !== '-') || (m.mcaDisburseStatus && String(m.mcaDisburseStatus).toLowerCase().includes('pending')))).sort((a, b) => new Date(b.disbursedDate || 0) - new Date(a.disbursedDate || 0)), [activeData]);
   const inactiveMerchants = useMemo(() => activeData.filter(m => !m.zeusStatus || m.zeusStatus.toUpperCase() !== 'ACTIVE').sort((a,b) => b.lmBs - a.lmBs), [activeData]);
   const zeroTrxMerchants = useMemo(() => activeData.filter(m => m.mtdBs <= 0).sort((a,b) => b.lmBs - a.lmBs), [activeData]);
 
   const kpi = useMemo(() => {
     if (!activeData.length) return null;
-    let activeMex = 0; let inactiveMex = 0; let zeroTrxMex = 0;
-    activeData.forEach(d => { 
-        if (d.zeusStatus && d.zeusStatus.toUpperCase() === 'ACTIVE') { activeMex++; } else { inactiveMex++; } 
-        if (d.mtdBs <= 0) { zeroTrxMex++; }
-    });
-    const totalPts = activeData.reduce((a, c) => a + (c.campaignPoint || 0), 0);
+    let act = 0, inact = 0, zTrx = 0;
+    activeData.forEach(d => { if (d.zeusStatus === 'ACTIVE') act++; else inact++; if (d.mtdBs <= 0) zTrx++; });
+    const totPts = activeData.reduce((a, c) => a + (c.campaignPoint || 0), 0);
     const disbursedFeb = activeData.filter(c => c.mcaAmount > 0 && String(c.disbursedDate).toLowerCase().includes('feb'));
 
     return {
@@ -708,65 +432,39 @@ export default function App() {
       miLm: activeData.reduce((a, c) => a + (c.lmMi || 0), 0), miRr: activeData.reduce((a, c) => a + (c.rrMi || 0), 0), miMtd: activeData.reduce((a, c) => a + (c.mtdMi || 0), 0),
       adsLm: activeData.reduce((a, c) => a + c.adsLM, 0), adsMtd: activeData.reduce((a, c) => a + c.adsTotal, 0), adsRr: activeData.reduce((a, c) => a + c.adsRR, 0),
       adsMobMtd: activeData.reduce((a, c) => a + (c.adsMob || 0), 0), adsWebMtd: activeData.reduce((a, c) => a + (c.adsWeb || 0), 0), adsDirMtd: activeData.reduce((a, c) => a + (c.adsDir || 0), 0),
-      mcaDis: disbursedFeb.reduce((a, c) => a + c.mcaAmount, 0), 
-      mcaDisCount: disbursedFeb.length, 
+      mcaDis: disbursedFeb.reduce((a, c) => a + c.mcaAmount, 0), mcaDisCount: disbursedFeb.length, 
       mcaEli: activeData.reduce((a, c) => a + (c.mcaWlLimit > 0 && !c.mcaWlClass.includes('Not') ? c.mcaWlLimit : 0), 0),
-      joiners: campaignStats.joiners, totalMex: activeData.length, activeMex, inactiveMex, zeroTrxMex, totalPoints: totalPts, activeCampCount: campaignStats.list.length, avgPtsPerJoiner: campaignStats.joiners > 0 ? Math.round(totalPts / campaignStats.joiners) : 0
+      joiners: campaignStats.joiners, totalMex: activeData.length, activeMex: act, inactiveMex: inact, zeroTrxMex: zTrx, totalPoints: totPts, avgPtsPerJoiner: campaignStats.joiners > 0 ? Math.round(totPts / campaignStats.joiners) : 0
     };
   }, [activeData, campaignStats]);
 
   const chartsData = useMemo(() => {
-    const mtd = [...activeData].sort((a, b) => b.mtdBs - a.mtdBs).slice(0, 10);
-    const ads = [...activeData].sort((a, b) => b.adsLM - a.adsLM).slice(0, 10);
-    let g = 0, d = 0, s = 0;
-    activeData.forEach(x => { if (x.rrBs > x.lmBs * 1.05) g++; else if (x.rrBs < x.lmBs * 0.95) d++; else s++; });
-    const total = Math.max(1, g + d + s);
-    return { mtd, ads, health: [ { name: 'Growing', count: g, percentage: ((g / total) * 100).toFixed(0), color: '#00B14F' }, { name: 'Declining', count: d, percentage: ((d / total) * 100).toFixed(0), color: COLORS.decline }, { name: 'Stable', count: s, percentage: ((s / total) * 100).toFixed(0), color: COLORS.finance } ] };
+    let g = 0, d = 0, s = 0; activeData.forEach(x => { if (x.rrBs > x.lmBs * 1.05) g++; else if (x.rrBs < x.lmBs * 0.95) d++; else s++; });
+    const tot = Math.max(1, g + d + s);
+    return { mtd: [...activeData].sort((a, b) => b.mtdBs - a.mtdBs).slice(0, 10), ads: [...activeData].sort((a, b) => b.adsLM - a.adsLM).slice(0, 10), health: [ { name: 'Growing', count: g, percentage: ((g/tot)*100).toFixed(0), color: '#00B14F' }, { name: 'Declining', count: d, percentage: ((d/tot)*100).toFixed(0), color: COLORS.decline }, { name: 'Stable', count: s, percentage: ((s/tot)*100).toFixed(0), color: COLORS.finance } ] };
   }, [activeData]);
 
   const filtered = useMemo(() => {
-    const s = searchTerm.toLowerCase();
-    let result = activeData.filter(d => {
-        const matchSearch = d.name.toLowerCase().includes(s) || d.id.toLowerCase().includes(s);
-        const matchPriority = selectedPriority === 'All' || d.mcaPriority === selectedPriority;
-        return matchSearch && matchPriority;
-    });
-
-    if (sortConfig !== null) {
-      result.sort((a, b) => {
-        let aValue = a[sortConfig.key];
-        let bValue = b[sortConfig.key];
-        if (typeof aValue === 'string') { aValue = aValue.toLowerCase(); bValue = bValue.toLowerCase(); }
-        if (sortConfig.key === 'campaigns') {
-            const aActive = a.campaigns && a.campaigns !== '-' && !a.campaigns.toLowerCase().includes('no campaign') ? 1 : 0;
-            const bActive = b.campaigns && b.campaigns !== '-' && !b.campaigns.toLowerCase().includes('no campaign') ? 1 : 0;
-            aValue = aActive; bValue = bActive;
-        }
-        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+    let res = activeData.filter(d => (d.name.toLowerCase().includes(searchTerm.toLowerCase()) || d.id.toLowerCase().includes(searchTerm.toLowerCase())) && (selectedPriority === 'All' || d.mcaPriority === selectedPriority));
+    if (sortConfig) {
+      res.sort((a, b) => {
+        let aV = a[sortConfig.key], bV = b[sortConfig.key];
+        if (typeof aV === 'string') { aV = aV.toLowerCase(); bV = bV.toLowerCase(); }
+        if (sortConfig.key === 'campaigns') { aV = a.campaigns && a.campaigns !== '-' && !a.campaigns.toLowerCase().includes('no') ? 1 : 0; bV = b.campaigns && b.campaigns !== '-' && !b.campaigns.toLowerCase().includes('no') ? 1 : 0; }
+        if (aV < bV) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aV > bV) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
       });
     }
-    return result;
+    return res;
   }, [activeData, searchTerm, selectedPriority, sortConfig]);
 
-  const requestSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
-    setSortConfig({ key, direction });
-  };
-
-  const paginatedData = useMemo(() => {
-      const startIndex = (currentPage - 1) * itemsPerPage;
-      return filtered.slice(startIndex, startIndex + itemsPerPage);
-  }, [filtered, currentPage]);
-
+  const requestSort = (key) => setSortConfig({ key, direction: sortConfig?.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc' });
+  const paginatedData = useMemo(() => filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage), [filtered, currentPage]);
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
 
-  const handleSearchChange = (e) => {
-    const val = e.target.value; setSearchTerm(val); setCurrentPage(1);
-    if (val && activeTab !== 'data' && !selectedMex) { setActiveTab('data'); }
-  };
+  const handleSearchChange = (e) => { setSearchTerm(e.target.value); setCurrentPage(1); if (e.target.value && activeTab !== 'data' && !selectedMex) setActiveTab('data'); };
+  const onChartClick = (state) => { if (state?.activePayload?.[0]?.payload?.id) { setSelectedMex(state.activePayload[0].payload); setActiveTab('overview'); } };
 
   const renderMerchantCampaigns = (campaignStr, hideEmpty = false) => {
     if (!campaignStr || campaignStr === '-' || campaignStr === '0' || campaignStr.toLowerCase().includes('no campaign')) { 
@@ -785,39 +483,17 @@ export default function App() {
     );
   };
 
-  const onChartClick = (state) => {
-    if (state && state.activePayload && state.activePayload.length > 0) {
-      if (state.activePayload[0].payload.id) { setSelectedMex(state.activePayload[0].payload); setActiveTab('overview'); }
-    }
-  };
-
-  if (isInitializing) {
-     return (
-       <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
-         <div className="text-center animate-pulse flex flex-col items-center">
-            <Activity className="w-12 h-12 text-[#00B14F] mb-4" />
-            <h2 className="text-sm font-bold text-slate-500 uppercase tracking-widest">Memuat Dashboard...</h2>
-         </div>
-       </div>
-     )
-  }
-
+  if (isInitializing) return <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4"><div className="animate-pulse flex flex-col items-center"><Activity className="w-12 h-12 text-[#00B14F] mb-4" /><h2 className="font-bold text-slate-500 uppercase tracking-widest">Memuat Dashboard...</h2></div></div>;
   if (data.length === 0 || isForceUpload) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden font-sans text-slate-800">
         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[100%] bg-emerald-900/40 rounded-full blur-[120px] pointer-events-none"></div>
         <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[100%] bg-blue-900/30 rounded-full blur-[120px] pointer-events-none"></div>
-
         <div className="text-center max-w-xl z-10 bg-white/95 backdrop-blur-xl p-8 md:p-10 rounded-[32px] shadow-2xl w-full mx-auto border border-white/20 animate-in fade-in zoom-in-95 relative">
-          
-          <div className="w-16 h-16 bg-gradient-to-br from-[#00B14F] to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-500/30">
-            <Activity className="w-8 h-8 text-white" />
-          </div>
+          <div className="w-16 h-16 bg-gradient-to-br from-[#00B14F] to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-500/30"><Activity className="w-8 h-8 text-white" /></div>
           <h1 className="text-2xl md:text-3xl font-black mb-1 text-slate-900 tracking-tight uppercase">AM DASHBOARD <span className="text-[#00B14F]">PRO</span></h1>
           <p className="text-slate-500 mb-8 text-xs font-semibold tracking-wide">MERCHANT INTELLIGENCE PLATFORM</p>
-          
           {errorMsg && <div className="mb-6 p-3 bg-rose-50 text-rose-600 rounded-xl text-xs font-bold flex gap-2 border border-rose-100 items-center text-left leading-snug"><AlertCircle className="w-5 h-5 shrink-0" />{errorMsg}</div>}
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="flex flex-col items-center justify-center p-5 border-2 border-slate-200 border-dashed rounded-2xl bg-slate-50 relative group hover:border-[#00B14F] hover:bg-emerald-50/50 transition-all cursor-pointer">
                 <Store className={`w-7 h-7 mb-2 transition-colors ${fileMaster ? 'text-[#00B14F]' : 'text-slate-400 group-hover:text-emerald-500'}`} />
@@ -834,19 +510,14 @@ export default function App() {
                 {fileHistory && <div className="absolute top-3 right-3 bg-white rounded-full shadow-sm"><CheckCircle className="w-4 h-4 text-[#00B14F]" /></div>}
               </div>
           </div>
-
           <button onClick={handleProcessFiles} disabled={loading || !fileMaster} className={`w-full py-4 bg-slate-900 text-white rounded-2xl font-black transition-all flex items-center justify-center gap-2 mb-4 text-sm hover:bg-slate-800 shadow-xl shadow-slate-900/20 ${!fileMaster ? 'opacity-50 cursor-not-allowed shadow-none' : 'active:scale-95'}`}>
             {loading ? <Activity className="w-5 h-5 animate-spin" /> : <UploadCloud className="w-5 h-5" />} {loading ? 'MEMPROSES DATA...' : 'MASUK KE DASHBOARD'}
           </button>
-          
           <button onClick={loadDemo} disabled={loading} className="w-full py-3 bg-transparent text-slate-500 hover:text-slate-800 font-bold transition-all flex items-center justify-center gap-2 text-xs rounded-xl hover:bg-slate-50">
             <TrendingUp className="w-4 h-4" /> Eksplorasi dengan Data Dummy
           </button>
-
           {data.length > 0 && isForceUpload && (
-             <button onClick={() => setIsForceUpload(false)} disabled={loading} className="w-full py-3 mt-2 bg-slate-100 text-slate-500 hover:text-slate-700 font-bold transition-all text-xs rounded-xl hover:bg-slate-200">
-                Batal & Kembali
-             </button>
+             <button onClick={() => setIsForceUpload(false)} disabled={loading} className="w-full py-3 mt-2 bg-slate-100 text-slate-500 hover:text-slate-700 font-bold transition-all text-xs rounded-xl hover:bg-slate-200">Batal & Kembali</button>
           )}
         </div>
       </div>
@@ -855,15 +526,13 @@ export default function App() {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark-theme' : ''} bg-[#f8fafc] text-slate-900 flex flex-col font-sans overflow-hidden relative transition-colors duration-300`}>
-      
-      {/* MODERN ENTERPRISE GRID BACKGROUND */}
       <div className="fixed inset-0 z-0 pointer-events-none flex justify-center overflow-hidden">
          <div className="absolute inset-0 bg-grid-pattern"></div>
          <div className="absolute left-0 right-0 top-[-10%] md:top-[-20%] -z-10 m-auto h-[300px] w-[300px] md:h-[600px] md:w-[600px] rounded-full blur-[100px] glow-effect"></div>
          <div className="absolute inset-x-0 bottom-0 h-[40vh] fade-bottom"></div>
       </div>
 
-      {/* MODAL TEMPLATE WHATSAPP */}
+      {/* --- ALL MODALS --- */}
       {showWaModal && selectedMex && (
         <div className="fixed inset-0 z-[7000] flex items-center justify-center p-4 sm:p-6">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 ease-out animate-in fade-in" onClick={() => setShowWaModal(false)} />
@@ -1264,8 +933,9 @@ export default function App() {
                <button onClick={() => setShowCompareModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
             </div>
             
-            <div className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 custom-scrollbar flex flex-col">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3 text-center md:hidden animate-pulse flex items-center justify-center gap-1.5"><ChevronLeft size={12}/> Geser kartu untuk membandingkan <ChevronRight size={12}/></p>
+                <div className="flex flex-nowrap md:grid md:grid-cols-3 gap-3 md:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 md:pb-0 hide-scrollbar flex-1" style={{ WebkitOverflowScrolling: 'touch' }}>
                     {[0, 1, 2].map((idx) => {
                         const selectedMonth = compareMonths[idx];
                         const hist = selectedMex.history.find(h => h.month === selectedMonth);
@@ -1286,16 +956,16 @@ export default function App() {
                             const isUp = val > 0;
                             const isGood = invert ? !isUp : isUp;
                             return (
-                                <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-black shadow-sm ${isGood ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
+                                <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] md:text-[10px] font-black shadow-sm ${isGood ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
                                     {isUp ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />} {Math.abs(val).toFixed(1)}%
                                 </span>
                             );
                         };
 
                         return (
-                            <div key={idx} className="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm flex flex-col relative overflow-hidden animate-fade-in-up" style={{ animationDelay: `${idx * 100}ms` }}>
-                                <div className="mb-5 relative z-10">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Bulan {idx + 1}</label>
+                            <div key={idx} className="w-[200px] sm:w-[240px] md:w-auto md:flex-1 shrink-0 snap-center bg-white rounded-2xl md:rounded-3xl border border-slate-200 p-3 md:p-5 shadow-sm flex flex-col relative overflow-hidden animate-fade-in-up" style={{ animationDelay: `${idx * 100}ms` }}>
+                                <div className="mb-3 md:mb-5 relative z-10">
+                                    <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 md:mb-2">Bulan {idx + 1}</label>
                                     <select 
                                         value={selectedMonth}
                                         onChange={(e) => {
@@ -1303,7 +973,7 @@ export default function App() {
                                             newMonths[idx] = e.target.value;
                                             setCompareMonths(newMonths);
                                         }}
-                                        className="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm font-bold rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-400 transition-colors cursor-pointer"
+                                        className="w-full bg-slate-50 border border-slate-200 text-slate-700 text-xs md:text-sm font-bold rounded-lg md:rounded-xl px-2 py-1.5 md:px-3 md:py-2 focus:outline-none focus:border-indigo-400 transition-colors cursor-pointer"
                                     >
                                         <option value="">-- Pilih Bulan --</option>
                                         {[...selectedMex.history].reverse().map(h => (
@@ -1313,48 +983,48 @@ export default function App() {
                                 </div>
 
                                 {hist ? (
-                                    <div className="relative z-10 flex flex-col mt-auto gap-4">
-                                        <div className="bg-emerald-600/70 border border-emerald-500/50 rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-inner backdrop-blur-sm relative overflow-hidden">
-                                            <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-bl-full opacity-50 -mr-2 -mt-2 pointer-events-none"></div>
-                                            <p className="text-[10px] font-black text-emerald-50 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Activity size={12}/> Gross Sales</p>
-                                            <p className="text-2xl font-black text-white tracking-tight mb-2">{formatCurrency(hist.basket_size)}</p>
+                                    <div className="relative z-10 flex flex-col mt-auto gap-2.5 md:gap-4">
+                                        <div className="bg-emerald-600/70 border border-emerald-500/50 rounded-xl md:rounded-2xl p-2.5 md:p-4 flex flex-col items-center justify-center text-center shadow-inner backdrop-blur-sm relative overflow-hidden">
+                                            <div className="absolute top-0 right-0 w-12 h-12 md:w-16 md:h-16 bg-white/10 rounded-bl-full opacity-50 -mr-2 -mt-2 pointer-events-none"></div>
+                                            <p className="text-[9px] md:text-[10px] font-black text-emerald-50 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Activity size={12}/> Gross Sales</p>
+                                            <p className="text-lg md:text-2xl font-black text-white tracking-tight mb-1.5 md:mb-2 truncate w-full px-1" title={formatCurrency(hist.basket_size)}>{formatCurrency(hist.basket_size)}</p>
                                             {renderGrowthBadge(getGrowth(hist.basket_size, prev?.basket_size))}
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-sm">
-                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1"><ShoppingBag size={10}/> Orders</p>
-                                                <p className="text-lg font-black text-slate-700 mb-1">{hist.completed_orders}</p>
+                                        <div className="grid grid-cols-2 gap-2 md:gap-3">
+                                            <div className="bg-slate-50 border border-slate-100 rounded-lg md:rounded-xl p-2 md:p-3 flex flex-col items-center justify-center text-center shadow-sm min-w-0">
+                                                <p className="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1 truncate w-full justify-center"><ShoppingBag size={10} className="shrink-0"/> Orders</p>
+                                                <p className="text-xs md:text-lg font-black text-slate-700 mb-1 truncate w-full" title={hist.completed_orders}>{hist.completed_orders}</p>
                                                 {renderGrowthBadge(getGrowth(hist.completed_orders, prev?.completed_orders))}
                                             </div>
-                                            <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-sm">
-                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1"><Target size={10}/> AOV</p>
-                                                <p className="text-lg font-black text-slate-700 mb-1">{formatCurrency(hist.aov)}</p>
+                                            <div className="bg-slate-50 border border-slate-100 rounded-lg md:rounded-xl p-2 md:p-3 flex flex-col items-center justify-center text-center shadow-sm min-w-0">
+                                                <p className="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1 truncate w-full justify-center"><Target size={10} className="shrink-0"/> AOV</p>
+                                                <p className="text-xs md:text-lg font-black text-slate-700 mb-1 truncate w-full" title={formatCurrency(hist.aov)}>{formatCurrency(hist.aov)}</p>
                                                 {renderGrowthBadge(getGrowth(hist.aov, prev?.aov))}
                                             </div>
                                         </div>
 
-                                        <div className="bg-rose-600/70 border border-rose-500/50 rounded-xl p-4 flex flex-col gap-3 shadow-inner backdrop-blur-sm">
-                                            <div className="flex justify-between items-center pb-3 border-b border-rose-400/40">
-                                                <div>
-                                                    <p className="text-[9px] font-bold text-rose-50 uppercase tracking-widest mb-0.5 flex items-center gap-1"><Zap size={10}/> Promo Invest</p>
-                                                    <p className="text-sm font-black text-white">{formatCurrency(hist.total_investment)}</p>
+                                        <div className="bg-rose-600/70 border border-rose-500/50 rounded-lg md:rounded-xl p-2.5 md:p-4 flex flex-col gap-2 md:gap-3 shadow-inner backdrop-blur-sm">
+                                            <div className="flex justify-between items-center pb-2 md:pb-3 border-b border-rose-400/40 gap-1">
+                                                <div className="min-w-0">
+                                                    <p className="text-[8px] md:text-[9px] font-bold text-rose-50 uppercase tracking-widest mb-0.5 flex items-center gap-1 truncate"><Zap size={10} className="shrink-0"/> Promo</p>
+                                                    <p className="text-[11px] md:text-sm font-black text-white truncate" title={formatCurrency(hist.total_investment)}>{formatCurrency(hist.total_investment)}</p>
                                                 </div>
-                                                {renderGrowthBadge(getGrowth(hist.total_investment, prev?.total_investment), true)}
+                                                <div className="shrink-0">{renderGrowthBadge(getGrowth(hist.total_investment, prev?.total_investment), true)}</div>
                                             </div>
-                                            <div className="flex justify-between items-center">
-                                                <div>
-                                                    <p className="text-[9px] font-bold text-rose-50 uppercase tracking-widest mb-0.5 flex items-center gap-1"><Megaphone size={10}/> Ads Spend</p>
-                                                    <p className="text-sm font-black text-white">{formatCurrency(hist.ads_total_hist)}</p>
+                                            <div className="flex justify-between items-center gap-1">
+                                                <div className="min-w-0">
+                                                    <p className="text-[8px] md:text-[9px] font-bold text-rose-50 uppercase tracking-widest mb-0.5 flex items-center gap-1 truncate"><Megaphone size={10} className="shrink-0"/> Ads</p>
+                                                    <p className="text-[11px] md:text-sm font-black text-white truncate" title={formatCurrency(hist.ads_total_hist)}>{formatCurrency(hist.ads_total_hist)}</p>
                                                 </div>
-                                                {renderGrowthBadge(getGrowth(hist.ads_total_hist, prev?.ads_total_hist), true)}
+                                                <div className="shrink-0">{renderGrowthBadge(getGrowth(hist.ads_total_hist, prev?.ads_total_hist), true)}</div>
                                             </div>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="flex-1 flex flex-col items-center justify-center text-slate-300 mt-10">
-                                        <BarChart2 className="w-12 h-12 mb-3 opacity-20" />
-                                        <p className="text-xs font-bold uppercase tracking-widest text-center">Pilih bulan<br/>untuk melihat data</p>
+                                    <div className="flex-1 flex flex-col items-center justify-center text-slate-300 mt-6 md:mt-10">
+                                        <BarChart2 className="w-10 h-10 md:w-12 md:h-12 mb-2 md:mb-3 opacity-20" />
+                                        <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-center">Pilih bulan<br/>untuk melihat data</p>
                                     </div>
                                 )}
                             </div>
@@ -1512,8 +1182,15 @@ export default function App() {
                                  <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest truncate">Basketsize</p>
                              </div>
                              {(() => {
-                                 let trend = 0; if (kpi?.lm > 0) trend = ((kpi.rr - kpi.lm) / kpi.lm) * 100; else if (kpi?.rr > 0) trend = 100; const isUp = trend >= 0;
-                                 return (<div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap transition-colors ${isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>{isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%</div>);
+                                 let trend = 0; 
+                                 if (kpi?.lm > 0) trend = ((kpi.rr - kpi.lm) / kpi.lm) * 100; 
+                                 else if (kpi?.rr > 0) trend = 100; 
+                                 const isUp = trend >= 0;
+                                 return (
+                                     <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap transition-colors ${isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                                         {isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%
+                                     </div>
+                                 );
                              })()}
                          </div>
                          <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
@@ -1539,8 +1216,15 @@ export default function App() {
                                  <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">Invest <MousePointer size={10} className="text-slate-300 group-hover:text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-0.5 shrink-0 hidden lg:block"/></p>
                              </div>
                              {(() => {
-                                 let trend = 0; if (kpi?.miLm > 0) trend = ((kpi.miRr - kpi.miLm) / kpi.miLm) * 100; else if (kpi?.miRr > 0) trend = 100; const isUp = trend > 0;
-                                 return (<div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap transition-colors ${!isUp ? 'bg-teal-50 text-teal-600' : 'bg-rose-50 text-rose-600'}`}>{isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%</div>);
+                                 let trend = 0; 
+                                 if (kpi?.miLm > 0) trend = ((kpi.miRr - kpi.miLm) / kpi.miLm) * 100; 
+                                 else if (kpi?.miRr > 0) trend = 100; 
+                                 const isUp = trend > 0;
+                                 return (
+                                     <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap transition-colors ${!isUp ? 'bg-teal-50 text-teal-600' : 'bg-rose-50 text-rose-600'}`}>
+                                         {isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%
+                                     </div>
+                                 );
                              })()}
                          </div>
                          <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
@@ -1573,13 +1257,21 @@ export default function App() {
                                  <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">Ads <MousePointer size={10} className="text-slate-300 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-0.5 shrink-0 hidden lg:block"/></p>
                              </div>
                              {(() => {
-                                 let trend = 0; if (kpi?.adsLm > 0) trend = ((kpi.adsRr - kpi.adsLm) / kpi.adsLm) * 100; else if (kpi?.adsRr > 0) trend = 100; const isUp = trend > 0;
-                                 return (<div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap transition-colors ${!isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>{isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%</div>);
+                                 let trend = 0; 
+                                 if (kpi?.adsLm > 0) trend = ((kpi.adsRr - kpi.adsLm) / kpi.adsLm) * 100; 
+                                 else if (kpi?.adsRr > 0) trend = 100; 
+                                 const isUp = trend > 0;
+                                 return (
+                                     <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap transition-colors ${!isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                                         {isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%
+                                     </div>
+                                 );
                              })()}
                          </div>
                          <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
                              <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">MTD Ads</p>
                              <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.adsMtd || 0)}</p>
+                             
                              <div className="flex flex-wrap items-center gap-1.5 lg:gap-2 mb-1 lg:mb-2">
                                  <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Runrate:</span>
                                  <span className="text-xs lg:text-sm font-black text-slate-800">{formatCurrency(kpi?.adsRr || 0)}</span>
@@ -2011,55 +1703,65 @@ export default function App() {
                   </div>
                </div>
 
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                  <div className="bg-white rounded-[28px] border border-slate-200 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1 group animate-fade-in-up stagger-2">
+               {/* REWORKED: 2 Columns on Mobile, 4 on Desktop */}
+               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+                  {/* CARD 1: SALES */}
+                  <div className="bg-white rounded-[20px] md:rounded-[28px] border border-slate-200 p-4 md:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1 group animate-fade-in-up stagger-2">
                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500"></div>
-                     <Activity className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                     <div className="flex items-start mb-5 pl-2 relative z-10">
-                        <div className="flex items-center gap-3">
-                           <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center transition-colors group-hover:bg-emerald-100"><Activity size={18} strokeWidth={2.5} /></div>
-                           <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Sales</p>
+                     <Activity className="absolute -bottom-4 -right-4 md:-bottom-6 md:-right-6 w-24 h-24 md:w-32 md:h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
+                     <div className="flex items-start mb-3 md:mb-5 pl-1.5 md:pl-2 relative z-10">
+                        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 lg:gap-3">
+                           <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center transition-colors group-hover:bg-emerald-100"><Activity size={16} className="md:w-[18px] md:h-[18px]" strokeWidth={2.5} /></div>
+                           <p className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest truncate w-full">Sales</p>
                         </div>
                      </div>
-                     <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
-                         <div className="flex items-center gap-2 mb-1">
-                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">MTD Sales</p>
-                             <div className={`px-1.5 py-0.5 rounded-md text-[9px] font-black flex items-center gap-0.5 transition-colors ${selectedMex.rrBs > selectedMex.lmBs ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' : 'bg-rose-50 text-rose-600 group-hover:bg-rose-100'}`}>
-                                {selectedMex.rrBs > selectedMex.lmBs ? <ArrowUpRight size={10}/> : <ArrowDownRight size={10}/>} {Math.abs(selectedMex.rrVsLm).toFixed(1)}%
-                             </div>
+                     <div className="pl-1.5 md:pl-2 relative z-10 flex-1 flex flex-col justify-center min-w-0">
+                         <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-2 mb-1">
+                             <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest">MTD Sales</p>
+                             {(() => {
+                                 let trend = 0; if (selectedMex.lmBs > 0) trend = ((selectedMex.rrBs - selectedMex.lmBs) / selectedMex.lmBs) * 100; else if (selectedMex.rrBs > 0) trend = 100; const isUp = trend >= 0;
+                                 return (<div className={`px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black flex items-center gap-0.5 w-fit transition-colors ${isUp ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' : 'bg-rose-50 text-rose-600 group-hover:bg-rose-100'}`}>{isUp ? <ArrowUpRight size={10}/> : <ArrowDownRight size={10}/>} {Math.abs(trend).toFixed(1)}%</div>);
+                             })()}
                          </div>
-                         <p className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-4">{formatCurrency(selectedMex.mtdBs)}</p>
-                         <div className="flex items-center gap-2 mb-2">
-                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Projected Runrate:</span>
-                             <span className="text-sm font-black text-slate-800">{formatCurrency(selectedMex.rrBs)}</span>
+                         <p className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-slate-900 tracking-tight leading-none mb-2 md:mb-4 truncate" title={formatCurrency(selectedMex.mtdBs)}>{formatCurrency(selectedMex.mtdBs)}</p>
+                         <div className="flex flex-col lg:flex-row lg:items-center gap-0.5 lg:gap-2 mb-1 md:mb-2">
+                             <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Projected:</span>
+                             <span className="text-[11px] sm:text-xs md:text-sm font-black text-slate-800 truncate">{formatCurrency(selectedMex.rrBs)}</span>
                          </div>
                      </div>
-                     <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
-                         <span className="text-[10px] font-bold text-slate-400 uppercase">Last Month</span>
-                         <span className="text-xs font-black text-slate-700">{formatCurrency(selectedMex.lmBs)}</span>
+                     <div className="mt-auto pt-2 md:pt-4 border-t border-slate-100 flex flex-col lg:flex-row lg:justify-between lg:items-center pl-1.5 md:pl-2 relative z-10 gap-0.5">
+                         <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Last Month</span>
+                         <span className="text-[11px] sm:text-xs font-black text-slate-700 truncate">{formatCurrency(selectedMex.lmBs)}</span>
                      </div>
                   </div>
 
-                  <div className="bg-white rounded-[28px] border border-slate-200 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 hover:-translate-y-1 group animate-fade-in-up stagger-3">
+                  {/* CARD 2: CAMPAIGNS */}
+                  <div className="bg-white rounded-[20px] md:rounded-[28px] border border-slate-200 p-4 md:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 hover:-translate-y-1 group animate-fade-in-up stagger-3">
                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500"></div>
-                     <Award className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                     <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
-                        <div className="flex items-center gap-3">
-                           <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center transition-colors group-hover:bg-amber-100"><Zap size={18} strokeWidth={2.5} /></div>
-                           <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Campaigns</p>
+                     <Award className="absolute -bottom-4 -right-4 md:-bottom-6 md:-right-6 w-24 h-24 md:w-32 md:h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
+                     <div className="flex items-start mb-3 md:mb-5 pl-1.5 md:pl-2 relative z-10">
+                        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 lg:gap-3">
+                           <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center transition-colors group-hover:bg-amber-100"><Zap size={16} className="md:w-[18px] md:h-[18px]" strokeWidth={2.5} /></div>
+                           <p className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest truncate w-full">Campaigns</p>
                         </div>
                      </div>
-                     <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
-                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Points</p>
-                         <p className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-4">{selectedMex.campaignPoint || 0}</p>
-                         <div>
-                             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Active List:</p>
-                             <div className="flex flex-wrap gap-1.5">
+                     <div className="pl-1.5 md:pl-2 relative z-10 flex-1 flex flex-col justify-center min-w-0">
+                         <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1 md:mb-2">Total Points</p>
+                         <p className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-slate-900 tracking-tight leading-none mb-2 md:mb-4">{selectedMex.campaignPoint || 0}</p>
+                         <div className="min-w-0 w-full">
+                             <div className="flex items-center gap-1.5 mb-1 md:mb-2">
+                                 <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active List:</p>
+                                 {(() => {
+                                     const count = (!selectedMex.campaigns || selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || selectedMex.campaigns.toLowerCase().includes('no campaign')) ? 0 : selectedMex.campaigns.split(/[|,]/).map(c => c.trim()).filter(Boolean).length;
+                                     return count > 0 ? <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md text-xs sm:text-sm font-black leading-none shadow-sm">{count}</span> : null;
+                                 })()}
+                             </div>
+                             <div className="flex overflow-x-auto hide-scrollbar gap-1 md:gap-1.5 pb-1 w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
                                 {(!selectedMex.campaigns || selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || selectedMex.campaigns.toLowerCase().includes('no campaign')) ? (
-                                    <span className="text-slate-400 text-[10px] font-semibold italic">Tidak ada partisipasi</span>
+                                    <span className="text-slate-400 text-[10px] md:text-[11px] font-semibold italic shrink-0">Tidak ada</span>
                                 ) : (
                                     selectedMex.campaigns.split(/[|,]/).map(c => c.trim()).filter(Boolean).map((camp, idx) => (
-                                        <span key={idx} className="bg-slate-100 text-slate-600 px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider transition-colors hover:bg-slate-200">
+                                        <span key={idx} className="shrink-0 bg-slate-100 text-slate-600 px-2 py-1 rounded-md text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-colors hover:bg-slate-200" title={camp}>
                                             {camp}
                                         </span>
                                     ))
@@ -2069,71 +1771,71 @@ export default function App() {
                      </div>
                   </div>
 
-                  <div className="bg-white rounded-[28px] border border-slate-200 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-rose-500/5 hover:-translate-y-1 group animate-fade-in-up stagger-4">
+                  {/* CARD 3: MARKETING */}
+                  <div className="bg-white rounded-[20px] md:rounded-[28px] border border-slate-200 p-4 md:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-rose-500/5 hover:-translate-y-1 group animate-fade-in-up stagger-4 cursor-pointer" onClick={() => setShowAdsModal(true)}>
                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500"></div>
-                     <Megaphone className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                     <div className="flex items-start mb-5 pl-2 relative z-10">
-                        <div className="flex items-center gap-3">
-                           <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center transition-colors group-hover:bg-rose-100"><Megaphone size={18} strokeWidth={2.5} /></div>
-                           <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Marketing</p>
+                     <Megaphone className="absolute -bottom-4 -right-4 md:-bottom-6 md:-right-6 w-24 h-24 md:w-32 md:h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
+                     <div className="flex items-start mb-3 md:mb-5 pl-1.5 md:pl-2 relative z-10">
+                        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 lg:gap-3">
+                           <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center transition-colors group-hover:bg-rose-100"><Megaphone size={16} className="md:w-[18px] md:h-[18px]" strokeWidth={2.5} /></div>
+                           <p className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest truncate w-full flex items-center gap-1">Ads <MousePointer size={10} className="text-slate-300 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-0.5 shrink-0 hidden lg:block"/></p>
                         </div>
                      </div>
-                     <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
-                         <div className="flex items-center gap-2 mb-1">
-                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ads Spend (MTD)</p>
+                     <div className="pl-1.5 md:pl-2 relative z-10 flex-1 flex flex-col justify-center min-w-0">
+                         <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-2 mb-1">
+                             <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest">Ads Spend</p>
                              {(() => {
                                  let adsTrend = 0; if (selectedMex.adsLM > 0) adsTrend = ((selectedMex.adsRR - selectedMex.adsLM) / selectedMex.adsLM) * 100; else if (selectedMex.adsRR > 0) adsTrend = 100; const isAdsUp = adsTrend > 0;
-                                 return (<div className={`px-1.5 py-0.5 rounded-md text-[9px] font-black flex items-center gap-0.5 transition-colors ${!isAdsUp ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' : 'bg-rose-50 text-rose-600 group-hover:bg-rose-100'}`}>{isAdsUp ? <ArrowUpRight size={10}/> : <ArrowDownRight size={10}/>} {Math.abs(adsTrend).toFixed(1)}%</div>);
+                                 return (<div className={`px-1.5 py-0.5 rounded-md text-[8px] md:text-[9px] font-black flex items-center gap-0.5 w-fit transition-colors ${!isAdsUp ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' : 'bg-rose-50 text-rose-600 group-hover:bg-rose-100'}`}>{isAdsUp ? <ArrowUpRight size={10}/> : <ArrowDownRight size={10}/>} {Math.abs(adsTrend).toFixed(1)}%</div>);
                              })()}
                          </div>
-                         <p className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-4">{formatCurrency(selectedMex.adsTotal)}</p>
-                         <div className="flex justify-between items-center bg-slate-50 rounded-xl p-3 mb-1 transition-colors group-hover:bg-slate-100/50">
-                             <div className="flex flex-col"><span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Mobile</span><span className="text-[10px] font-black text-slate-700">{formatCurrency(selectedMex.adsMob || 0)}</span></div>
-                             <div className="w-px h-6 bg-slate-200"></div>
-                             <div className="flex flex-col"><span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Web</span><span className="text-[10px] font-black text-slate-700">{formatCurrency(selectedMex.adsWeb || 0)}</span></div>
-                             <div className="w-px h-6 bg-slate-200"></div>
-                             <div className="flex flex-col"><span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Direct</span><span className="text-[10px] font-black text-slate-700">{formatCurrency(selectedMex.adsDir || 0)}</span></div>
+                         <p className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-slate-900 tracking-tight leading-none mb-2 md:mb-4 truncate" title={formatCurrency(selectedMex.adsTotal)}>{formatCurrency(selectedMex.adsTotal)}</p>
+                         
+                         <div className="flex flex-col lg:flex-row lg:items-center gap-0.5 lg:gap-2 mb-1 md:mb-2">
+                             <span className="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Projected:</span>
+                             <span className="text-[10px] md:text-sm font-black text-slate-800 truncate">{formatCurrency(selectedMex.adsRR)}</span>
                          </div>
                      </div>
-                     <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
-                         <span className="text-[10px] font-bold text-slate-400 uppercase">Last Month Ads</span>
-                         <span className="text-xs font-black text-slate-700">{formatCurrency(selectedMex.adsLM)}</span>
+                     <div className="mt-auto pt-2 md:pt-4 border-t border-slate-100 flex flex-col lg:flex-row lg:justify-between lg:items-center pl-1.5 md:pl-2 relative z-10 gap-0.5">
+                         <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Last Month</span>
+                         <span className="text-[11px] sm:text-xs font-black text-slate-700 truncate">{formatCurrency(selectedMex.adsLM)}</span>
                      </div>
                   </div>
 
-                  <div className="bg-white rounded-[28px] border border-slate-200 p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 group animate-fade-in-up stagger-5">
+                  {/* CARD 4: MCA LIMIT */}
+                  <div className="bg-white rounded-[20px] md:rounded-[28px] border border-slate-200 p-4 md:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 group animate-fade-in-up stagger-5">
                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
-                     <Database className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                     <div className="flex items-start mb-5 pl-2 relative z-10">
-                        <div className="flex items-center gap-3">
-                           <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center transition-colors group-hover:bg-blue-100"><Database size={18} strokeWidth={2.5} /></div>
-                           <p className="text-xs font-black text-slate-500 uppercase tracking-widest">MCA Config</p>
+                     <Database className="absolute -bottom-4 -right-4 md:-bottom-6 md:-right-6 w-24 h-24 md:w-32 md:h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
+                     <div className="flex items-start mb-3 md:mb-5 pl-1.5 md:pl-2 relative z-10">
+                        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 lg:gap-3">
+                           <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center transition-colors group-hover:bg-blue-100"><Database size={16} className="md:w-[18px] md:h-[18px]" strokeWidth={2.5} /></div>
+                           <p className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest truncate w-full">MCA Config</p>
                         </div>
                      </div>
-                     <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
+                     <div className="pl-1.5 md:pl-2 relative z-10 flex-1 flex flex-col justify-center min-w-0">
                          {(() => {
                              const isPending = selectedMex.mcaDisburseStatus && String(selectedMex.mcaDisburseStatus).toLowerCase().includes('pending');
                              const textColor = isPending ? 'text-amber-500' : 'text-blue-500';
-                             const labelText = isPending ? 'Pending Disbursed' : 'Disbursed';
+                             const labelText = isPending ? 'Pending Disburse' : 'Disbursed';
                              return (
-                                 <div className="mb-4">
-                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{labelText}</p>
-                                     <p className={`text-3xl lg:text-4xl font-black ${textColor} tracking-tight leading-none`}>{formatCurrency(selectedMex.mcaAmount)}</p>
+                                 <div className="mb-2 md:mb-4">
+                                     <p className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1">{labelText}</p>
+                                     <p className={`text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black ${textColor} tracking-tight leading-none truncate`} title={formatCurrency(selectedMex.mcaAmount)}>{formatCurrency(selectedMex.mcaAmount)}</p>
                                  </div>
                              );
                          })()}
-                         <div className="flex items-center gap-2 mb-2">
-                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Limit Tersedia:</span>
-                             <span className="text-sm font-black text-slate-800">{selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}</span>
+                         <div className="flex flex-col lg:flex-row lg:items-center gap-0.5 lg:gap-2 mb-1 md:mb-2">
+                             <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Tersedia:</span>
+                             <span className="text-[11px] sm:text-xs md:text-sm font-black text-slate-800 truncate">{selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}</span>
                          </div>
                      </div>
-                     <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
-                         <span className="text-[10px] font-bold text-slate-400 uppercase">Eligibility</span>
-                         <div className="flex items-center gap-1.5">
+                     <div className="mt-auto pt-2 md:pt-4 border-t border-slate-100 flex flex-col lg:flex-row lg:justify-between lg:items-center pl-1.5 md:pl-2 relative z-10 gap-1.5">
+                         <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Eligibility</span>
+                         <div className="flex flex-wrap items-center gap-1">
                              {selectedMex.mcaPriority && selectedMex.mcaPriority !== '-' && (
-                                 <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border ${getPriorityBadgeClass(selectedMex.mcaPriority)}`}>{selectedMex.mcaPriority}</span>
+                                 <span className={`px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black uppercase tracking-widest border ${getPriorityBadgeClass(selectedMex.mcaPriority)}`}>{selectedMex.mcaPriority}</span>
                              )}
-                             <span className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider transition-colors ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' : 'bg-slate-100 text-slate-500'}`}>
+                             <span className={`px-2 py-1 rounded-md text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-colors ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' : 'bg-slate-100 text-slate-500'}`}>
                                  {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'Eligible' : 'Not Eligible'}
                              </span>
                          </div>
@@ -2260,7 +1962,7 @@ export default function App() {
                    </div>
                )}
 
-               <div className="animate-fade-in-up stagger-10 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-5 md:p-8 mt-6 hover:shadow-2xl transition-shadow duration-500">
+               <div className="animate-fade-in-up stagger-10 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-5 md:p-8 mt-6 hover:shadow-2xl transition-shadow duration-500">
                   <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
                      <Info className="w-5 h-5 text-indigo-500"/>
                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Informasi Kontak & Lokasi</h3>
@@ -2342,7 +2044,6 @@ export default function App() {
         .pb-safe { padding-bottom: max(2rem, env(safe-area-inset-bottom)); }
         * { font-feature-settings: "tnum" on, "lnum" on; }
         
-        /* --- HARDWARE-ACCELERATED TRANSITIONS --- */
         @keyframes fadeInUpCustom {
             from { opacity: 0; transform: translate3d(0, 20px, 0); }
             to { opacity: 1; transform: translate3d(0, 0, 0); }
@@ -2354,7 +2055,6 @@ export default function App() {
             will-change: opacity, transform;
         }
         
-        /* Stagger Delays (0ms - 500ms) */
         .stagger-1 { animation-delay: 50ms; }
         .stagger-2 { animation-delay: 100ms; }
         .stagger-3 { animation-delay: 150ms; }
@@ -2372,7 +2072,6 @@ export default function App() {
         @keyframes float-up { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
         .animate-float-up { animation: float-up 1.5s ease-in-out infinite; }
 
-        /* --- CUSTOM BACKGROUND UTILS --- */
         .bg-grid-pattern { background-image: linear-gradient(to right, rgba(148, 163, 184, 0.15) 1px, transparent 1px), linear-gradient(to bottom, rgba(148, 163, 184, 0.15) 1px, transparent 1px); background-size: 24px 24px; }
         .dark-theme .bg-grid-pattern { background-image: linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px); }
         .glow-effect { background-color: #00B14F; opacity: 0.12; }
@@ -2380,7 +2079,6 @@ export default function App() {
         .fade-bottom { background-image: linear-gradient(to top, #f8fafc 10%, transparent); }
         .dark-theme .fade-bottom { background-image: linear-gradient(to top, #020617 10%, transparent); }
 
-        /* --- DARK MODE ENGINE --- */
         .dark-theme { background-color: #020617 !important; color: #f8fafc !important; }
         .dark-theme .bg-white { background-color: #0f172a !important; border-color: #1e293b !important; }
         .dark-theme .bg-\\[\\#f8fafc\\] { background-color: #020617 !important; }
@@ -2398,7 +2096,6 @@ export default function App() {
         .dark-theme .shadow-xl, .dark-theme .shadow-2xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8) !important; }
         .dark-theme input, .dark-theme select { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
         
-        /* TINT BACKGROUNDS & BORDERS (Cards & Badges) */
         .dark-theme .bg-emerald-50\\/60, .dark-theme .bg-emerald-50 { background-color: rgba(6, 78, 59, 0.3) !important; border-color: rgba(6, 78, 59, 0.5) !important; }
         .dark-theme .bg-teal-50\\/60, .dark-theme .bg-teal-50 { background-color: rgba(19, 78, 74, 0.3) !important; border-color: rgba(19, 78, 74, 0.5) !important; }
         .dark-theme .bg-rose-50\\/60, .dark-theme .bg-rose-50, .dark-theme .bg-rose-50\\/50 { background-color: rgba(136, 19, 55, 0.3) !important; border-color: rgba(136, 19, 55, 0.5) !important; }
@@ -2407,7 +2104,6 @@ export default function App() {
         .dark-theme .bg-indigo-50\\/60, .dark-theme .bg-indigo-50 { background-color: rgba(49, 46, 129, 0.3) !important; border-color: rgba(49, 46, 129, 0.5) !important; }
         .dark-theme .bg-purple-50 { background-color: rgba(88, 28, 135, 0.3) !important; border-color: rgba(88, 28, 135, 0.5) !important; }
 
-        /* BRIGHTEN DARK TEXT COLORS ON DARK THEME */
         .dark-theme .text-emerald-900, .dark-theme .text-emerald-800, .dark-theme .text-emerald-700, .dark-theme .text-emerald-600, .dark-theme .text-emerald-500 { color: #34d399 !important; }
         .dark-theme .text-teal-900, .dark-theme .text-teal-800, .dark-theme .text-teal-700, .dark-theme .text-teal-600, .dark-theme .text-teal-500 { color: #2dd4bf !important; }
         .dark-theme .text-rose-900, .dark-theme .text-rose-800, .dark-theme .text-rose-700, .dark-theme .text-rose-600, .dark-theme .text-rose-500 { color: #fb7185 !important; }
@@ -2415,14 +2111,12 @@ export default function App() {
         .dark-theme .text-amber-900, .dark-theme .text-amber-800, .dark-theme .text-amber-700, .dark-theme .text-amber-600, .dark-theme .text-amber-500 { color: #fbbf24 !important; }
         .dark-theme .text-indigo-900, .dark-theme .text-indigo-800, .dark-theme .text-indigo-700, .dark-theme .text-indigo-600, .dark-theme .text-indigo-500 { color: #818cf8 !important; }
         
-        /* Recharts Dark Mode Fixes */
         .dark-theme .recharts-cartesian-grid-horizontal line, .dark-theme .recharts-cartesian-grid-vertical line { stroke: #1e293b !important; }
         .dark-theme .recharts-text { fill: #94a3b8 !important; }
         .dark-theme .recharts-default-tooltip { background-color: #0f172a !important; border-color: #1e293b !important; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8) !important; }
         .dark-theme .recharts-tooltip-item { color: #f8fafc !important; }
         .dark-theme .recharts-tooltip-cursor { fill: #1e293b !important; }
         
-        /* Hover states in dark mode */
         .dark-theme .hover\\:bg-slate-50:hover { background-color: #1e293b !important; }
         .dark-theme .hover\\:bg-slate-50\\/80:hover { background-color: #1e293b !important; }
         .dark-theme .hover\\:border-slate-300:hover { border-color: #475569 !important; }
