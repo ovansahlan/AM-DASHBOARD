@@ -11,6 +11,12 @@ import {
 } from 'lucide-react';
 
 // ============================================================================
+// GOOGLE SHEETS API CONFIGURATION
+// ============================================================================
+// Tempel Web App URL Anda di dalam tanda kutip di bawah ini:
+const GOOGLE_SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbzXPFsROPQRsg8JENQ92vTTEravnDqmUyUmIiAm-pvQyeiaDbJ-eDo1ITTxHhuJWObS/exec'; 
+
+// ============================================================================
 // UTILS & CONSTANTS
 // ============================================================================
 const cleanNumber = (val) => {
@@ -495,11 +501,13 @@ export default function App() {
 
   const handleSaveNote = async () => {
       if (!noteText.trim() || !selectedMex) return;
+
       const newNote = {
           id: Date.now().toString(),
           date: new Date().toISOString(),
           text: noteText.trim()
       };
+      
       const updatedMex = { ...selectedMex, notes: [newNote, ...(selectedMex.notes || [])] };
       const updatedData = data.map(m => m.id === updatedMex.id ? updatedMex : m);
       
@@ -507,6 +515,28 @@ export default function App() {
       setData(updatedData);
       setNoteText('');
       await saveToIndexedDB('am_dashboard_data', updatedData);
+
+      // --- SINKRONISASI GOOGLE SHEETS ---
+      if (GOOGLE_SHEETS_API_URL) {
+          try {
+              const payload = {
+                  timestamp: new Date().toLocaleString('id-ID'),
+                  merchantId: selectedMex.id,
+                  merchantName: selectedMex.name,
+                  amName: selectedMex.amName || 'Unassigned',
+                  note: newNote.text
+              };
+              
+              await fetch(GOOGLE_SHEETS_API_URL, {
+                  method: 'POST',
+                  // text/plain digunakan agar tidak memicu preflight (CORS block) di Apps Script
+                  headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                  body: JSON.stringify(payload)
+              });
+          } catch (err) {
+              console.error("Gagal mengirim ke Google Sheets:", err);
+          }
+      }
   };
 
   const handleDeleteNote = async (noteId) => {
@@ -2193,8 +2223,8 @@ export default function App() {
                          </div>
                          <p className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-slate-900 tracking-tight leading-none mb-2 md:mb-4 truncate" title={formatCurrency(selectedMex.adsTotal)}>{formatCurrency(selectedMex.adsTotal)}</p>
                          <div className="flex flex-col lg:flex-row lg:items-center gap-0.5 lg:gap-2 mb-1 md:mb-2">
-                             <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Projected:</span>
-                             <span className="text-[11px] sm:text-xs md:text-sm font-black text-slate-800 truncate">{formatCurrency(selectedMex.adsRR)}</span>
+                             <span className="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Projected:</span>
+                             <span className="text-[10px] md:text-sm font-black text-slate-800 truncate">{formatCurrency(selectedMex.adsRR)}</span>
                          </div>
                      </div>
                      <div className="mt-auto pt-2 md:pt-4 border-t border-slate-100 flex flex-col lg:flex-row lg:justify-between lg:items-center pl-1.5 md:pl-2 relative z-10 gap-0.5">
