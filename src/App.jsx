@@ -444,6 +444,14 @@ export default function App() {
     return { mtd: [...activeData].sort((a, b) => b.mtdBs - a.mtdBs).slice(0, 10), ads: [...activeData].sort((a, b) => b.adsLM - a.adsLM).slice(0, 10), health: [ { name: 'Growing', count: g, percentage: ((g/tot)*100).toFixed(0), color: '#00B14F' }, { name: 'Declining', count: d, percentage: ((d/tot)*100).toFixed(0), color: COLORS.decline }, { name: 'Stable', count: s, percentage: ((s/tot)*100).toFixed(0), color: COLORS.finance } ] };
   }, [activeData]);
 
+  const compareChartData = useMemo(() => {
+    if (!selectedMex || !selectedMex.history) return [];
+    return compareMonths
+        .map(m => selectedMex.history.find(h => h.month === m))
+        .filter(Boolean)
+        .sort((a, b) => new Date(a.month) - new Date(b.month));
+  }, [selectedMex, compareMonths]);
+
   const filtered = useMemo(() => {
     let res = activeData.filter(d => (d.name.toLowerCase().includes(searchTerm.toLowerCase()) || d.id.toLowerCase().includes(searchTerm.toLowerCase())) && (selectedPriority === 'All' || d.mcaPriority === selectedPriority));
     if (sortConfig) {
@@ -934,8 +942,35 @@ export default function App() {
             </div>
             
             <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 custom-scrollbar flex flex-col">
+                {compareChartData.length > 0 && (
+                    <div className="mb-4 md:mb-6 bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 shadow-sm animate-fade-in-up shrink-0" style={{ animationDelay: '100ms' }}>
+                        <h4 className="text-xs md:text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <Activity className="text-[#00B14F] w-4 h-4"/> Grafik Tren Sales, Invest, AOV & Orders
+                        </h4>
+                        <div className="h-[200px] md:h-[250px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <ComposedChart data={compareChartData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <XAxis dataKey="month" tickFormatter={formatMonth} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} dy={5} />
+                                    <YAxis yAxisId="left" tickFormatter={(v) => v >= 1000000 ? `${(v/1000000).toFixed(0)}M` : `${(v/1000).toFixed(0)}K`} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} width={40} />
+                                    <YAxis yAxisId="aov" orientation="right" tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} tick={{ fill: '#3b82f6', fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} width={35} />
+                                    <YAxis yAxisId="right" orientation="right" tick={{ fill: '#f59e0b', fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} width={25} />
+                                    <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, name) => [name === 'Orders' ? v : formatCurrency(v), name]} labelFormatter={formatMonth}/>
+                                    <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '20px', fontSize: '11px', fontWeight: 'bold' }} iconType="circle" />
+                                    
+                                    <Bar yAxisId="left" dataKey="net_sales" stackId="a" name="Net Sales" fill="#10b981" maxBarSize={40} />
+                                    <Bar yAxisId="left" dataKey="total_investment" stackId="a" name="Total Invest" fill="#f43f5e" radius={[4,4,0,0]} maxBarSize={40} />
+                                    
+                                    <Bar yAxisId="aov" dataKey="aov" name="AOV" fill="#3b82f6" radius={[4,4,0,0]} maxBarSize={40} />
+                                    <Bar yAxisId="right" dataKey="completed_orders" name="Orders" fill="#f59e0b" radius={[4,4,0,0]} maxBarSize={40} />
+                                </ComposedChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                )}
+
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3 text-center md:hidden animate-pulse flex items-center justify-center gap-1.5"><ChevronLeft size={12}/> Geser kartu untuk membandingkan <ChevronRight size={12}/></p>
-                <div className="flex flex-nowrap md:grid md:grid-cols-3 gap-3 md:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 md:pb-0 hide-scrollbar flex-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+                <div className="flex flex-nowrap md:grid md:grid-cols-3 gap-3 md:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 md:pb-0 hide-scrollbar shrink-0" style={{ WebkitOverflowScrolling: 'touch' }}>
                     {[0, 1, 2].map((idx) => {
                         const selectedMonth = compareMonths[idx];
                         const hist = selectedMex.history.find(h => h.month === selectedMonth);
@@ -963,7 +998,7 @@ export default function App() {
                         };
 
                         return (
-                            <div key={idx} className="w-[200px] sm:w-[240px] md:w-auto md:flex-1 shrink-0 snap-center bg-white rounded-2xl md:rounded-3xl border border-slate-200 p-3 md:p-5 shadow-sm flex flex-col relative overflow-hidden animate-fade-in-up" style={{ animationDelay: `${idx * 100}ms` }}>
+                            <div key={idx} className="w-[200px] sm:w-[240px] md:w-auto md:flex-1 shrink-0 snap-center bg-white rounded-2xl md:rounded-3xl border border-slate-200 p-3 md:p-5 shadow-sm flex flex-col relative overflow-hidden animate-fade-in-up" style={{ animationDelay: `${300 + (idx * 100)}ms` }}>
                                 <div className="mb-3 md:mb-5 relative z-10">
                                     <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 md:mb-2">Bulan {idx + 1}</label>
                                     <select 
