@@ -241,6 +241,7 @@ export default function App() {
   const [showMiModal, setShowMiModal] = useState(false);
   const [showOutletsModal, setShowOutletsModal] = useState(false);
   const [showAdsModal, setShowAdsModal] = useState(false);
+  const [showCampaignModal, setShowCampaignModal] = useState(false);
   const [outletModalTab, setOutletModalTab] = useState('inactive');
   
   const [showFloatingBar, setShowFloatingBar] = useState(true);
@@ -1066,21 +1067,26 @@ export default function App() {
              <div className="bg-white rounded-[28px] p-6 md:p-8 border border-slate-200 shadow-sm relative overflow-hidden flex flex-col gap-6 animate-fade-in-up stagger-1">
                  <div className="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none"></div>
                  {(() => {
-                     const adsData = selectedMex ? { total: selectedMex.adsTotal || 0, rr: selectedMex.adsRR || 0, mob: selectedMex.adsMob || 0, web: selectedMex.adsWeb || 0, dir: selectedMex.adsDir || 0 } : { total: kpi?.adsMtd || 0, rr: kpi?.adsRr || 0, mob: kpi?.adsMobMtd || 0, web: kpi?.adsWebMtd || 0, dir: kpi?.adsDirMtd || 0 };
+                     const adsData = selectedMex ? { total: selectedMex.adsTotal || 0, rr: selectedMex.adsRR || 0, lm: selectedMex.adsLM || 0, mob: selectedMex.adsMob || 0, web: selectedMex.adsWeb || 0, dir: selectedMex.adsDir || 0 } : { total: kpi?.adsMtd || 0, rr: kpi?.adsRr || 0, lm: kpi?.adsLm || 0, mob: kpi?.adsMobMtd || 0, web: kpi?.adsWebMtd || 0, dir: kpi?.adsDirMtd || 0 };
                      const totalAds = adsData.total || 1; 
                      const mobPct = ((adsData.mob / totalAds) * 100).toFixed(1); const webPct = ((adsData.web / totalAds) * 100).toFixed(1); const dirPct = ((adsData.dir / totalAds) * 100).toFixed(1);
 
                      return (
                          <Fragment>
-                             <div className="flex-1 w-full relative z-10 flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10">
-                                 <div className="flex-1 text-center sm:text-left">
-                                     <p className="text-[11px] font-black text-rose-600 uppercase tracking-widest mb-2 flex items-center justify-center sm:justify-start gap-1.5"><Activity size={14}/> Total Ads (MTD)</p>
+                             <div className="flex-1 w-full relative z-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 bg-slate-50/50 p-4 rounded-3xl border border-slate-100/50">
+                                 <div className="flex-1 text-center">
+                                     <p className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1 md:mb-2 flex items-center justify-center gap-1.5"><Clock size={14}/> Last Month</p>
+                                     <p className="text-2xl md:text-3xl font-black text-slate-400 tracking-tight">{formatCurrency(adsData.lm)}</p>
+                                 </div>
+                                 <div className="hidden sm:block w-px h-12 bg-slate-200"></div>
+                                 <div className="flex-1 text-center scale-105">
+                                     <p className="text-[11px] md:text-xs font-black text-rose-600 uppercase tracking-widest mb-1 md:mb-2 flex items-center justify-center gap-1.5"><Activity size={16}/> Total Ads (MTD)</p>
                                      <p className="text-4xl md:text-5xl font-black text-slate-800 tracking-tight">{formatCurrency(adsData.total)}</p>
                                  </div>
-                                 <div className="hidden sm:block w-px h-16 bg-slate-200"></div>
-                                 <div className="flex-1 text-center sm:text-left">
-                                     <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center sm:justify-start gap-1.5"><TrendingUp size={14}/> Projected Runrate</p>
-                                     <p className="text-4xl md:text-5xl font-black text-slate-400 tracking-tight">{formatCurrency(adsData.rr)}</p>
+                                 <div className="hidden sm:block w-px h-12 bg-slate-200"></div>
+                                 <div className="flex-1 text-center">
+                                     <p className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1 md:mb-2 flex items-center justify-center gap-1.5"><TrendingUp size={14}/> Runrate</p>
+                                     <p className="text-2xl md:text-3xl font-black text-slate-400 tracking-tight">{formatCurrency(adsData.rr)}</p>
                                  </div>
                              </div>
                              <div className="space-y-4 relative z-10 w-full mt-2 border-t border-slate-100 pt-6">
@@ -1119,6 +1125,41 @@ export default function App() {
                      );
                  })()}
              </div>
+          </div>
+      </Modal>
+
+      <Modal isOpen={!!(showCampaignModal && selectedMex)} onClose={() => setShowCampaignModal(false)} title="Active Campaigns" icon={Award} iconColor="text-amber-500" subtitle={`Daftar program promo yang diikuti ${selectedMex?.name}`}>
+          <div className="p-4 md:p-6 bg-[#f8fafc] custom-scrollbar overflow-y-auto max-h-[75vh]">
+              {(() => {
+                  const campsRaw = (!selectedMex?.campaigns || selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || selectedMex.campaigns.toLowerCase().includes('no'))
+                               ? []
+                               : selectedMex.campaigns.split(/[|,]/).map(c => c.trim()).filter(Boolean);
+
+                  if (campsRaw.length === 0) {
+                      return (
+                          <div className="flex flex-col items-center justify-center h-48 text-slate-400 bg-white rounded-[24px] border border-dashed border-slate-200">
+                              <Award className="w-10 h-10 mb-3 opacity-20 text-amber-500" />
+                              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Tidak ada campaign aktif</p>
+                          </div>
+                      );
+                  }
+
+                  return (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {campsRaw.map((camp, idx) => (
+                              <div key={idx} className="bg-white border border-slate-200 hover:border-amber-300 p-4 rounded-2xl shadow-sm flex items-center gap-3 animate-fade-in-up transition-colors group" style={{ animationDelay: `${idx * 50}ms` }}>
+                                  <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center shrink-0 border border-amber-100 group-hover:bg-amber-100 transition-colors">
+                                      <Zap className="w-5 h-5 text-amber-500" />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                      <p className="font-bold text-slate-800 text-sm truncate">{camp}</p>
+                                      <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest mt-0.5">Active Program</p>
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+                  );
+              })()}
           </div>
       </Modal>
 
@@ -1656,13 +1697,13 @@ export default function App() {
                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
                   <DashboardCard title="Sales" value={formatCurrency(selectedMex.mtdBs)} subLabel="Last Month" subValue={formatCurrency(selectedMex.lmBs)} icon={Activity} color="emerald" trend={selectedMex.lmBs > 0 ? ((selectedMex.rrBs - selectedMex.lmBs) / selectedMex.lmBs) * 100 : (selectedMex.rrBs > 0 ? 100 : 0)} borderClass="emerald-300" />
                   
-                  <div className="bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 hover:-translate-y-1 group animate-fade-in-up stagger-3 h-full">
+                  <div onClick={() => setShowCampaignModal(true)} className="bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10 hover:border-amber-300 hover:-translate-y-1 group animate-fade-in-up stagger-3 h-full cursor-pointer">
                       <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500"></div>
                       <Award className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
                       <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-4 lg:mb-5 pl-2 relative z-10 shrink-0 min-h-[44px]">
                           <div className="flex items-center gap-2 lg:gap-3">
                               <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0"><Zap size={18} strokeWidth={2.5} /></div>
-                              <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">Campaigns</p>
+                              <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">Campaigns <MousePointer size={10} className="text-slate-300 group-hover:text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-0.5 shrink-0 hidden lg:block"/></p>
                           </div>
                           <div className="self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap opacity-0 pointer-events-none select-none">
                               <ArrowUpRight size={12}/> 0.0%
