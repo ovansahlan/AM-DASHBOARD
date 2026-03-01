@@ -266,6 +266,7 @@ export default function App() {
   const [showOutletsModal, setShowOutletsModal] = useState(false);
   const [showAdsModal, setShowAdsModal] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
+  const [showNotesModal, setShowNotesModal] = useState(false);
   const [outletModalTab, setOutletModalTab] = useState('inactive');
   
   const [showFloatingBar, setShowFloatingBar] = useState(true);
@@ -1187,6 +1188,59 @@ export default function App() {
           </div>
       </Modal>
 
+      <Modal isOpen={!!(showNotesModal && selectedMex)} onClose={() => setShowNotesModal(false)} title="Activity Log & Notes" icon={StickyNote} iconColor="text-amber-500" subtitle={`Catatan kunjungan untuk ${selectedMex?.name}`}>
+          <div className="flex-1 flex flex-col sm:flex-row h-[75vh] md:h-[65vh] bg-[#f8fafc]">
+              <div className="w-full sm:w-2/5 md:w-1/3 bg-white border-b sm:border-b-0 sm:border-r border-slate-200 p-4 md:p-6 flex flex-col gap-3 shrink-0 relative z-10 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]">
+                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2 mb-2"><Plus className="w-4 h-4 text-amber-500"/> Tambah Catatan</h4>
+                  <textarea 
+                      value={noteText}
+                      onChange={e => setNoteText(e.target.value)}
+                      placeholder="Tulis hasil meeting, keluhan merchant, atau rencana follow-up di sini..."
+                      className="w-full flex-1 min-h-[120px] sm:min-h-0 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm text-slate-700 font-medium focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-400/10 transition-all resize-none custom-scrollbar"
+                  />
+                  <button 
+                      onClick={handleSaveNote}
+                      disabled={!noteText.trim()}
+                      className="w-full bg-amber-500 hover:bg-amber-600 text-white font-black text-xs py-3.5 rounded-xl transition-all shadow-md shadow-amber-500/20 disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2 active:scale-95 shrink-0"
+                  >
+                      <Plus size={16}/> Simpan Catatan
+                  </button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-6 bg-slate-50/50 relative">
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-amber-50 rounded-bl-full opacity-40 pointer-events-none"></div>
+                  {(!selectedMex?.notes || selectedMex.notes.length === 0) ? (
+                      <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                          <FileText className="w-12 h-12 mb-3 opacity-20 text-amber-500" />
+                          <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Belum ada log aktivitas.</p>
+                          <p className="text-sm text-slate-400 mt-1.5 font-medium text-center max-w-[250px]">Rekam jejak kunjungan dan kendala toko ini agar tidak lupa.</p>
+                      </div>
+                  ) : (
+                      <div className="flex flex-col gap-3 relative z-10">
+                          {selectedMex.notes.map((note, idx) => (
+                              <div key={note.id} style={{ animationDelay: `${idx * 50}ms` }} className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm flex gap-3.5 group hover:border-amber-300 transition-all hover:shadow-md animate-fade-in-up">
+                                  <div className="w-10 h-10 bg-amber-50 rounded-full flex items-center justify-center shrink-0 border border-amber-100 shadow-inner group-hover:bg-amber-100 transition-colors">
+                                      <Calendar size={16} className="text-amber-500" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                      <div className="flex justify-between items-start mb-1 gap-2">
+                                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                              <Clock size={10}/> {new Date(note.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                          </p>
+                                          <button onClick={() => handleDeleteNote(note.id)} className="text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg p-1.5 transition-colors sm:opacity-0 sm:group-hover:opacity-100 -mt-1 -mr-1" title="Hapus catatan">
+                                              <Trash2 size={14}/>
+                                          </button>
+                                      </div>
+                                      <p className="text-sm text-slate-700 font-medium whitespace-pre-wrap leading-relaxed break-words">{note.text}</p>
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+                  )}
+              </div>
+          </div>
+      </Modal>
+
       <Modal isOpen={showOutletsModal} onClose={() => setShowOutletsModal(false)} title="Outlets Attention" icon={Store} iconColor="text-blue-500" subtitle="Daftar merchant yang perlu perhatian khusus">
           <div className="flex px-5 pt-4 gap-2 bg-[#f8fafc] border-b border-slate-100 shrink-0">
               <button onClick={() => setOutletModalTab('inactive')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest rounded-t-xl transition-all border-b-2 ${outletModalTab === 'inactive' ? 'border-slate-800 text-slate-800 bg-white shadow-sm' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>Inactive ({kpi?.inactiveMex || 0})</button>
@@ -1337,9 +1391,15 @@ export default function App() {
                  <Activity className="w-4 h-4 md:w-5 md:h-5 text-white" />
                </div>
                <div className="flex flex-col">
-                 <h1 className="text-sm md:text-base lg:text-lg font-black text-slate-900 dark:text-white tracking-tight leading-none group-hover:text-[#00B14F] transition-colors">
+                 <h1 className={`text-sm md:text-base lg:text-lg font-black text-slate-900 dark:text-white tracking-tight leading-none group-hover:text-[#00B14F] transition-colors ${globalLastUpdate && !selectedMex ? 'hidden md:block' : ''}`}>
                    AM DASHBOARD <span className="text-[#00B14F] dark:text-emerald-400">PRO</span>
                  </h1>
+                 {globalLastUpdate && !selectedMex && (
+                   <div className="flex flex-col md:hidden animate-in fade-in zoom-in-95 duration-300">
+                      <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">Last Sync</span>
+                      <span className="text-[11px] font-bold text-[#00B14F] dark:text-emerald-400 leading-none flex items-center gap-1"><Clock size={10} /> {globalLastUpdate}</span>
+                   </div>
+                 )}
                </div>
              </div>
              <div className="hidden md:block w-px h-6 bg-slate-200 dark:bg-slate-700 shrink-0"></div>
@@ -1382,12 +1442,12 @@ export default function App() {
 
              <div className="flex items-center gap-1 border-l border-slate-200 dark:border-slate-700 pl-3 md:pl-4">
                  {globalLastUpdate && !selectedMex && (
-                     <div className="flex flex-col justify-center px-2 lg:px-3 text-right hidden lg:flex">
+                     <div className="flex flex-col justify-center px-2 lg:px-3 text-right hidden md:flex">
                          <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">Last Sync</span>
                          <span className="text-[10px] font-bold text-[#00B14F] dark:text-emerald-400 leading-none flex items-center gap-1 justify-end"><Clock size={10} /> {globalLastUpdate}</span>
                      </div>
                  )}
-                 {!selectedMex && <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1 hidden lg:block"></div>}
+                 {!selectedMex && <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1 hidden md:block"></div>}
                  <button onClick={() => setIsForceUpload(true)} className="flex items-center justify-center text-slate-500 hover:text-[#00B14F] dark:text-slate-400 dark:hover:text-emerald-400 w-8 h-8 md:w-9 md:h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group shadow-sm border border-slate-200/50 dark:border-slate-700 active:scale-95" title="Update Data">
                      <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
                  </button>
@@ -1401,7 +1461,7 @@ export default function App() {
         {/* MOBILE SUB-NAV */}
         {!selectedMex && (
             <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
-                <div className="flex items-center justify-between px-4 py-2.5 gap-2">
+                <div className="flex flex-col px-4 py-2.5 gap-2">
                     <div className="flex w-full gap-2">
                         <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 ${activeTab === 'overview' ? 'bg-white dark:bg-slate-800 text-[#00B14F] dark:text-emerald-400 shadow-sm border border-slate-200 dark:border-slate-700' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
                             <LayoutDashboard className="w-3.5 h-3.5" /> Overview
@@ -1692,28 +1752,72 @@ export default function App() {
             // VIEW MERCHANT DETAIL
             // =========================================================
             <div className="animate-in fade-in slide-in-from-right-8 duration-500 ease-out space-y-5 md:space-y-6 pb-12 w-full">
-               <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6 relative overflow-hidden animate-fade-in-up stagger-1">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none transition-transform duration-700 hover:scale-110"></div>
-                  <div className="relative z-10 w-full lg:w-auto">
-                     <div className="flex items-center gap-3 md:gap-4 mb-2.5">
-                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-emerald-50 to-emerald-100 text-[#00B14F] rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-emerald-200 shadow-sm transition-transform hover:rotate-6">
-                           <Store className="w-5 h-5 md:w-6 md:h-6" />
+               
+               {/* KARTU 1: MERCHANT INFO HEADER (FULL WIDTH) */}
+               <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col relative overflow-hidden h-full transition-shadow hover:shadow-2xl animate-fade-in-up stagger-1">
+                  <div className="absolute top-0 right-0 w-48 h-48 bg-slate-50 rounded-bl-full opacity-50 -mr-12 -mt-12 pointer-events-none transition-transform duration-700 hover:scale-110"></div>
+                  
+                  <div className="relative z-10 flex flex-col lg:flex-row gap-8 lg:gap-12">
+                     {/* KIRI: PROFIL & INFO */}
+                     <div className="flex-1 min-w-0 flex flex-col justify-center">
+                        <div className="pr-6">
+                            <h2 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-900 leading-tight tracking-tight">{selectedMex.name}</h2>
+                            <div className="flex flex-wrap items-center gap-y-2 gap-x-3 md:gap-x-4 mt-3">
+                                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5"><MapPin size={14}/> {selectedMex.city || 'Tidak diketahui'}</p>
+                                <div className="w-1 h-1 rounded-full bg-slate-300 hidden sm:block"></div>
+                                <div className="flex items-center gap-1.5 text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500" title={selectedMex.zeusStatus === 'ACTIVE' ? 'Status: Aktif' : 'Status: Inactive'}>
+                                   {selectedMex.zeusStatus === 'ACTIVE' ? <CheckCircle className="w-3.5 h-3.5 text-[#00B14F]" /> : <AlertCircle className="w-3.5 h-3.5 text-slate-400" />}
+                                   <span className="font-mono">{selectedMex.id}</span>
+                                </div>
+                                <div className="w-1 h-1 rounded-full bg-slate-300 hidden sm:block"></div>
+                                <div className="flex items-center gap-1.5 text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500">
+                                   <Users className="w-3.5 h-3.5 text-slate-400" />
+                                   <span className="truncate max-w-[150px] sm:max-w-[200px]">{selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Unknown Owner'}</span>
+                                </div>
+                            </div>
                         </div>
-                        <h2 className="text-xl md:text-2xl font-black text-slate-900 leading-tight tracking-tight">{selectedMex.name}</h2>
                      </div>
-                     <div className="flex items-center gap-3 text-sm text-slate-600 font-medium ml-1 md:ml-[64px]">
-                        <div className="flex items-center gap-1.5 cursor-help bg-slate-50 border border-slate-100 pl-1.5 pr-2.5 py-1 rounded-lg transition-colors hover:border-slate-200 shadow-sm" title={selectedMex.zeusStatus === 'ACTIVE' ? 'Status: Aktif' : 'Status: Inactive'}>
-                            {selectedMex.zeusStatus === 'ACTIVE' ? <CheckCircle className="w-4 h-4 text-[#00B14F]" /> : <AlertCircle className="w-4 h-4 text-slate-400" />}
-                            <span className="font-mono text-slate-700 text-xs font-bold tracking-tight">{selectedMex.id}</span>
+
+                     {/* KANAN: RECENT NOTES & ACTION */}
+                     <div className="w-full lg:w-[400px] xl:w-[450px] shrink-0 flex flex-col bg-slate-50 rounded-[24px] border border-slate-200 p-5 md:p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-xs md:text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><StickyNote className="w-4 h-4 text-amber-500"/> Recent Notes</h3>
+                            <button onClick={() => setShowNotesModal(true)} className="bg-amber-50 hover:bg-amber-100 text-amber-600 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors border border-amber-200 shadow-sm flex items-center gap-1.5 active:scale-95">
+                                <Plus size={12}/> {selectedMex.notes?.length > 0 ? 'See All' : 'Add Note'}
+                            </button>
                         </div>
-                        <span className="text-slate-400">•</span>
-                        <span className="text-slate-700 font-bold uppercase tracking-wider text-xs flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-slate-400" /> Owner: <span className="text-slate-900">{selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Tidak Diketahui'}</span></span>
+
+                        <div className="flex-1 flex flex-col gap-3 overflow-hidden">
+                            {(!selectedMex.notes || selectedMex.notes.length === 0) ? (
+                                <div className="flex-1 flex flex-col items-center justify-center text-slate-400 py-6 border border-dashed border-slate-300 rounded-xl bg-slate-50/50">
+                                    <FileText className="w-8 h-8 mb-2 opacity-20" />
+                                    <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-center">Belum ada catatan.</p>
+                                </div>
+                            ) : (
+                                selectedMex.notes.slice(0, 2).map((note, idx) => (
+                                    <div key={note.id} className="bg-white border border-slate-200 p-3.5 rounded-xl shadow-sm flex gap-3 group">
+                                        <div className="w-8 h-8 bg-amber-50 rounded-full flex items-center justify-center shrink-0 border border-amber-100">
+                                            <Calendar size={14} className="text-amber-500" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[9px] font-black text-slate-400 mb-1 flex items-center gap-1.5 uppercase tracking-widest">
+                                                {new Date(note.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                            </p>
+                                            <p className="text-xs text-slate-700 font-medium whitespace-pre-wrap leading-relaxed line-clamp-3">{note.text}</p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                            
+                            {selectedMex.notes && selectedMex.notes.length > 2 && (
+                                <div className="text-center pt-2">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer hover:text-amber-500 transition-colors" onClick={() => setShowNotesModal(true)}>
+                                        + {selectedMex.notes.length - 2} catatan lainnya
+                                    </span>
+                                </div>
+                            )}
+                        </div>
                      </div>
-                  </div>
-                  <div className="relative z-10 shrink-0 w-full lg:w-auto flex flex-col sm:flex-row items-center justify-start lg:justify-end gap-3 mt-4 lg:mt-0 pt-4 lg:pt-0 border-t border-slate-100 lg:border-none">
-                      {selectedMex.history && selectedMex.history.length > 0 && (
-                          <button onClick={() => { const hist = selectedMex.history || []; const defaultMonths = [ hist.length > 2 ? hist[hist.length - 3].month : '', hist.length > 1 ? hist[hist.length - 2].month : '', hist.length > 0 ? hist[hist.length - 1].month : '' ]; setCompareMonths(defaultMonths); setShowCompareModal(true); }} className="w-full sm:w-auto bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border border-indigo-200 shadow-sm group active:scale-95"><BarChart2 size={16} className="group-hover:scale-110 transition-transform" /> Compare</button>
-                      )}
                   </div>
                </div>
 
@@ -1788,6 +1892,12 @@ export default function App() {
                            <div className="animate-fade-in-up stagger-6 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
                                 <div className="flex justify-between items-start md:items-center mb-8 gap-2 shrink-0 min-h-[44px]">
                                    <div><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="text-blue-500 w-5 h-5"/> 12-Month Review</h3></div>
+                                   {selectedMex.lastUpdate && (
+                                       <div className="bg-slate-50 border border-slate-100 px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm" title="Data terakhir diperbarui">
+                                           <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                           <span className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest mt-0.5">{selectedMex.lastUpdate}</span>
+                                       </div>
+                                   )}
                                 </div>
                                 <div className="h-[280px] md:h-[360px] w-full mt-auto">
                                     <ResponsiveContainer width="100%" height="100%">
@@ -1885,59 +1995,6 @@ export default function App() {
                   </div>
                </div>
 
-               {/* FITUR BARU: ACTIVITY & NOTES SECTION */}
-               <div className="animate-fade-in-up stagger-10 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 mt-6 hover:shadow-2xl transition-shadow duration-500">
-                   <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-                       <div className="flex items-center gap-2"><StickyNote className="w-5 h-5 text-amber-500"/><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Catatan Visit & Aktivitas</h3></div>
-                       <span className="bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg text-[10px] font-black border border-amber-200 shadow-sm">{selectedMex.notes?.length || 0} Catatan</span>
-                   </div>
-                   
-                   <div className="flex flex-col lg:flex-row gap-6">
-                       <div className="w-full lg:w-1/3 flex flex-col gap-3">
-                           <textarea 
-                               value={noteText}
-                               onChange={e => setNoteText(e.target.value)}
-                               placeholder="Tulis hasil meeting, keluhan merchant, atau rencana follow-up di sini..."
-                               className="w-full h-32 md:h-40 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs md:text-sm text-slate-700 font-medium focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-400/10 transition-all resize-none custom-scrollbar"
-                           />
-                           <button 
-                               onClick={handleSaveNote}
-                               disabled={!noteText.trim()}
-                               className="w-full bg-amber-500 hover:bg-amber-600 text-white font-black text-xs py-3.5 rounded-xl transition-all shadow-md shadow-amber-500/20 disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2 active:scale-95"
-                           >
-                               <Plus size={16}/> Tambah Catatan
-                           </button>
-                       </div>
-                       
-                       <div className="w-full lg:w-2/3 h-48 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-3">
-                           {(!selectedMex.notes || selectedMex.notes.length === 0) ? (
-                               <div className="flex-1 flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200 p-6 h-full min-h-[120px]">
-                                   <FileText className="w-8 h-8 mb-2 opacity-20" />
-                                   <p className="text-[10px] font-bold uppercase tracking-widest">Belum ada catatan.</p>
-                                   <p className="text-xs text-slate-400 mt-1 font-medium text-center">Catat aktivitas Anda dengan toko ini agar tidak lupa.</p>
-                               </div>
-                           ) : (
-                               selectedMex.notes.map((note, idx) => (
-                                   <div key={note.id} style={{ animationDelay: `${idx * 50}ms` }} className="bg-white border border-slate-200 p-4 md:p-5 rounded-2xl shadow-sm flex gap-4 group hover:border-amber-300 transition-colors animate-fade-in-up">
-                                       <div className="w-10 h-10 bg-amber-50 rounded-full flex items-center justify-center shrink-0 border border-amber-100">
-                                           <Calendar size={16} className="text-amber-500" />
-                                       </div>
-                                       <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                           <p className="text-[9px] md:text-[10px] font-black text-slate-400 mb-1 flex items-center gap-1.5 uppercase tracking-widest">
-                                               {new Date(note.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                           </p>
-                                           <p className="text-xs md:text-sm text-slate-700 font-medium whitespace-pre-wrap leading-relaxed break-words">{note.text}</p>
-                                       </div>
-                                       <button onClick={() => handleDeleteNote(note.id)} className="text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors self-start p-2 md:opacity-0 md:group-hover:opacity-100" title="Hapus catatan">
-                                           <Trash2 size={16}/>
-                                       </button>
-                                   </div>
-                               ))
-                           )}
-                       </div>
-                   </div>
-               </div>
-
                {/* UNIVERSAL FLOATING ACTION BAR */}
                <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[55] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${showFloatingBar ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-24 opacity-0 scale-90 pointer-events-none'}`}>
                    <div className="bg-slate-900/90 dark:bg-slate-800/90 backdrop-blur-xl p-1.5 rounded-full shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] border border-slate-700/50 flex items-center justify-center gap-1.5">
@@ -1948,6 +2005,14 @@ export default function App() {
                        <button onClick={() => setShowPresentation(true)} className="w-12 h-12 flex items-center justify-center text-slate-900 bg-white hover:bg-slate-100 rounded-full transition-all duration-300 active:scale-90 shadow-lg" title="Mulai Presentasi">
                            <MonitorPlay className="w-5 h-5" />
                        </button>
+                       {selectedMex.history && selectedMex.history.length > 0 && (
+                           <Fragment>
+                               <div className="w-px h-6 bg-slate-700/80 shrink-0"></div>
+                               <button onClick={() => { const hist = selectedMex.history || []; const defaultMonths = [ hist.length > 2 ? hist[hist.length - 3].month : '', hist.length > 1 ? hist[hist.length - 2].month : '', hist.length > 0 ? hist[hist.length - 1].month : '' ]; setCompareMonths(defaultMonths); setShowCompareModal(true); }} className="w-12 h-12 flex items-center justify-center text-white hover:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition-all duration-300 active:scale-90" title="Bandingkan Performa">
+                                   <BarChart2 className="w-5 h-5" />
+                               </button>
+                           </Fragment>
+                       )}
                        <div className="w-px h-6 bg-slate-700/80 shrink-0"></div>
                        <button onClick={() => { if (selectedMex.phone && selectedMex.phone !== '-') setShowWaModal(true); }} className={`w-12 h-12 flex items-center justify-center rounded-full transition-all duration-300 active:scale-90 ${selectedMex.phone && selectedMex.phone !== '-' ? 'bg-[#00B14F] text-white hover:bg-emerald-600 shadow-[0_0_20px_-5px_rgba(0,177,79,0.5)]' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`} title="Hubungi via WhatsApp">
                            <MessageCircle className="w-5 h-5" />
