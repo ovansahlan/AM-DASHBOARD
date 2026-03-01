@@ -230,8 +230,8 @@ const DashboardCard = ({ title, value, subLabel, subValue, icon: Icon, color, on
                <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{value}</p>
            </div>
            <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10 shrink-0 min-h-[40px] lg:min-h-[44px]">
-               <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">{subLabel}</span>
-               <span className="text-[10px] lg:text-xs font-black text-slate-700">{subValue}</span>
+               <span className="text-[10px] lg:text-[11px] font-bold text-slate-400 uppercase truncate pr-2">{subLabel}</span>
+               <span className="text-sm lg:text-base font-black text-slate-700">{subValue}</span>
            </div>
         </div>
     );
@@ -1889,17 +1889,18 @@ export default function App() {
                         
                         <div className="relative z-10 pr-2">
                             <h2 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-900 leading-tight tracking-tight">{selectedMex.name}</h2>
-                            <div className="flex flex-wrap items-center gap-y-2 gap-x-3 md:gap-x-4 mt-4">
-                                <p className="panel-text-muted text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5"><MapPin size={14} className="panel-icon-primary text-[#00B14F]"/> {selectedMex.city || 'Tidak diketahui'}</p>
-                                <div className="panel-divider w-1.5 h-1.5 rounded-full bg-slate-300 hidden sm:block"></div>
-                                <div className="panel-text-muted text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-600" title={selectedMex.zeusStatus === 'ACTIVE' ? 'Status: Aktif' : 'Status: Inactive'}>
-                                   {selectedMex.zeusStatus === 'ACTIVE' ? <CheckCircle className="panel-icon-primary w-4 h-4 text-[#00B14F]" /> : <AlertCircle className="w-4 h-4 text-slate-400" />}
-                                   <span className="font-mono">{selectedMex.id}</span>
+                            <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-4">
+                                <div className="panel-badge flex items-center gap-1.5 px-3 py-1.5 bg-white/60 backdrop-blur-sm border border-emerald-100/50 rounded-xl shadow-sm">
+                                    <MapPin size={14} className="panel-icon-primary text-[#00B14F]"/> 
+                                    <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-slate-600">{selectedMex.city || 'Tidak diketahui'}</span>
                                 </div>
-                                <div className="panel-divider w-1.5 h-1.5 rounded-full bg-slate-300 hidden sm:block"></div>
-                                <div className="panel-text-muted text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-600">
+                                <div className="panel-badge flex items-center gap-1.5 px-3 py-1.5 bg-white/60 backdrop-blur-sm border border-emerald-100/50 rounded-xl shadow-sm" title={selectedMex.zeusStatus === 'ACTIVE' ? 'Status: Aktif' : 'Status: Inactive'}>
+                                   {selectedMex.zeusStatus === 'ACTIVE' ? <CheckCircle className="panel-icon-primary w-4 h-4 text-[#00B14F]" /> : <AlertCircle className="w-4 h-4 text-slate-400" />}
+                                   <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest font-mono text-slate-600">{selectedMex.id}</span>
+                                </div>
+                                <div className="panel-badge flex items-center gap-1.5 px-3 py-1.5 bg-white/60 backdrop-blur-sm border border-emerald-100/50 rounded-xl shadow-sm">
                                    <Users className="panel-icon-primary w-4 h-4 text-[#00B14F]" />
-                                   <span className="truncate max-w-[150px] sm:max-w-[200px]">{selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Unknown Owner'}</span>
+                                   <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-slate-600 truncate max-w-[150px] sm:max-w-[200px]">{selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Unknown Owner'}</span>
                                 </div>
                             </div>
                         </div>
@@ -2256,6 +2257,9 @@ export default function App() {
         .dark-theme .panel-text-muted { color: #94a3b8 !important; }
         .dark-theme .panel-icon-primary { color: #34d399 !important; }
         .dark-theme .panel-divider { background-color: #475569 !important; }
+        
+        .dark-theme .panel-badge { background-color: rgba(15, 23, 42, 0.5) !important; border-color: rgba(51, 65, 85, 0.8) !important; box-shadow: none !important; }
+        .dark-theme .panel-badge-text { color: #cbd5e1 !important; }
         
         .dark-theme .panel-notes-card { background-color: rgba(30, 41, 59, 0.8) !important; border-color: rgba(51, 65, 85, 0.8) !important; }
         .dark-theme .panel-notes-title { color: #f8fafc !important; }
