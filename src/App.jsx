@@ -497,7 +497,6 @@ export default function App() {
           const pointHeader = headers.find(h => h.toLowerCase().includes('total point') || h.toLowerCase().includes('point'));
 
           const gmsPackageHeader = headers.find(h => h && (h.toLowerCase().includes('gms package') || h.toLowerCase().includes('package')));
-          const optOutHeader = headers.find(h => h && (h.toLowerCase().includes('opt out') || h.toLowerCase().includes('opt-out')));
 
           let pMap = new Map();
           let rowIdx = 0;
@@ -524,7 +523,7 @@ export default function App() {
               adsLM: cleanNumber(vals[lmAIdx]), adsTotal: cleanNumber(obj['Total MTD (Ads)'] || obj['Total MTD\n(Ads)']), adsRR: cleanNumber(obj['RR (Ads)']),
               adsMob: cleanNumber(obj['Ads Mobile'] || obj['Ads mobile'] || obj['MTD Ads Mobile'] || obj['Ads Mob']), adsWeb: cleanNumber(obj['Ads Web'] || obj['Ads web'] || obj['MTD Ads Web']), adsDir: cleanNumber(obj['Ads Direct'] || obj['Ads direct'] || obj['MTD Ads Direct'] || obj['Ads Dir']),
               mcaAmount: cleanNumber(obj['MCA Amount']), mcaWlLimit: cleanNumber(obj['MCA WL']), mcaWlClass: obj['MCA WL Classification'] || '-Not in WL', mcaPriority: (prioHeader && obj[prioHeader]) ? String(obj[prioHeader]).trim() : '-', mcaDropOff: obj['Drop Off Screen'] && String(obj['Drop Off Screen']).trim().toUpperCase() !== 'FALSE' ? String(obj['Drop Off Screen']).trim() : '-', mcaDisburseStatus: obj['Disburse Status'] || '', disbursedDate: obj['Disbursed date'],
-              zeusStatus: obj['Zeus'], joinDate: obj['Join Date'], campaigns: obj['Campaign'] || '', commission: obj['Base Commission'], city: obj['City Mex'], address: obj['Adress'] || obj['Address'], phone: obj['Phone zeus'], email: obj['Email zeus'],
+              zeusStatus: obj['Zeus'], joinDate: obj['Join Date'], campaigns: obj['Campaign'] || '', commission: vals[13] || obj['Base Commission'], city: obj['City Mex'], address: obj['Adress'] || obj['Address'], phone: obj['Phone zeus'], email: obj['Email zeus'],
               latitude: obj['Latitude'] || obj['Lat'] || (vals[14] !== undefined ? String(vals[14]).trim() : ''), longitude: obj['Longitude'] || obj['Long'] || obj['Lng'] || (vals[15] !== undefined ? String(vals[15]).trim() : ''),
               lastUpdate: '', campaignPoint: cleanNumber(pointHeader ? obj[pointHeader] : 0), history: [], notes: notesMap.get(mexId) || [], 
               gmsOptIn: optInVal, gmsOptOut: optOutVal, gmsOptInDate: optInDateVal, gmsOptOutDate: optOutDateVal, rowNum: rowIdx++
@@ -1216,7 +1215,7 @@ export default function App() {
                                   </div>
                                   <div className="min-w-0 flex-1">
                                       <p className="font-bold text-slate-800 text-sm truncate">{camp}</p>
-                                      <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest mt-0.5">Active Program</p>
+                                      <p className="text-[9px] font-black text-amber-50 uppercase tracking-widest mt-0.5">Active Program</p>
                                   </div>
                               </div>
                           ))}
@@ -1899,6 +1898,10 @@ export default function App() {
                                    <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest font-mono text-slate-600">{selectedMex.id}</span>
                                 </div>
                                 <div className="panel-badge flex items-center gap-1.5 px-3 py-1.5 bg-white/60 backdrop-blur-sm border border-emerald-100/50 rounded-xl shadow-sm">
+                                   <Percent size={14} className="panel-icon-primary text-[#00B14F]"/> 
+                                   <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-slate-600">Komisi: {selectedMex.commission || '-'}</span>
+                                </div>
+                                <div className="panel-badge flex items-center gap-1.5 px-3 py-1.5 bg-white/60 backdrop-blur-sm border border-emerald-100/50 rounded-xl shadow-sm">
                                    <Users className="panel-icon-primary w-4 h-4 text-[#00B14F]" />
                                    <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-slate-600 truncate max-w-[150px] sm:max-w-[200px]">{selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Unknown Owner'}</span>
                                 </div>
@@ -2093,7 +2096,7 @@ export default function App() {
                                           <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} height={20} dy={5} />
                                           <YAxis yAxisId="left" domain={['auto', 'auto']} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={45} />
                                           <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={40} />
-                                          <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [n.includes('%') ? `${v}%` : formatCurrency(v), n]} labelFormatter={formatMonth}/>
+                                          <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [n.includes('%') ? `${v}%` : formatCurrency(v), n]} labelFormatter={formatMonth}/>
                                           <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold' }} iconType="circle" />
                                           <Area yAxisId="left" type="monotone" dataKey="aov" name="AOV" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorAov)">
                                               <LabelList dataKey="aov" position="top" offset={10} fontSize={9} fontWeight={800} fill="#6366f1" formatter={(v) => `${(v/1000).toFixed(0)}K`} />
