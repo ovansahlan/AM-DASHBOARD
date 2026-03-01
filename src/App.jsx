@@ -1754,24 +1754,27 @@ export default function App() {
             <div className="animate-in fade-in slide-in-from-right-8 duration-500 ease-out space-y-5 md:space-y-6 pb-12 w-full">
                
                {/* KARTU 1: MERCHANT INFO HEADER (FULL WIDTH) */}
-               <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col relative overflow-hidden h-full transition-shadow hover:shadow-2xl animate-fade-in-up stagger-1">
-                  <div className="absolute top-0 right-0 w-48 h-48 bg-slate-50 rounded-bl-full opacity-50 -mr-12 -mt-12 pointer-events-none transition-transform duration-700 hover:scale-110"></div>
+               <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[32px] shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100/50 dark:border-slate-800/50 p-6 md:p-8 flex flex-col relative overflow-hidden h-full transition-shadow hover:shadow-2xl animate-fade-in-up stagger-1">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-slate-100/50 to-transparent dark:from-slate-800/50 rounded-bl-full opacity-60 -mr-16 -mt-16 pointer-events-none transition-transform duration-700 hover:scale-110"></div>
                   
-                  <div className="relative z-10 flex flex-col lg:flex-row gap-8 lg:gap-12">
+                  <div className="relative z-10 flex flex-col lg:flex-row gap-5 lg:gap-6">
                      {/* KIRI: PROFIL & INFO */}
-                     <div className="flex-1 min-w-0 flex flex-col justify-center">
-                        <div className="pr-6">
-                            <h2 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-900 leading-tight tracking-tight">{selectedMex.name}</h2>
-                            <div className="flex flex-wrap items-center gap-y-2 gap-x-3 md:gap-x-4 mt-3">
-                                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5"><MapPin size={14}/> {selectedMex.city || 'Tidak diketahui'}</p>
-                                <div className="w-1 h-1 rounded-full bg-slate-300 hidden sm:block"></div>
-                                <div className="flex items-center gap-1.5 text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500" title={selectedMex.zeusStatus === 'ACTIVE' ? 'Status: Aktif' : 'Status: Inactive'}>
-                                   {selectedMex.zeusStatus === 'ACTIVE' ? <CheckCircle className="w-3.5 h-3.5 text-[#00B14F]" /> : <AlertCircle className="w-3.5 h-3.5 text-slate-400" />}
+                     <div className="flex-1 min-w-0 flex flex-col justify-center bg-gradient-to-br from-emerald-50/80 to-white dark:from-emerald-900/20 dark:to-slate-900 border border-emerald-100 dark:border-emerald-800/50 rounded-[24px] p-6 lg:p-8 relative overflow-hidden shadow-sm">
+                        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#00B14F]"></div>
+                        <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-emerald-100 dark:bg-emerald-900/30 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+                        
+                        <div className="relative z-10 pr-2">
+                            <h2 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white leading-tight tracking-tight">{selectedMex.name}</h2>
+                            <div className="flex flex-wrap items-center gap-y-2 gap-x-3 md:gap-x-4 mt-4">
+                                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-1.5"><MapPin size={14} className="text-[#00B14F]"/> {selectedMex.city || 'Tidak diketahui'}</p>
+                                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 hidden sm:block"></div>
+                                <div className="flex items-center gap-1.5 text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300" title={selectedMex.zeusStatus === 'ACTIVE' ? 'Status: Aktif' : 'Status: Inactive'}>
+                                   {selectedMex.zeusStatus === 'ACTIVE' ? <CheckCircle className="w-4 h-4 text-[#00B14F]" /> : <AlertCircle className="w-4 h-4 text-slate-400" />}
                                    <span className="font-mono">{selectedMex.id}</span>
                                 </div>
-                                <div className="w-1 h-1 rounded-full bg-slate-300 hidden sm:block"></div>
-                                <div className="flex items-center gap-1.5 text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500">
-                                   <Users className="w-3.5 h-3.5 text-slate-400" />
+                                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 hidden sm:block"></div>
+                                <div className="flex items-center gap-1.5 text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                                   <Users className="w-4 h-4 text-[#00B14F]" />
                                    <span className="truncate max-w-[150px] sm:max-w-[200px]">{selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Unknown Owner'}</span>
                                 </div>
                             </div>
@@ -1779,7 +1782,7 @@ export default function App() {
                      </div>
 
                      {/* KANAN: RECENT NOTES & ACTION */}
-                     <div className="w-full lg:w-[400px] xl:w-[450px] shrink-0 flex flex-col bg-slate-50 rounded-[24px] border border-slate-200 p-5 md:p-6">
+                     <div className="w-full lg:w-[400px] xl:w-[450px] shrink-0 flex flex-col bg-slate-50 dark:bg-slate-800/50 rounded-[24px] border border-slate-200 dark:border-slate-700/50 p-5 md:p-6 shadow-sm">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xs md:text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><StickyNote className="w-4 h-4 text-amber-500"/> Recent Notes</h3>
                             <button onClick={() => setShowNotesModal(true)} className="bg-amber-50 hover:bg-amber-100 text-amber-600 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors border border-amber-200 shadow-sm flex items-center gap-1.5 active:scale-95">
