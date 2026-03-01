@@ -7,7 +7,7 @@ import {
   UploadCloud, TrendingUp, Database, Filter, Megaphone,
   Search, CheckCircle, AlertCircle, DollarSign, Activity, X,
   Store, ArrowUpRight, ArrowDownRight, Users, Info, ArrowLeft, Zap, MapPin, Phone, Smartphone, Mail, Award, LayoutDashboard, Table, ShoppingBag, Target, Percent, ExternalLink, Calculator,
-  Check, ChevronDown, MousePointer, RefreshCw, BarChart2, FileText, MessageCircle, Clock, ArrowUp, ArrowDown, Moon, Sun, ChevronLeft, ChevronRight, MonitorPlay, ThumbsUp, Trash2, Calendar, Camera, Loader2, Plus, StickyNote
+  Check, ChevronDown, MousePointer, RefreshCw, BarChart2, FileText, MessageCircle, Clock, ArrowUp, ArrowDown, Moon, Sun, ChevronLeft, ChevronRight, MonitorPlay, ThumbsUp, Trash2, Calendar, Camera, Loader2, Plus, StickyNote, UserPlus, UserMinus, Package, XCircle
 } from 'lucide-react';
 
 // ============================================================================
@@ -496,15 +496,28 @@ export default function App() {
           const prioHeader = headers.find(h => h.toLowerCase().includes('priority') || h.toLowerCase().includes('prio') || h.toLowerCase().includes('framework'));
           const pointHeader = headers.find(h => h.toLowerCase().includes('total point') || h.toLowerCase().includes('point'));
 
+          const gmsPackageHeader = headers.find(h => h && (h.toLowerCase().includes('gms package') || h.toLowerCase().includes('package')));
+          const optOutHeader = headers.find(h => h && (h.toLowerCase().includes('opt out') || h.toLowerCase().includes('opt-out')));
+
           let pMap = new Map();
+          let rowIdx = 0;
           for (let i = headerIdx + 1; i < masterLines.length; i++) {
             const vals = masterLines[i]; if (!vals || !vals[mIdx] || vals[mIdx].toLowerCase() === 'mex id') continue;
             let obj = {}; headers.forEach((h, idx) => { if(h) obj[h] = vals[idx] !== undefined ? String(vals[idx]).trim() : ''; });
             
             const mexId = obj['Mex ID'];
             const lmBsVal = cleanNumber(vals[lmBIdx]); const mtdBsVal = cleanNumber(obj['MTD (BS)'] || obj['MTD\n(BS)']); const rrBsVal = cleanNumber(obj['RR (BS)'] || obj['RR\n(BS)']);
-            let calcRrVsLm = lmBsVal > 0 ? ((rrBsVal - lmBsVal) / lmBsVal) * 100 : (rrBsVal > 0 ? 100 : 0);
+            const calcRrVsLm = lmBsVal > 0 ? ((rrBsVal - lmBsVal) / lmBsVal) * 100 : (rrBsVal > 0 ? 100 : 0);
             
+            // Mengambil GMS Package dari kolom AV (index 47)
+            const optInVal = (gmsPackageHeader && obj[gmsPackageHeader]) ? String(obj[gmsPackageHeader]).trim() : (vals[47] !== undefined ? String(vals[47]).trim() : '');
+            // Mengambil Opt Out dari kolom BA (index 52)
+            const optOutVal = vals[52] !== undefined ? String(vals[52]).trim() : '';
+            // Mengambil Tanggal Join dari kolom AW (index 48)
+            const optInDateVal = vals[48] !== undefined ? String(vals[48]).trim() : '';
+            // Mengambil Tanggal Opt Out dari kolom BB (index 53)
+            const optOutDateVal = vals[53] !== undefined ? String(vals[53]).trim() : '';
+
             pMap.set(mexId, {
               id: mexId, name: obj['Mex Name'], amName: obj['AM Name'] || 'Unassigned', ownerName: vals[10] !== undefined && String(vals[10]).trim() !== '' ? String(vals[10]).trim() : '-',
               lmBs: lmBsVal, mtdBs: mtdBsVal, rrBs: rrBsVal, rrVsLm: calcRrVsLm, lmMi: cleanNumber(vals[lmMiIdx]), mtdMi: cleanNumber(obj['MTD (MI)'] || obj['MTD\n(MI)']), rrMi: cleanNumber(obj['RR (MI)'] || obj['RR\n(MI)']),
@@ -513,7 +526,8 @@ export default function App() {
               mcaAmount: cleanNumber(obj['MCA Amount']), mcaWlLimit: cleanNumber(obj['MCA WL']), mcaWlClass: obj['MCA WL Classification'] || '-Not in WL', mcaPriority: (prioHeader && obj[prioHeader]) ? String(obj[prioHeader]).trim() : '-', mcaDropOff: obj['Drop Off Screen'] && String(obj['Drop Off Screen']).trim().toUpperCase() !== 'FALSE' ? String(obj['Drop Off Screen']).trim() : '-', mcaDisburseStatus: obj['Disburse Status'] || '', disbursedDate: obj['Disbursed date'],
               zeusStatus: obj['Zeus'], joinDate: obj['Join Date'], campaigns: obj['Campaign'] || '', commission: obj['Base Commission'], city: obj['City Mex'], address: obj['Adress'] || obj['Address'], phone: obj['Phone zeus'], email: obj['Email zeus'],
               latitude: obj['Latitude'] || obj['Lat'] || (vals[14] !== undefined ? String(vals[14]).trim() : ''), longitude: obj['Longitude'] || obj['Long'] || obj['Lng'] || (vals[15] !== undefined ? String(vals[15]).trim() : ''),
-              lastUpdate: '', campaignPoint: cleanNumber(pointHeader ? obj[pointHeader] : 0), history: [], notes: notesMap.get(mexId) || [] 
+              lastUpdate: '', campaignPoint: cleanNumber(pointHeader ? obj[pointHeader] : 0), history: [], notes: notesMap.get(mexId) || [], 
+              gmsOptIn: optInVal, gmsOptOut: optOutVal, gmsOptInDate: optInDateVal, gmsOptOutDate: optOutDateVal, rowNum: rowIdx++
             });
           }
 
@@ -560,8 +574,11 @@ export default function App() {
                   baseBs = Math.max(1000000, baseBs * (1 + (Math.random() * 0.4 - 0.2))); const ord = Math.floor(baseBs / 40000); const adsTotHist = Math.random() > 0.3 ? Math.floor(Math.random() * 500000) + 100000 : 0; const adsSales = adsTotHist > 0 ? adsTotHist * (Math.random() * 5 + 1.5) : 0; const adsOrders = Math.floor(adsSales / 40000);
                   return { month: mon, basket_size: baseBs, net_sales: baseBs * 0.8, total_orders: ord, completed_orders: ord, orders_with_promo: Math.floor(ord*0.5), promo_order_pct: 50, aov: 40000, mfc: 0, mfp: 0, cpo: 0, gms: 0, basic_commission: 0, ads_total_hist: adsTotHist, mi_percentage: 12, total_investment: 0, ads_orders: adsOrders, ads_sales: adsSales };
               });
+              const randomDay = Math.floor(Math.random() * 28) + 1;
+              const randomDayOut = Math.floor(Math.random() * 28) + 1;
               return {
-                  id: `6-C${Math.random().toString(36).substr(2, 9).toUpperCase()}`, name: `Merchant ${String.fromCharCode(65 + (i % 26))} - Kota`, amName: amNames[i % 4], ownerName: `Ona`, lmBs: lm, mtdBs: rr * 0.7, rrBs: rr, rrVsLm: ((rr - lm) / lm) * 100, lmMi: 0, mtdMi: 0, rrMi: 0, adsLM: 0, adsTotal: 0, adsMob: 0, adsWeb: 0, adsDir: 0, adsRR: 0, mcaAmount: mca, mcaWlLimit: mca > 0 ? mca * 1.5 : 0, mcaWlClass: mca > 0 ? 'Repeat' : '-Not in WL', mcaPriority: mca > 0 ? 'P1' : '-', mcaDropOff: '-', mcaDisburseStatus: mca > 0 ? 'Disbursed' : '', disbursedDate: mca > 0 ? `15-Feb-26` : '', zeusStatus: Math.random() > 0.15 ? 'ACTIVE' : 'INACTIVE', joinDate: `12-Jan-22`, campaigns: Math.random() < 0.2 ? 'No Campaign' : camps[Math.floor(Math.random()*5)], commission: '20%', city: 'Kota', address: 'Jalan', phone: '+628123456789', email: 'test@mail.com', latitude: '', longitude: '', lastUpdate: '22 Feb', campaignPoint: 100, history: hist, notes: [] 
+                  id: `6-C${Math.random().toString(36).substr(2, 9).toUpperCase()}`, name: `Merchant ${String.fromCharCode(65 + (i % 26))} - Kota`, amName: amNames[i % 4], ownerName: `Ona`, lmBs: lm, mtdBs: rr * 0.7, rrBs: rr, rrVsLm: ((rr - lm) / lm) * 100, lmMi: 0, mtdMi: 0, rrMi: 0, adsLM: 0, adsTotal: 0, adsMob: 0, adsWeb: 0, adsDir: 0, adsRR: 0, mcaAmount: mca, mcaWlLimit: mca > 0 ? mca * 1.5 : 0, mcaWlClass: mca > 0 ? 'Repeat' : '-Not in WL', mcaPriority: mca > 0 ? 'P1' : '-', mcaDropOff: '-', mcaDisburseStatus: mca > 0 ? 'Disbursed' : '', disbursedDate: mca > 0 ? `15-Feb-26` : '', zeusStatus: Math.random() > 0.15 ? 'ACTIVE' : 'INACTIVE', joinDate: `12-Jan-22`, campaigns: Math.random() < 0.2 ? 'No Campaign' : camps[Math.floor(Math.random()*5)], commission: '20%', city: 'Kota', address: 'Jalan', phone: '+628123456789', email: 'test@mail.com', latitude: '', longitude: '', lastUpdate: '22 Feb', campaignPoint: 100, history: hist, notes: [],
+                  gmsOptIn: Math.random() > 0.85 ? camps[Math.floor(Math.random()*3)] : '', gmsOptOut: Math.random() > 0.9 ? camps[Math.floor(Math.random()*3)] : '', gmsOptInDate: `2026-02-${randomDay.toString().padStart(2, '0')}`, gmsOptOutDate: `2026-02-${randomDayOut.toString().padStart(2, '0')}`, rowNum: i 
               };
           });
           saveToLocal(genData); 
@@ -609,6 +626,27 @@ export default function App() {
   const disbursedMerchants = useMemo(() => activeData.filter(m => m.mcaAmount > 0 && ((m.disbursedDate && String(m.disbursedDate).trim() !== '-') || (m.mcaDisburseStatus && String(m.mcaDisburseStatus).toLowerCase().includes('pending')))).sort((a, b) => new Date(b.disbursedDate || 0) - new Date(a.disbursedDate || 0)), [activeData]);
   const inactiveMerchants = useMemo(() => activeData.filter(m => !m.zeusStatus || m.zeusStatus.toUpperCase() !== 'ACTIVE').sort((a,b) => b.lmBs - a.lmBs), [activeData]);
   const zeroTrxMerchants = useMemo(() => activeData.filter(m => m.mtdBs <= 0).sort((a,b) => b.lmBs - a.lmBs), [activeData]);
+
+  const optInList = useMemo(() => activeData.filter(m => m.gmsOptIn && m.gmsOptIn !== '-' && m.gmsOptIn !== '0' && m.gmsOptIn !== 'FALSE' && m.gmsOptIn !== '#N/A').sort((a,b) => {
+      const getSortableDate = (dateStr) => {
+          if (!dateStr || dateStr === '-' || dateStr === '#N/A') return 0;
+          return new Date(parseSafeDate(dateStr)).getTime();
+      };
+      const dateA = getSortableDate(a.gmsOptInDate);
+      const dateB = getSortableDate(b.gmsOptInDate);
+      if (dateA !== dateB) return dateB - dateA; // Z-A (terbaru di atas)
+      return b.rowNum - a.rowNum; // Fallback jika tanggal sama/kosong
+  }), [activeData]);
+  const optOutList = useMemo(() => activeData.filter(m => m.gmsOptOut && m.gmsOptOut !== '-' && m.gmsOptOut !== '0' && m.gmsOptOut !== 'FALSE' && m.gmsOptOut !== '#N/A').sort((a,b) => {
+      const getSortableDate = (dateStr) => {
+          if (!dateStr || dateStr === '-' || dateStr === '#N/A') return 0;
+          return new Date(parseSafeDate(dateStr)).getTime();
+      };
+      const dateA = getSortableDate(a.gmsOptOutDate);
+      const dateB = getSortableDate(b.gmsOptOutDate);
+      if (dateA !== dateB) return dateB - dateA; // Z-A (terbaru di atas)
+      return b.rowNum - a.rowNum; // Fallback jika tanggal sama/kosong
+  }), [activeData]);
 
   const kpi = useMemo(() => {
     if (!activeData.length) return null;
@@ -948,7 +986,7 @@ export default function App() {
   // --- END PRESENTATION MODE ---
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark-theme' : ''} bg-[#f8fafc] text-slate-900 flex flex-col font-sans overflow-hidden relative transition-colors duration-300`}>
+    <div className={`min-h-screen ${isDarkMode ? 'dark-theme dark' : ''} bg-[#f8fafc] text-slate-900 flex flex-col font-sans overflow-hidden relative transition-colors duration-300`}>
       <div className="fixed inset-0 z-0 pointer-events-none flex justify-center overflow-hidden">
          <div className="absolute inset-0 bg-grid-pattern"></div>
          <div className="absolute left-0 right-0 top-[-10%] md:top-[-20%] -z-10 m-auto h-[300px] w-[300px] md:h-[600px] md:w-[600px] rounded-full blur-[100px] glow-effect"></div>
@@ -1652,6 +1690,92 @@ export default function App() {
                         </div>
                       </div>
                     </div>
+
+                    {/* GMS OPT-IN & OPT-OUT CARDS */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6 mt-6">
+                      {/* OPT IN CARD */}
+                      <div className="animate-fade-in-up stagger-12 bg-white p-5 md:p-6 lg:p-7 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
+                          <div className="flex justify-between items-end mb-4 md:mb-5 shrink-0">
+                              <div>
+                                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><UserPlus className="text-emerald-500 w-5 h-5"/> GMS Opt-In</h3>
+                                  <p className="text-[10px] md:text-[11px] font-bold text-slate-500 mt-1">Merchant join GMS terbaru</p>
+                              </div>
+                              <span className="bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-lg text-xs font-black border border-emerald-100">{optInList.length} Toko</span>
+                          </div>
+                          <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 max-h-[340px] flex flex-col gap-2.5">
+                              {optInList.length === 0 ? (
+                                  <div className="flex-1 flex flex-col items-center justify-center text-slate-400 py-6 min-h-[160px]">
+                                      <UserPlus className="w-8 h-8 mb-2 opacity-20 text-emerald-500" />
+                                      <p className="text-[10px] font-bold uppercase tracking-widest">Belum ada Opt-In</p>
+                                  </div>
+                              ) : (
+                                  optInList.map(mex => (
+                                      <div key={mex.id} onClick={() => setSelectedMex(mex)} className="bg-slate-50 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-200 p-3.5 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition-colors group shrink-0">
+                                          <div className="min-w-0 flex-1">
+                                              <p className="font-bold text-sm text-slate-800 group-hover:text-emerald-700 truncate transition-colors">{mex.name}</p>
+                                              <div className="mt-1.5 flex flex-wrap items-center gap-1.5 md:gap-2">
+                                                  {mex.gmsOptInDate && mex.gmsOptInDate !== '-' && mex.gmsOptInDate !== '#N/A' && (
+                                                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 bg-white border border-slate-200 text-slate-600 text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-lg shadow-sm group-hover:border-slate-300 truncate max-w-full" title="Tanggal Join">
+                                                          <Calendar size={12} className="shrink-0 text-slate-400"/> 
+                                                          {new Date(parseSafeDate(mex.gmsOptInDate)).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                      </span>
+                                                  )}
+                                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 bg-emerald-50 border border-emerald-100 text-emerald-700 text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-lg shadow-sm group-hover:border-emerald-200 truncate max-w-full" title={mex.gmsOptIn}>
+                                                      <Package size={12} className="shrink-0 text-emerald-500" /> {mex.gmsOptIn}
+                                                  </span>
+                                              </div>
+                                          </div>
+                                          <div className="text-right shrink-0 px-1 md:px-2">
+                                              <ChevronRight size={16} className="text-slate-300 group-hover:text-emerald-500 transition-colors" />
+                                          </div>
+                                      </div>
+                                  ))
+                              )}
+                          </div>
+                      </div>
+
+                      {/* OPT OUT CARD */}
+                      <div className="animate-fade-in-up stagger-13 bg-white p-5 md:p-6 lg:p-7 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
+                          <div className="flex justify-between items-end mb-4 md:mb-5 shrink-0">
+                              <div>
+                                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><UserMinus className="text-rose-500 w-5 h-5"/> GMS Opt-Out</h3>
+                                  <p className="text-[10px] md:text-[11px] font-bold text-slate-500 mt-1">Merchant keluar GMS terbaru</p>
+                              </div>
+                              <span className="bg-rose-50 text-rose-600 px-2.5 py-1 rounded-lg text-xs font-black border border-rose-100">{optOutList.length} Toko</span>
+                          </div>
+                          <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 max-h-[340px] flex flex-col gap-2.5">
+                              {optOutList.length === 0 ? (
+                                  <div className="flex-1 flex flex-col items-center justify-center text-slate-400 py-6 min-h-[160px]">
+                                      <UserMinus className="w-8 h-8 mb-2 opacity-20 text-rose-500" />
+                                      <p className="text-[10px] font-bold uppercase tracking-widest">Belum ada Opt-Out</p>
+                                  </div>
+                              ) : (
+                                  optOutList.map(mex => (
+                                      <div key={mex.id} onClick={() => setSelectedMex(mex)} className="bg-slate-50 hover:bg-rose-50 border border-slate-100 hover:border-rose-200 p-3.5 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition-colors group shrink-0">
+                                          <div className="min-w-0 flex-1">
+                                              <p className="font-bold text-sm text-slate-800 group-hover:text-rose-700 truncate transition-colors">{mex.name}</p>
+                                              <div className="mt-1.5 flex flex-wrap items-center gap-1.5 md:gap-2">
+                                                  {mex.gmsOptOutDate && mex.gmsOptOutDate !== '-' && mex.gmsOptOutDate !== '#N/A' && (
+                                                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 bg-white border border-slate-200 text-slate-600 text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-lg shadow-sm group-hover:border-slate-300 truncate max-w-full" title="Tanggal Keluar">
+                                                          <Calendar size={12} className="shrink-0 text-slate-400"/> 
+                                                          {new Date(parseSafeDate(mex.gmsOptOutDate)).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                      </span>
+                                                  )}
+                                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 bg-rose-50 border border-rose-100 text-rose-700 text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-lg shadow-sm group-hover:border-rose-200 truncate max-w-full" title={mex.gmsOptOut}>
+                                                      <XCircle size={12} className="shrink-0 text-rose-500" /> {mex.gmsOptOut}
+                                                  </span>
+                                              </div>
+                                          </div>
+                                          <div className="text-right shrink-0 px-1 md:px-2">
+                                              <ChevronRight size={16} className="text-slate-300 group-hover:text-rose-500 transition-colors" />
+                                          </div>
+                                      </div>
+                                  ))
+                              )}
+                          </div>
+                      </div>
+                    </div>
+
                 </div>
               )}
 
@@ -1754,27 +1878,27 @@ export default function App() {
             <div className="animate-in fade-in slide-in-from-right-8 duration-500 ease-out space-y-5 md:space-y-6 pb-12 w-full">
                
                {/* KARTU 1: MERCHANT INFO HEADER (FULL WIDTH) */}
-               <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[32px] shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100/50 dark:border-slate-800/50 p-6 md:p-8 flex flex-col relative overflow-hidden h-full transition-shadow hover:shadow-2xl animate-fade-in-up stagger-1">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-slate-100/50 to-transparent dark:from-slate-800/50 rounded-bl-full opacity-60 -mr-16 -mt-16 pointer-events-none transition-transform duration-700 hover:scale-110"></div>
+               <div className="bg-white/80 dark:bg-slate-800/60 backdrop-blur-2xl rounded-[32px] shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100/50 dark:border-slate-700/50 p-6 md:p-8 flex flex-col relative overflow-hidden h-full transition-shadow hover:shadow-2xl animate-fade-in-up stagger-1">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-slate-100/50 to-transparent dark:from-slate-700/30 rounded-bl-full opacity-60 -mr-16 -mt-16 pointer-events-none transition-transform duration-700 hover:scale-110"></div>
                   
                   <div className="relative z-10 flex flex-col lg:flex-row gap-5 lg:gap-6">
                      {/* KIRI: PROFIL & INFO */}
-                     <div className="flex-1 min-w-0 flex flex-col justify-center bg-gradient-to-br from-emerald-50/80 to-white dark:from-emerald-900/20 dark:to-slate-900 border border-emerald-100 dark:border-emerald-800/50 rounded-[24px] p-6 lg:p-8 relative overflow-hidden shadow-sm">
+                     <div className="flex-1 min-w-0 flex flex-col justify-center bg-gradient-to-br from-emerald-50/80 to-white dark:from-emerald-900/40 dark:to-slate-800/80 border border-emerald-100 dark:border-emerald-800/60 rounded-[24px] p-6 lg:p-8 relative overflow-hidden shadow-sm">
                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#00B14F]"></div>
-                        <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-emerald-100 dark:bg-emerald-900/30 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+                        <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-emerald-100 dark:bg-emerald-900/40 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
                         
                         <div className="relative z-10 pr-2">
                             <h2 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white leading-tight tracking-tight">{selectedMex.name}</h2>
                             <div className="flex flex-wrap items-center gap-y-2 gap-x-3 md:gap-x-4 mt-4">
-                                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-1.5"><MapPin size={14} className="text-[#00B14F]"/> {selectedMex.city || 'Tidak diketahui'}</p>
+                                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-1.5"><MapPin size={14} className="text-[#00B14F] dark:text-emerald-400"/> {selectedMex.city || 'Tidak diketahui'}</p>
                                 <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 hidden sm:block"></div>
                                 <div className="flex items-center gap-1.5 text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300" title={selectedMex.zeusStatus === 'ACTIVE' ? 'Status: Aktif' : 'Status: Inactive'}>
-                                   {selectedMex.zeusStatus === 'ACTIVE' ? <CheckCircle className="w-4 h-4 text-[#00B14F]" /> : <AlertCircle className="w-4 h-4 text-slate-400" />}
+                                   {selectedMex.zeusStatus === 'ACTIVE' ? <CheckCircle className="w-4 h-4 text-[#00B14F] dark:text-emerald-400" /> : <AlertCircle className="w-4 h-4 text-slate-400 dark:text-slate-500" />}
                                    <span className="font-mono">{selectedMex.id}</span>
                                 </div>
                                 <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 hidden sm:block"></div>
                                 <div className="flex items-center gap-1.5 text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                                   <Users className="w-4 h-4 text-[#00B14F]" />
+                                   <Users className="w-4 h-4 text-[#00B14F] dark:text-emerald-400" />
                                    <span className="truncate max-w-[150px] sm:max-w-[200px]">{selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Unknown Owner'}</span>
                                 </div>
                             </div>
@@ -1782,31 +1906,31 @@ export default function App() {
                      </div>
 
                      {/* KANAN: RECENT NOTES & ACTION */}
-                     <div className="w-full lg:w-[400px] xl:w-[450px] shrink-0 flex flex-col bg-slate-50 dark:bg-slate-800/50 rounded-[24px] border border-slate-200 dark:border-slate-700/50 p-5 md:p-6 shadow-sm">
+                     <div className="w-full lg:w-[400px] xl:w-[450px] shrink-0 flex flex-col bg-slate-50 dark:bg-slate-800/80 rounded-[24px] border border-slate-200 dark:border-slate-700/80 p-5 md:p-6 shadow-sm">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xs md:text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><StickyNote className="w-4 h-4 text-amber-500"/> Recent Notes</h3>
-                            <button onClick={() => setShowNotesModal(true)} className="bg-amber-50 hover:bg-amber-100 text-amber-600 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors border border-amber-200 shadow-sm flex items-center gap-1.5 active:scale-95">
+                            <h3 className="text-xs md:text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest flex items-center gap-2"><StickyNote className="w-4 h-4 text-amber-500"/> Recent Notes</h3>
+                            <button onClick={() => setShowNotesModal(true)} className="bg-amber-50 dark:bg-amber-500/20 hover:bg-amber-100 dark:hover:bg-amber-500/30 text-amber-600 dark:text-amber-400 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors border border-amber-200 dark:border-amber-500/30 shadow-sm flex items-center gap-1.5 active:scale-95">
                                 <Plus size={12}/> {selectedMex.notes?.length > 0 ? 'See All' : 'Add Note'}
                             </button>
                         </div>
 
                         <div className="flex-1 flex flex-col gap-3 overflow-hidden">
                             {(!selectedMex.notes || selectedMex.notes.length === 0) ? (
-                                <div className="flex-1 flex flex-col items-center justify-center text-slate-400 py-6 border border-dashed border-slate-300 rounded-xl bg-slate-50/50">
+                                <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 py-6 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50/50 dark:bg-slate-900/30">
                                     <FileText className="w-8 h-8 mb-2 opacity-20" />
                                     <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-center">Belum ada catatan.</p>
                                 </div>
                             ) : (
                                 selectedMex.notes.slice(0, 2).map((note, idx) => (
-                                    <div key={note.id} className="bg-white border border-slate-200 p-3.5 rounded-xl shadow-sm flex gap-3 group">
-                                        <div className="w-8 h-8 bg-amber-50 rounded-full flex items-center justify-center shrink-0 border border-amber-100">
-                                            <Calendar size={14} className="text-amber-500" />
+                                    <div key={note.id} className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 p-3.5 rounded-xl shadow-sm flex gap-3 group">
+                                        <div className="w-8 h-8 bg-amber-50 dark:bg-amber-500/10 rounded-full flex items-center justify-center shrink-0 border border-amber-100 dark:border-amber-500/20">
+                                            <Calendar size={14} className="text-amber-500 dark:text-amber-400" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[9px] font-black text-slate-400 mb-1 flex items-center gap-1.5 uppercase tracking-widest">
+                                            <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1.5 uppercase tracking-widest">
                                                 {new Date(note.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                                             </p>
-                                            <p className="text-xs text-slate-700 font-medium whitespace-pre-wrap leading-relaxed line-clamp-3">{note.text}</p>
+                                            <p className="text-xs text-slate-700 dark:text-slate-300 font-medium whitespace-pre-wrap leading-relaxed line-clamp-3">{note.text}</p>
                                         </div>
                                     </div>
                                 ))
@@ -1814,7 +1938,7 @@ export default function App() {
                             
                             {selectedMex.notes && selectedMex.notes.length > 2 && (
                                 <div className="text-center pt-2">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer hover:text-amber-500 transition-colors" onClick={() => setShowNotesModal(true)}>
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest cursor-pointer hover:text-amber-500 dark:hover:text-amber-400 transition-colors" onClick={() => setShowNotesModal(true)}>
                                         + {selectedMex.notes.length - 2} catatan lainnya
                                     </span>
                                 </div>
@@ -2077,7 +2201,13 @@ export default function App() {
 
         .dark-theme { background-color: #020617 !important; color: #f8fafc !important; }
         .dark-theme .bg-white { background-color: #0f172a !important; border-color: #1e293b !important; }
+        .dark-theme .bg-white\\/80 { background-color: rgba(15, 23, 42, 0.8) !important; border-color: rgba(30, 41, 59, 0.5) !important; }
+        .dark-theme .bg-white\\/95 { background-color: rgba(15, 23, 42, 0.95) !important; border-color: rgba(30, 41, 59, 0.5) !important; }
+        .dark-theme .from-emerald-50\\/80 { --tw-gradient-from: rgba(6, 78, 59, 0.3) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+        .dark-theme .from-slate-100\\/50 { --tw-gradient-from: rgba(51, 65, 85, 0.3) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+        .dark-theme .to-white { --tw-gradient-to: rgba(15, 23, 42, 0.8) !important; }
         .dark-theme .bg-\\[\\#f8fafc\\] { background-color: #020617 !important; }
+        
         .dark-theme .text-slate-900, .dark-theme .text-slate-800 { color: #f8fafc !important; }
         .dark-theme .text-slate-700 { color: #e2e8f0 !important; }
         .dark-theme .text-slate-600 { color: #cbd5e1 !important; }
