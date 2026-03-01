@@ -7,14 +7,13 @@ import {
   UploadCloud, TrendingUp, Database, Filter, Megaphone,
   Search, CheckCircle, AlertCircle, DollarSign, Activity, X,
   Store, ArrowUpRight, ArrowDownRight, Users, Info, ArrowLeft, Zap, MapPin, Phone, Smartphone, Mail, Award, LayoutDashboard, Table, ShoppingBag, Target, Percent, ExternalLink, Calculator,
-  Check, ChevronDown, MousePointer, RefreshCw, BarChart2, FileText, MessageCircle, Clock, ArrowUp, ArrowDown, Moon, Sun, ChevronLeft, ChevronRight, MonitorPlay, ThumbsUp, TrendingUp as GrowthIcon, StickyNote, Plus, Trash2, Calendar, Camera, Loader2
+  Check, ChevronDown, MousePointer, RefreshCw, BarChart2, FileText, MessageCircle, Clock, ArrowUp, ArrowDown, Moon, Sun, ChevronLeft, ChevronRight, MonitorPlay, ThumbsUp, Trash2, Calendar, Camera, Loader2, Plus, StickyNote
 } from 'lucide-react';
 
 // ============================================================================
 // GOOGLE SHEETS API CONFIGURATION
 // ============================================================================
-// Tempel Web App URL Anda di dalam tanda kutip di bawah ini:
-const GOOGLE_SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbzXPFsROPQRsg8JENQ92vTTEravnDqmUyUmIiAm-pvQyeiaDbJ-eDo1ITTxHhuJWObS/exec'; 
+const GOOGLE_SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbyiPgQX12g9f2csxcxNF7NTN3vtEFKOlnBjceBz3dzHh8DfoSLI8K8ccx3KKXdPvawR/exec'; 
 
 // ============================================================================
 // UTILS & CONSTANTS
@@ -150,7 +149,75 @@ const loadFromIndexedDB = async (key) => {
 };
 const fNum = (n) => Math.round(n || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
+// ============================================================================
+// REUSABLE COMPONENTS
+// ============================================================================
+const Modal = ({ isOpen, onClose, title, subtitle, icon: Icon, iconColor, maxWidth = "max-w-2xl", children, zIndex = 6000 }) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 flex items-center justify-center p-4 sm:p-6" style={{ zIndex }}>
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in" onClick={onClose} />
+            <div className={`relative w-full ${maxWidth} bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300 ease-out overflow-hidden`}>
+                <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10 shadow-sm">
+                    <div>
+                        <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
+                            {Icon && <Icon className={`w-5 h-5 ${iconColor}`} />}
+                            {title}
+                        </h3>
+                        {subtitle && <p className="text-xs text-slate-500 font-medium mt-1">{subtitle}</p>}
+                    </div>
+                    <button onClick={onClose} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
+                </div>
+                {children}
+            </div>
+        </div>
+    );
+};
+
+const MetricCard = ({ title, value, icon: Icon, colorClass, gradientClass, subText, subValue }) => (
+  <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
+      <div className={`absolute top-0 w-full h-1 bg-gradient-to-r ${gradientClass}`}></div>
+      <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mb-3 ${colorClass}`}><Icon size={20} strokeWidth={2.5}/></div>
+      <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{title}</p>
+      <p className="text-lg sm:text-xl xl:text-2xl font-black text-slate-900 px-1 break-words leading-tight">{value}</p>
+      {subText && <p className="text-[8px] md:text-[9px] text-slate-500 font-medium mt-2">{subText} {subValue && <strong className="text-slate-700">{subValue}</strong>}</p>}
+  </div>
+);
+
+const DashboardCard = ({ title, value, subLabel, subValue, icon: Icon, color, onClick, trend, borderClass }) => {
+    const isUp = trend >= 0;
+    return (
+        <div onClick={onClick} className={`bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group h-full ${onClick ? 'cursor-pointer hover:border-'+borderClass : ''}`}>
+           <div className={`absolute left-0 top-0 bottom-0 w-1.5 bg-${color}-500`}></div>
+           <Icon className={`absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110`} />
+           <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-4 lg:mb-5 pl-2 relative z-10 shrink-0 min-h-[44px]">
+               <div className="flex items-center gap-2 lg:gap-3">
+                   <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-${color}-50 text-${color}-600 flex items-center justify-center shrink-0`}><Icon size={18} strokeWidth={2.5}/></div>
+                   <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">{title} {onClick && <MousePointer size={10} className={`text-slate-300 group-hover:text-${color}-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-0.5 shrink-0 hidden lg:block`}/>}</p>
+               </div>
+               {trend !== undefined && !isNaN(trend) && (
+                   <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap transition-colors ${isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                       {isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%
+                   </div>
+               )}
+           </div>
+           <div className="pl-2 relative z-10 flex-1 flex flex-col justify-start">
+               <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">MTD {title}</p>
+               <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{value}</p>
+           </div>
+           <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10 shrink-0 min-h-[40px] lg:min-h-[44px]">
+               <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">{subLabel}</span>
+               <span className="text-[10px] lg:text-xs font-black text-slate-700">{subValue}</span>
+           </div>
+        </div>
+    );
+};
+
+// ============================================================================
+// MAIN APP COMPONENT
+// ============================================================================
 export default function App() {
+  // 1. ALL HOOKS DECLARATIONS
   const [data, setData] = useState([]);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isForceUpload, setIsForceUpload] = useState(false);
@@ -184,7 +251,6 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
-  // State untuk Note/Catatan & Presentasi
   const [noteText, setNoteText] = useState('');
   const [showPresentation, setShowPresentation] = useState(false);
   const presentationRef = useRef(null);
@@ -228,8 +294,7 @@ export default function App() {
 
               let metricsText = `📈 Estimasi Omset: *${rrBsFormatted}*\n🛍️ Total Pesanan: *${lastOrders} Orders*\n💰 Rata-rata Pesanan: *${aovFormatted}*\n✨ Minat Promo: *${promoPct}%*`;
               if (roas > 0 || adsOrders > 0) {
-                  metricsText += `\n🎯 Pesanan dari Iklan: *${adsOrders} Orders*`;
-                  metricsText += `\n📢 ROAS Iklan: *${roas}x*`;
+                  metricsText += `\n🎯 Pesanan dari Iklan: *${adsOrders} Orders*\n📢 ROAS Iklan: *${roas}x*`;
               }
               
               let ctaText = "";
@@ -250,7 +315,6 @@ export default function App() {
       setShowWaModal(false);
   };
 
-  // Fungsi Cerdas Screenshot & Bagikan
   const handleShareReport = async () => {
       if (!selectedMex || !selectedMex.phone || selectedMex.phone === '-') return;
       setIsCapturing(true);
@@ -290,15 +354,60 @@ export default function App() {
 
   useEffect(() => {
     const loadLocalData = async () => {
+        setIsInitializing(true);
         try {
-            const saved = await loadFromIndexedDB('am_dashboard_data');
+            let saved = await loadFromIndexedDB('am_dashboard_data');
+            
             if (saved && saved.length > 0) {
                 saved.sort((a, b) => a.name.localeCompare(b.name));
-                setData(saved); setIsForceUpload(false);
+                
+                if (GOOGLE_SHEETS_API_URL) {
+                    try {
+                        const res = await fetch(GOOGLE_SHEETS_API_URL + '?t=' + new Date().getTime());
+                        const cloudNotes = await res.json();
+                        
+                        if (Array.isArray(cloudNotes) && cloudNotes.length > 0) {
+                            const notesMap = {};
+                            cloudNotes.forEach(row => {
+                                const mId = String(row.merchantId).trim();
+                                if (!notesMap[mId]) notesMap[mId] = [];
+                                notesMap[mId].push({
+                                    id: String(row.timestamp), 
+                                    date: row.timestamp, 
+                                    text: row.note
+                                });
+                            });
+
+                            saved = saved.map(mex => {
+                                const mId = String(mex.id).trim();
+                                const cNotes = notesMap[mId] || [];
+                                const lNotes = mex.notes || [];
+                                
+                                const merged = new Map();
+                                lNotes.forEach(n => merged.set(n.id, n));
+                                cNotes.forEach(n => merged.set(n.id, n));
+                                
+                                const finalNotes = Array.from(merged.values());
+                                finalNotes.sort((a, b) => new Date(b.date) - new Date(a.date));
+                                
+                                return { ...mex, notes: finalNotes };
+                            });
+                            
+                            await saveToIndexedDB('am_dashboard_data', saved);
+                        }
+                    } catch (err) {
+                        console.error("Gagal sinkronisasi data dari Google Sheets (akan menggunakan lokal):", err);
+                    }
+                }
+
+                setData(saved); 
+                setIsForceUpload(false);
                 const savedUpdate = localStorage.getItem('am_dashboard_last_update');
                 if (savedUpdate) setGlobalLastUpdate(savedUpdate);
             }
-        } catch (e) {}
+        } catch (e) {
+            console.error("Gagal inisialisasi awal", e);
+        }
         setIsInitializing(false);
     };
     loadLocalData();
@@ -315,227 +424,136 @@ export default function App() {
   };
 
   const parseCSVString = (str) => {
-    const firstLine = str.split('\n')[0] || '';
-    const delimiter = (firstLine.match(/;/g) || []).length > (firstLine.match(/,/g) || []).length ? ';' : ',';
-    const arr = []; let quote = false; let row = 0, col = 0;
-    for (let c = 0; c < str.length; c++) {
-      let cc = str[c], nc = str[c+1];
-      arr[row] = arr[row] || []; arr[row][col] = arr[row][col] || '';
-      if (cc === '"' && quote && nc === '"') { arr[row][col] += cc; ++c; continue; }
-      if (cc === '"') { quote = !quote; continue; }
-      if (cc === delimiter && !quote) { ++col; continue; }
-      if (cc === '\r' && nc === '\n' && !quote) { ++row; col = 0; ++c; continue; }
-      if ((cc === '\n' || cc === '\r') && !quote) { ++row; col = 0; continue; }
-      arr[row][col] += cc;
-    }
-    return arr;
+      const firstLine = str.split('\n')[0] || '';
+      const delimiter = (firstLine.match(/;/g) || []).length > (firstLine.match(/,/g) || []).length ? ';' : ',';
+      const arr = []; let quote = false; let row = 0, col = 0;
+      for (let c = 0; c < str.length; c++) {
+        let cc = str[c], nc = str[c+1];
+        arr[row] = arr[row] || []; arr[row][col] = arr[row][col] || '';
+        if (cc === '"' && quote && nc === '"') { arr[row][col] += cc; ++c; continue; }
+        if (cc === '"') { quote = !quote; continue; }
+        if (cc === delimiter && !quote) { ++col; continue; }
+        if (cc === '\r' && nc === '\n' && !quote) { ++row; col = 0; ++c; continue; }
+        if ((cc === '\n' || cc === '\r') && !quote) { ++row; col = 0; continue; }
+        arr[row][col] += cc;
+      }
+      return arr;
   };
 
   const parseAndSave = async (masterText, histText) => {
-    try {
-        const masterLines = parseCSVString(masterText);
-        const firstRow = masterLines[0] || [];
-        let extractedDate = ''; let extractedMonth = '';
-        if (String(firstRow[45]).trim().toUpperCase() === 'MTD') { extractedDate = String(firstRow[46]).trim(); extractedMonth = String(firstRow[47]).trim(); } 
-        else {
-            const fallbackIdx = firstRow.lastIndexOf('MTD');
-            if (fallbackIdx !== -1) { extractedDate = String(firstRow[fallbackIdx + 1]).trim(); extractedMonth = String(firstRow[fallbackIdx + 2]).trim(); }
-        }
-        if (extractedDate) {
-            const updateStr = `${extractedDate} ${extractedMonth || 'Feb'}`.trim();
-            localStorage.setItem('am_dashboard_last_update', updateStr); setGlobalLastUpdate(updateStr);
-        }
-        
-        const existingData = await loadFromIndexedDB('am_dashboard_data');
-        const existingNotesMap = new Map();
-        if (existingData && Array.isArray(existingData)) {
-            existingData.forEach(d => {
-                if (d.notes && d.notes.length > 0) {
-                    existingNotesMap.set(d.id, d.notes);
-                }
+      try {
+          const masterLines = parseCSVString(masterText);
+          const firstRow = masterLines[0] || [];
+          let extDate = ''; let extMonth = '';
+          if (String(firstRow[45]).trim().toUpperCase() === 'MTD') { extDate = String(firstRow[46]).trim(); extMonth = String(firstRow[47]).trim(); } 
+          else { const fbIdx = firstRow.lastIndexOf('MTD'); if (fbIdx !== -1) { extDate = String(firstRow[fbIdx + 1]).trim(); extMonth = String(firstRow[fbIdx + 2]).trim(); } }
+          if (extDate) { const updateStr = `${extDate} ${extMonth || 'Feb'}`.trim(); localStorage.setItem('am_dashboard_last_update', updateStr); setGlobalLastUpdate(updateStr); }
+          
+          const existingData = await loadFromIndexedDB('am_dashboard_data');
+          const notesMap = new Map();
+          if (existingData && Array.isArray(existingData)) existingData.forEach(d => { if (d.notes && d.notes.length) notesMap.set(d.id, d.notes); });
+
+          let headerIdx = -1; let rawHeaders = [];
+          for (let i = 0; i < Math.min(20, masterLines.length); i++) {
+            const test = (masterLines[i] || []).map(h => h ? String(h).trim().replace(/[\r\n]+/g, ' ') : '');
+            if (test.includes('Mex ID')) { rawHeaders = test; headerIdx = i; break; }
+          }
+          if (headerIdx === -1) throw new Error("Kolom 'Mex ID' tidak ditemukan."); 
+
+          const headers = []; const mCounts = {};
+          rawHeaders.forEach(h => { if (!h) { headers.push(''); return; } if (mCounts[h]) { headers.push(`${h}.${mCounts[h]}`); mCounts[h]++; } else { headers.push(h); mCounts[h] = 1; } });
+
+          const mIdx = headers.indexOf('Mex ID');
+          const mtdBIdx = headers.findIndex(h => h.includes('MTD (BS)') || h.includes('MTD\n(BS)')); const lmBIdx = mtdBIdx > 0 ? mtdBIdx - 1 : -1;
+          const mtdAIdx = headers.findIndex(h => h.includes('Total MTD (Ads)') || h.includes('Total MTD\n(Ads)')); const lmAIdx = mtdAIdx > 0 ? mtdAIdx - 1 : -1;
+          const mtdMiIdx = headers.findIndex(h => h.includes('MTD (MI)') || h.includes('MTD\n(MI)')); const lmMiIdx = mtdMiIdx > 0 ? mtdMiIdx - 1 : -1;
+          const prioHeader = headers.find(h => h.toLowerCase().includes('priority') || h.toLowerCase().includes('prio') || h.toLowerCase().includes('framework'));
+          const pointHeader = headers.find(h => h.toLowerCase().includes('total point') || h.toLowerCase().includes('point'));
+
+          let pMap = new Map();
+          for (let i = headerIdx + 1; i < masterLines.length; i++) {
+            const vals = masterLines[i]; if (!vals || !vals[mIdx] || vals[mIdx].toLowerCase() === 'mex id') continue;
+            let obj = {}; headers.forEach((h, idx) => { if(h) obj[h] = vals[idx] !== undefined ? String(vals[idx]).trim() : ''; });
+            
+            const mexId = obj['Mex ID'];
+            const lmBsVal = cleanNumber(vals[lmBIdx]); const mtdBsVal = cleanNumber(obj['MTD (BS)'] || obj['MTD\n(BS)']); const rrBsVal = cleanNumber(obj['RR (BS)'] || obj['RR\n(BS)']);
+            let calcRrVsLm = lmBsVal > 0 ? ((rrBsVal - lmBsVal) / lmBsVal) * 100 : (rrBsVal > 0 ? 100 : 0);
+            
+            pMap.set(mexId, {
+              id: mexId, name: obj['Mex Name'], amName: obj['AM Name'] || 'Unassigned', ownerName: vals[10] !== undefined && String(vals[10]).trim() !== '' ? String(vals[10]).trim() : '-',
+              lmBs: lmBsVal, mtdBs: mtdBsVal, rrBs: rrBsVal, rrVsLm: calcRrVsLm, lmMi: cleanNumber(vals[lmMiIdx]), mtdMi: cleanNumber(obj['MTD (MI)'] || obj['MTD\n(MI)']), rrMi: cleanNumber(obj['RR (MI)'] || obj['RR\n(MI)']),
+              adsLM: cleanNumber(vals[lmAIdx]), adsTotal: cleanNumber(obj['Total MTD (Ads)'] || obj['Total MTD\n(Ads)']), adsRR: cleanNumber(obj['RR (Ads)']),
+              adsMob: cleanNumber(obj['Ads Mobile'] || obj['Ads mobile'] || obj['MTD Ads Mobile'] || obj['Ads Mob']), adsWeb: cleanNumber(obj['Ads Web'] || obj['Ads web'] || obj['MTD Ads Web']), adsDir: cleanNumber(obj['Ads Direct'] || obj['Ads direct'] || obj['MTD Ads Direct'] || obj['Ads Dir']),
+              mcaAmount: cleanNumber(obj['MCA Amount']), mcaWlLimit: cleanNumber(obj['MCA WL']), mcaWlClass: obj['MCA WL Classification'] || '-Not in WL', mcaPriority: (prioHeader && obj[prioHeader]) ? String(obj[prioHeader]).trim() : '-', mcaDropOff: obj['Drop Off Screen'] && String(obj['Drop Off Screen']).trim().toUpperCase() !== 'FALSE' ? String(obj['Drop Off Screen']).trim() : '-', mcaDisburseStatus: obj['Disburse Status'] || '', disbursedDate: obj['Disbursed date'],
+              zeusStatus: obj['Zeus'], joinDate: obj['Join Date'], campaigns: obj['Campaign'] || '', commission: obj['Base Commission'], city: obj['City Mex'], address: obj['Adress'] || obj['Address'], phone: obj['Phone zeus'], email: obj['Email zeus'],
+              latitude: obj['Latitude'] || obj['Lat'] || (vals[14] !== undefined ? String(vals[14]).trim() : ''), longitude: obj['Longitude'] || obj['Long'] || obj['Lng'] || (vals[15] !== undefined ? String(vals[15]).trim() : ''),
+              lastUpdate: '', campaignPoint: cleanNumber(pointHeader ? obj[pointHeader] : 0), history: [], notes: notesMap.get(mexId) || [] 
             });
-        }
+          }
 
-        let masterHeaderIdx = -1; let masterRawHeaders = [];
-        for (let i = 0; i < Math.min(20, masterLines.length); i++) {
-          const test = (masterLines[i] || []).map(h => h ? String(h).trim().replace(/[\r\n]+/g, ' ') : '');
-          if (test.includes('Mex ID')) { masterRawHeaders = test; masterHeaderIdx = i; break; }
-        }
-        if (masterHeaderIdx === -1) throw new Error("Kolom 'Mex ID' tidak ditemukan."); 
-
-        const masterHeaders = []; const mCounts = {};
-        masterRawHeaders.forEach(h => {
-          if (!h) { masterHeaders.push(''); return; }
-          if (mCounts[h]) { masterHeaders.push(`${h}.${mCounts[h]}`); mCounts[h]++; }
-          else { masterHeaders.push(h); mCounts[h] = 1; }
-        });
-
-        const mIdx = masterHeaders.indexOf('Mex ID');
-        const mtdBIdx = masterHeaders.findIndex(h => h.includes('MTD (BS)') || h.includes('MTD\n(BS)'));
-        const lmBIdx = mtdBIdx > 0 ? mtdBIdx - 1 : -1;
-        const mtdAIdx = masterHeaders.findIndex(h => h.includes('Total MTD (Ads)') || h.includes('Total MTD\n(Ads)'));
-        const lmAIdx = mtdAIdx > 0 ? mtdAIdx - 1 : -1;
-        const mtdMiIdx = masterHeaders.findIndex(h => h.includes('MTD (MI)') || h.includes('MTD\n(MI)'));
-        const lmMiIdx = mtdMiIdx > 0 ? mtdMiIdx - 1 : -1;
-        const prioHeader = masterHeaders.find(h => h.toLowerCase().includes('priority') || h.toLowerCase().includes('prio') || h.toLowerCase().includes('framework'));
-        const pointHeader = masterHeaders.find(h => h.toLowerCase().includes('total point') || h.toLowerCase().includes('point'));
-
-        let parsedDataMap = new Map();
-        for (let i = masterHeaderIdx + 1; i < masterLines.length; i++) {
-          const vals = masterLines[i];
-          if (!vals || !vals[mIdx] || vals[mIdx].toLowerCase() === 'mex id') continue;
-          let obj = {}; masterHeaders.forEach((h, idx) => { if(h) obj[h] = vals[idx] !== undefined ? String(vals[idx]).trim() : ''; });
-          
-          const mexId = obj['Mex ID'];
-          const lmBsVal = cleanNumber(vals[lmBIdx]); const mtdBsVal = cleanNumber(obj['MTD (BS)'] || obj['MTD\n(BS)']); const rrBsVal = cleanNumber(obj['RR (BS)'] || obj['RR\n(BS)']);
-          let calcRrVsLm = lmBsVal > 0 ? ((rrBsVal - lmBsVal) / lmBsVal) * 100 : (rrBsVal > 0 ? 100 : 0);
-          
-          parsedDataMap.set(mexId, {
-            id: mexId, name: obj['Mex Name'], amName: obj['AM Name'] || 'Unassigned',
-            ownerName: vals[10] !== undefined && String(vals[10]).trim() !== '' ? String(vals[10]).trim() : '-',
-            lmBs: lmBsVal, mtdBs: mtdBsVal, rrBs: rrBsVal, rrVsLm: calcRrVsLm,
-            lmMi: cleanNumber(vals[lmMiIdx]), mtdMi: cleanNumber(obj['MTD (MI)'] || obj['MTD\n(MI)']), rrMi: cleanNumber(obj['RR (MI)'] || obj['RR\n(MI)']),
-            adsLM: cleanNumber(vals[lmAIdx]), adsTotal: cleanNumber(obj['Total MTD (Ads)'] || obj['Total MTD\n(Ads)']), adsRR: cleanNumber(obj['RR (Ads)']),
-            adsMob: cleanNumber(obj['Ads Mobile'] || obj['Ads mobile'] || obj['MTD Ads Mobile'] || obj['Ads Mob']),
-            adsWeb: cleanNumber(obj['Ads Web'] || obj['Ads web'] || obj['MTD Ads Web']),
-            adsDir: cleanNumber(obj['Ads Direct'] || obj['Ads direct'] || obj['MTD Ads Direct'] || obj['Ads Dir']),
-            mcaAmount: cleanNumber(obj['MCA Amount']), mcaWlLimit: cleanNumber(obj['MCA WL']),
-            mcaWlClass: obj['MCA WL Classification'] || '-Not in WL',
-            mcaPriority: (prioHeader && obj[prioHeader]) ? String(obj[prioHeader]).trim() : '-',
-            mcaDropOff: obj['Drop Off Screen'] && String(obj['Drop Off Screen']).trim().toUpperCase() !== 'FALSE' ? String(obj['Drop Off Screen']).trim() : '-',
-            mcaDisburseStatus: obj['Disburse Status'] || '', disbursedDate: obj['Disbursed date'],
-            zeusStatus: obj['Zeus'], joinDate: obj['Join Date'], campaigns: obj['Campaign'] || '', commission: obj['Base Commission'],
-            city: obj['City Mex'], address: obj['Adress'] || obj['Address'], phone: obj['Phone zeus'], email: obj['Email zeus'],
-            latitude: obj['Latitude'] || obj['Lat'] || (vals[14] !== undefined ? String(vals[14]).trim() : ''), 
-            longitude: obj['Longitude'] || obj['Long'] || obj['Lng'] || (vals[15] !== undefined ? String(vals[15]).trim() : ''),
-            lastUpdate: '', campaignPoint: cleanNumber(pointHeader ? obj[pointHeader] : 0), 
-            history: [],
-            notes: existingNotesMap.get(mexId) || [] 
-          });
-        }
-
-        if (histText) {
-            const histLines = parseCSVString(histText);
-            const histHeaders = (histLines[0] || []).map(h => h ? String(h).trim() : '');
-            const hMexIdx = histHeaders.indexOf('merchant_id'); const hMonthIdx = histHeaders.indexOf('first_day_of_month');
-            const hBsIdx = histHeaders.indexOf('basket_size'); const hTotalOrdersIdx = histHeaders.indexOf('total_orders');
-            const hCompletedOrdersIdx = histHeaders.indexOf('completed_orders'); const hPromoOrdersIdx = histHeaders.indexOf('orders_with_promo_mfp_gms');
-            const hAovIdx = histHeaders.indexOf('aov'); const hMfcIdx = histHeaders.indexOf('mfc_mex_spend');
-            const hMfpIdx = histHeaders.indexOf('mfp_mex_spend'); const hCpoIdx = histHeaders.indexOf('cpo');
-            const hGmsIdx = histHeaders.indexOf('gms'); const hCommIdx = histHeaders.indexOf('basic_commission');
-            const hAdsWebIdx = histHeaders.indexOf('ads_web'); const hAdsMobIdx = histHeaders.indexOf('ads_mobile'); const hAdsDirIdx = histHeaders.indexOf('ads_direct');
-
-            if (hMexIdx !== -1 && hMonthIdx !== -1) {
-                for (let i = 1; i < histLines.length; i++) {
-                    const vals = histLines[i];
-                    if (!vals || !vals[hMexIdx]) continue;
-                    const mexId = String(vals[hMexIdx]).trim();
-                    if (parsedDataMap.has(mexId)) {
-                        if (vals[0] && String(vals[0]).trim() !== '') parsedDataMap.get(mexId).lastUpdate = String(vals[0]).trim();
-                        const baseBs = cleanNumber(vals[hBsIdx]); const totalOrders = cleanNumber(vals[hTotalOrdersIdx]);
-                        const promoOrders = cleanNumber(vals[hPromoOrdersIdx]);
-                        const adsTotalHist = cleanNumber(vals[hAdsWebIdx]) + cleanNumber(vals[hAdsMobIdx]) + cleanNumber(vals[hAdsDirIdx]);
-                        const totalInvestment = cleanNumber(vals[hMfcIdx]) + cleanNumber(vals[hMfpIdx]) + cleanNumber(vals[hCpoIdx]) + cleanNumber(vals[hGmsIdx]) + cleanNumber(vals[hCommIdx]) + adsTotalHist;
-                        
-                        // EKSTRAKSI KOLOM V (21) DAN W (22) UNTUK ADS ORDERS & ADS SALES (ROAS)
-                        const adsOrdersHist = vals.length > 21 ? cleanNumber(vals[21]) : 0;
-                        const adsSalesHist = vals.length > 22 ? cleanNumber(vals[22]) : 0;
-
-                        parsedDataMap.get(mexId).history.push({
-                            month: vals[hMonthIdx], basket_size: baseBs, net_sales: baseBs - totalInvestment,
-                            total_orders: totalOrders, completed_orders: hCompletedOrdersIdx !== -1 ? cleanNumber(vals[hCompletedOrdersIdx]) : totalOrders,
-                            orders_with_promo: promoOrders, promo_order_pct: totalOrders > 0 ? parseFloat(((promoOrders / totalOrders) * 100).toFixed(1)) : 0,
-                            aov: cleanNumber(vals[hAovIdx]), mfc: cleanNumber(vals[hMfcIdx]), mfp: cleanNumber(vals[hMfpIdx]), cpo: cleanNumber(vals[hCpoIdx]), gms: cleanNumber(vals[hGmsIdx]), basic_commission: cleanNumber(vals[hCommIdx]), ads_total_hist: adsTotalHist,
-                            mi_percentage: baseBs > 0 ? parseFloat(((totalInvestment / baseBs) * 100).toFixed(1)) : 0, total_investment: totalInvestment,
-                            ads_orders: adsOrdersHist, ads_sales: adsSalesHist // Disimpan ke history state
-                        });
-                    }
-                }
-            }
-        }
-        const finalData = Array.from(parsedDataMap.values()).map(m => { if (m.history.length > 0) m.history.sort((a, b) => new Date(a.month) - new Date(b.month)); return m; });
-        await saveToLocal(finalData);
-    } catch (err) { setErrorMsg(err.message || "Gagal memproses data."); setLoading(false); }
+          if (histText) {
+              const histLines = parseCSVString(histText); const hHeaders = (histLines[0] || []).map(h => h ? String(h).trim() : '');
+              const hMexIdx = hHeaders.indexOf('merchant_id'); const hMonthIdx = hHeaders.indexOf('first_day_of_month'); const hBsIdx = hHeaders.indexOf('basket_size'); const hTotOrdIdx = hHeaders.indexOf('total_orders'); const hCompOrdIdx = hHeaders.indexOf('completed_orders'); const hPromoOrdIdx = hHeaders.indexOf('orders_with_promo_mfp_gms'); const hAovIdx = hHeaders.indexOf('aov'); const hMfcIdx = hHeaders.indexOf('mfc_mex_spend'); const hMfpIdx = hHeaders.indexOf('mfp_mex_spend'); const hCpoIdx = hHeaders.indexOf('cpo'); const hGmsIdx = hHeaders.indexOf('gms'); const hCommIdx = hHeaders.indexOf('basic_commission'); const hAdsWebIdx = hHeaders.indexOf('ads_web'); const hAdsMobIdx = hHeaders.indexOf('ads_mobile'); const hAdsDirIdx = hHeaders.indexOf('ads_direct');
+              if (hMexIdx !== -1 && hMonthIdx !== -1) {
+                  for (let i = 1; i < histLines.length; i++) {
+                      const vals = histLines[i]; if (!vals || !vals[hMexIdx]) continue; const mexId = String(vals[hMexIdx]).trim();
+                      if (pMap.has(mexId)) {
+                          if (vals[0] && String(vals[0]).trim() !== '') pMap.get(mexId).lastUpdate = String(vals[0]).trim();
+                          const baseBs = cleanNumber(vals[hBsIdx]); const totOrd = cleanNumber(vals[hTotOrdIdx]); const promoOrd = cleanNumber(vals[hPromoOrdIdx]);
+                          const adsTotHist = cleanNumber(vals[hAdsWebIdx]) + cleanNumber(vals[hAdsMobIdx]) + cleanNumber(vals[hAdsDirIdx]);
+                          const totInv = cleanNumber(vals[hMfcIdx]) + cleanNumber(vals[hMfpIdx]) + cleanNumber(vals[hCpoIdx]) + cleanNumber(vals[hGmsIdx]) + cleanNumber(vals[hCommIdx]) + adsTotHist;
+                          const adsOrdHist = vals.length > 21 ? cleanNumber(vals[21]) : 0; const adsSalesHist = vals.length > 22 ? cleanNumber(vals[22]) : 0;
+                          pMap.get(mexId).history.push({
+                              month: vals[hMonthIdx], basket_size: baseBs, net_sales: baseBs - totInv, total_orders: totOrd, completed_orders: hCompOrdIdx !== -1 ? cleanNumber(vals[hCompOrdIdx]) : totOrd, orders_with_promo: promoOrd, promo_order_pct: totOrd > 0 ? parseFloat(((promoOrd / totOrd) * 100).toFixed(1)) : 0, aov: cleanNumber(vals[hAovIdx]), mfc: cleanNumber(vals[hMfcIdx]), mfp: cleanNumber(vals[hMfpIdx]), cpo: cleanNumber(vals[hCpoIdx]), gms: cleanNumber(vals[hGmsIdx]), basic_commission: cleanNumber(vals[hCommIdx]), ads_total_hist: adsTotHist, mi_percentage: baseBs > 0 ? parseFloat(((totInv / baseBs) * 100).toFixed(1)) : 0, total_investment: totInv, ads_orders: adsOrdHist, ads_sales: adsSalesHist
+                          });
+                      }
+                  }
+              }
+          }
+          const finalData = Array.from(pMap.values()).map(m => { if (m.history.length > 0) m.history.sort((a, b) => new Date(a.month) - new Date(b.month)); return m; });
+          await saveToLocal(finalData);
+      } catch (err) { setErrorMsg(err.message || "Gagal memproses data."); setLoading(false); }
   };
 
   const handleProcessFiles = async () => {
-    setLoading(true); setErrorMsg('');
-    try {
-        const masterText = await fileMaster.text();
-        const histText = fileHistory ? await fileHistory.text() : null;
-        await parseAndSave(masterText, histText);
-    } catch (err) { setErrorMsg("Gagal membaca file."); setLoading(false); }
+      setLoading(true); setErrorMsg('');
+      try {
+          const masterText = await fileMaster.text();
+          const histText = fileHistory ? await fileHistory.text() : null;
+          await parseAndSave(masterText, histText);
+      } catch (err) { setErrorMsg("Gagal membaca file."); setLoading(false); }
   };
 
   const loadDemo = () => { 
-     setLoading(true); 
-     setTimeout(() => { 
-        const amNames = ['Novan', 'Aldo', 'Dadan', 'Hikam'];
-        const camps = ['GMS', 'Cuan', 'Ongkir', 'WEEKENDFEST', 'Booster+'];
-        const m = ['2025-01-01','2025-02-01','2025-03-01','2025-04-01','2025-05-01','2025-06-01','2025-07-01','2025-08-01','2025-09-01','2025-10-01','2025-11-01','2025-12-01','2026-01-01','2026-02-01'];
-        const genData = Array.from({ length: 150 }).map((_, i) => {
-          const lm = Math.floor(Math.random() * 50000000) + 5000000;
-          const rr = Math.random() > 0.4 ? lm * (1 + Math.random() * 0.5) : lm * (1 - Math.random() * 0.3);
-          const mca = Math.random() > 0.8 ? Math.floor(Math.random() * 50000000) + 10000000 : 0;
-          let baseBs = Math.floor(Math.random() * 15000000) + 5000000;
-          const hist = m.map(mon => {
-              baseBs = Math.max(1000000, baseBs * (1 + (Math.random() * 0.4 - 0.2)));
-              const ord = Math.floor(baseBs / 40000);
-              const adsTotalHist = Math.random() > 0.3 ? Math.floor(Math.random() * 500000) + 100000 : 0;
-              const adsSales = adsTotalHist > 0 ? adsTotalHist * (Math.random() * 5 + 1.5) : 0; // ROAS 1.5x - 6.5x
-              const adsOrders = Math.floor(adsSales / 40000);
-
-              return { month: mon, basket_size: baseBs, net_sales: baseBs * 0.8, total_orders: ord, completed_orders: ord, orders_with_promo: Math.floor(ord*0.5), promo_order_pct: 50, aov: 40000, mfc: 0, mfp: 0, cpo: 0, gms: 0, basic_commission: 0, ads_total_hist: adsTotalHist, mi_percentage: 12, total_investment: 0, ads_orders: adsOrders, ads_sales: adsSales };
+       setLoading(true); 
+       setTimeout(() => { 
+          const amNames = ['Novan', 'Aldo', 'Dadan', 'Hikam']; const camps = ['GMS', 'Cuan', 'Ongkir', 'WEEKENDFEST', 'Booster+']; const m = ['2025-01-01','2025-02-01','2025-03-01','2025-04-01','2025-05-01','2025-06-01','2025-07-01','2025-08-01','2025-09-01','2025-10-01','2025-11-01','2025-12-01','2026-01-01','2026-02-01'];
+          const genData = Array.from({ length: 150 }).map((_, i) => {
+              const lm = Math.floor(Math.random() * 50000000) + 5000000; const rr = Math.random() > 0.4 ? lm * (1 + Math.random() * 0.5) : lm * (1 - Math.random() * 0.3); const mca = Math.random() > 0.8 ? Math.floor(Math.random() * 50000000) + 10000000 : 0; let baseBs = Math.floor(Math.random() * 15000000) + 5000000;
+              const hist = m.map(mon => {
+                  baseBs = Math.max(1000000, baseBs * (1 + (Math.random() * 0.4 - 0.2))); const ord = Math.floor(baseBs / 40000); const adsTotHist = Math.random() > 0.3 ? Math.floor(Math.random() * 500000) + 100000 : 0; const adsSales = adsTotHist > 0 ? adsTotHist * (Math.random() * 5 + 1.5) : 0; const adsOrders = Math.floor(adsSales / 40000);
+                  return { month: mon, basket_size: baseBs, net_sales: baseBs * 0.8, total_orders: ord, completed_orders: ord, orders_with_promo: Math.floor(ord*0.5), promo_order_pct: 50, aov: 40000, mfc: 0, mfp: 0, cpo: 0, gms: 0, basic_commission: 0, ads_total_hist: adsTotHist, mi_percentage: 12, total_investment: 0, ads_orders: adsOrders, ads_sales: adsSales };
+              });
+              return {
+                  id: `6-C${Math.random().toString(36).substr(2, 9).toUpperCase()}`, name: `Merchant ${String.fromCharCode(65 + (i % 26))} - Kota`, amName: amNames[i % 4], ownerName: `Ona`, lmBs: lm, mtdBs: rr * 0.7, rrBs: rr, rrVsLm: ((rr - lm) / lm) * 100, lmMi: 0, mtdMi: 0, rrMi: 0, adsLM: 0, adsTotal: 0, adsMob: 0, adsWeb: 0, adsDir: 0, adsRR: 0, mcaAmount: mca, mcaWlLimit: mca > 0 ? mca * 1.5 : 0, mcaWlClass: mca > 0 ? 'Repeat' : '-Not in WL', mcaPriority: mca > 0 ? 'P1' : '-', mcaDropOff: '-', mcaDisburseStatus: mca > 0 ? 'Disbursed' : '', disbursedDate: mca > 0 ? `15-Feb-26` : '', zeusStatus: Math.random() > 0.15 ? 'ACTIVE' : 'INACTIVE', joinDate: `12-Jan-22`, campaigns: Math.random() < 0.2 ? 'No Campaign' : camps[Math.floor(Math.random()*5)], commission: '20%', city: 'Kota', address: 'Jalan', phone: '+628123456789', email: 'test@mail.com', latitude: '', longitude: '', lastUpdate: '22 Feb', campaignPoint: 100, history: hist, notes: [] 
+              };
           });
-          return {
-            id: `6-C${Math.random().toString(36).substr(2, 9).toUpperCase()}`, name: `Merchant ${String.fromCharCode(65 + (i % 26))} - Kota`, amName: amNames[i % 4], ownerName: `Ona`,
-            lmBs: lm, mtdBs: rr * 0.7, rrBs: rr, rrVsLm: ((rr - lm) / lm) * 100, lmMi: 0, mtdMi: 0, rrMi: 0, adsLM: 0, adsTotal: 0, adsMob: 0, adsWeb: 0, adsDir: 0, adsRR: 0,
-            mcaAmount: mca, mcaWlLimit: mca > 0 ? mca * 1.5 : 0, mcaWlClass: mca > 0 ? 'Repeat' : '-Not in WL', mcaPriority: mca > 0 ? 'P1' : '-', mcaDropOff: '-', mcaDisburseStatus: mca > 0 ? 'Disbursed' : '', disbursedDate: mca > 0 ? `15-Feb-26` : '',
-            zeusStatus: Math.random() > 0.15 ? 'ACTIVE' : 'INACTIVE', joinDate: `12-Jan-22`, campaigns: Math.random() < 0.2 ? 'No Campaign' : camps[Math.floor(Math.random()*5)], commission: '20%',
-            city: 'Kota', address: 'Jalan', phone: '+628123456789', email: 'test@mail.com', latitude: '', longitude: '', lastUpdate: '22 Feb', campaignPoint: 100, history: hist, notes: [] 
-          };
-        });
-        saveToLocal(genData); 
-     }, 600); 
+          saveToLocal(genData); 
+       }, 600); 
   };
 
   const handleSaveNote = async () => {
       if (!noteText.trim() || !selectedMex) return;
-
-      const newNote = {
-          id: Date.now().toString(),
-          date: new Date().toISOString(),
-          text: noteText.trim()
-      };
-      
+      const newNote = { id: Date.now().toString(), date: new Date().toISOString(), text: noteText.trim() };
       const updatedMex = { ...selectedMex, notes: [newNote, ...(selectedMex.notes || [])] };
       const updatedData = data.map(m => m.id === updatedMex.id ? updatedMex : m);
-      
-      setSelectedMex(updatedMex);
-      setData(updatedData);
-      setNoteText('');
-      await saveToIndexedDB('am_dashboard_data', updatedData);
+      setSelectedMex(updatedMex); setData(updatedData); setNoteText(''); await saveToIndexedDB('am_dashboard_data', updatedData);
 
-      // --- SINKRONISASI GOOGLE SHEETS ---
       if (GOOGLE_SHEETS_API_URL) {
           try {
-              const payload = {
-                  timestamp: new Date().toLocaleString('id-ID'),
-                  merchantId: selectedMex.id,
-                  merchantName: selectedMex.name,
-                  amName: selectedMex.amName || 'Unassigned',
-                  note: newNote.text
-              };
-              
-              await fetch(GOOGLE_SHEETS_API_URL, {
-                  method: 'POST',
-                  // text/plain digunakan agar tidak memicu preflight (CORS block) di Apps Script
-                  headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                  body: JSON.stringify(payload)
-              });
-          } catch (err) {
-              console.error("Gagal mengirim ke Google Sheets:", err);
-          }
+              const payload = { timestamp: new Date().toLocaleString('id-ID'), merchantId: selectedMex.id, merchantName: selectedMex.name, amName: selectedMex.amName || 'Unassigned', note: newNote.text };
+              await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+          } catch (err) { console.error("Gagal mengirim ke Google Sheets:", err); }
       }
   };
 
@@ -543,10 +561,7 @@ export default function App() {
       if (!selectedMex) return;
       const updatedMex = { ...selectedMex, notes: selectedMex.notes.filter(n => n.id !== noteId) };
       const updatedData = data.map(m => m.id === updatedMex.id ? updatedMex : m);
-      
-      setSelectedMex(updatedMex);
-      setData(updatedData);
-      await saveToIndexedDB('am_dashboard_data', updatedData);
+      setSelectedMex(updatedMex); setData(updatedData); await saveToIndexedDB('am_dashboard_data', updatedData);
   };
 
   const amOptions = useMemo(() => ['All', ...Array.from(new Set(data.map(d => d.amName).filter(Boolean))).sort()], [data]);
@@ -595,10 +610,7 @@ export default function App() {
 
   const compareChartData = useMemo(() => {
     if (!selectedMex || !selectedMex.history) return [];
-    return compareMonths
-        .map(m => selectedMex.history.find(h => h.month === m))
-        .filter(Boolean)
-        .sort((a, b) => new Date(a.month) - new Date(b.month));
+    return compareMonths.map(m => selectedMex.history.find(h => h.month === m)).filter(Boolean).sort((a, b) => new Date(a.month) - new Date(b.month));
   }, [selectedMex, compareMonths]);
 
   const filtered = useMemo(() => {
@@ -625,63 +637,58 @@ export default function App() {
 
   const renderMerchantCampaigns = (campaignStr, hideEmpty = false) => {
     if (!campaignStr || campaignStr === '-' || campaignStr === '0' || campaignStr.toLowerCase().includes('no campaign')) { 
-      if (hideEmpty) return null;
-      return <span className="text-slate-400 text-[10px] font-semibold italic block mt-1">Tidak ada partisipasi campaign.</span>; 
+      if (hideEmpty) return null; return <span className="text-slate-400 text-[10px] font-semibold italic block mt-1">Tidak ada partisipasi campaign.</span>; 
     }
     const camps = campaignStr.split(/[|,]/).map(c => c.trim()).filter(Boolean);
     return (
         <div className="flex flex-wrap gap-1 mt-1.5">
-            {camps.map((camp, idx) => ( 
-              <span key={idx} className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded-md text-[9px] font-bold flex items-center gap-1 shadow-[0_1px_2px_rgb(0,0,0,0.05)]">
-                <Zap className="w-2.5 h-2.5 fill-emerald-500 text-emerald-500" />{camp}
-              </span> 
-            ))}
+            {camps.map((camp, idx) => (<span key={idx} className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded-md text-[9px] font-bold flex items-center gap-1 shadow-sm"><Zap className="w-2.5 h-2.5 text-emerald-500" />{camp}</span>))}
         </div>
     );
   };
 
-  if (isInitializing) return <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4"><div className="animate-pulse flex flex-col items-center"><Activity className="w-12 h-12 text-[#00B14F] mb-4" /><h2 className="font-bold text-slate-500 uppercase tracking-widest">Memuat Dashboard...</h2></div></div>;
+  // 3. EARLY RETURNS (Must be after ALL hooks & function declarations to prevent React Fiber crashes)
+  if (isInitializing) return <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4"><div className="animate-pulse flex flex-col items-center"><Activity className="w-12 h-12 text-[#00B14F] mb-4" /><h2 className="font-bold text-slate-500 uppercase tracking-widest">Menyiapkan Dashboard...</h2></div></div>;
   if (data.length === 0 || isForceUpload) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden font-sans text-slate-800">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[100%] bg-emerald-900/40 rounded-full blur-[120px] pointer-events-none"></div>
-        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[100%] bg-blue-900/30 rounded-full blur-[120px] pointer-events-none"></div>
-        <div className="text-center max-w-xl z-10 bg-white/95 backdrop-blur-xl p-8 md:p-10 rounded-[32px] shadow-2xl w-full mx-auto border border-white/20 animate-in fade-in zoom-in-95 relative">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#00B14F] to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-500/30"><Activity className="w-8 h-8 text-white" /></div>
-          <h1 className="text-2xl md:text-3xl font-black mb-1 text-slate-900 tracking-tight uppercase">AM DASHBOARD <span className="text-[#00B14F]">PRO</span></h1>
-          <p className="text-slate-500 mb-8 text-xs font-semibold tracking-wide">MERCHANT INTELLIGENCE PLATFORM</p>
-          {errorMsg && <div className="mb-6 p-3 bg-rose-50 text-rose-600 rounded-xl text-xs font-bold flex gap-2 border border-rose-100 items-center text-left leading-snug"><AlertCircle className="w-5 h-5 shrink-0" />{errorMsg}</div>}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className="flex flex-col items-center justify-center p-5 border-2 border-slate-200 border-dashed rounded-2xl bg-slate-50 relative group hover:border-[#00B14F] hover:bg-emerald-50/50 transition-all cursor-pointer">
-                <Store className={`w-7 h-7 mb-2 transition-colors ${fileMaster ? 'text-[#00B14F]' : 'text-slate-400 group-hover:text-emerald-500'}`} />
-                <p className="text-slate-800 font-bold text-xs mb-1">Master Outlet</p>
-                <p className="text-[10px] text-slate-400 text-center px-2 line-clamp-2 leading-tight">{fileMaster ? fileMaster.name : 'Upload file utama (.csv)'}</p>
-                <input type="file" accept=".csv" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => setFileMaster(e.target.files[0])} />
-                {fileMaster && <div className="absolute top-3 right-3 bg-white rounded-full shadow-sm"><CheckCircle className="w-4 h-4 text-[#00B14F]" /></div>}
-              </div>
-              <div className="flex flex-col items-center justify-center p-5 border-2 border-slate-200 border-dashed rounded-2xl bg-slate-50 relative group hover:border-[#00B14F] hover:bg-emerald-50/50 transition-all cursor-pointer">
-                <FileText className={`w-7 h-7 mb-2 transition-colors ${fileHistory ? 'text-[#00B14F]' : 'text-slate-400 group-hover:text-emerald-500'}`} />
-                <p className="text-slate-800 font-bold text-xs mb-1">Data Historis</p>
-                <p className="text-[10px] text-slate-400 text-center px-2 line-clamp-2 leading-tight">{fileHistory ? fileHistory.name : 'Upload data bulanan (opsional)'}</p>
-                <input type="file" accept=".csv" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => setFileHistory(e.target.files[0])} />
-                {fileHistory && <div className="absolute top-3 right-3 bg-white rounded-full shadow-sm"><CheckCircle className="w-4 h-4 text-[#00B14F]" /></div>}
-              </div>
+      return (
+        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden font-sans text-slate-800">
+          <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[100%] bg-emerald-900/40 rounded-full blur-[120px] pointer-events-none"></div>
+          <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[100%] bg-blue-900/30 rounded-full blur-[120px] pointer-events-none"></div>
+          <div className="text-center max-w-xl z-10 bg-white/95 backdrop-blur-xl p-8 md:p-10 rounded-[32px] shadow-2xl w-full mx-auto border border-white/20 animate-in fade-in zoom-in-95 relative">
+            <div className="w-16 h-16 bg-gradient-to-br from-[#00B14F] to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-500/30"><Activity className="w-8 h-8 text-white" /></div>
+            <h1 className="text-2xl md:text-3xl font-black mb-1 text-slate-900 tracking-tight uppercase">AM DASHBOARD <span className="text-[#00B14F]">PRO</span></h1>
+            <p className="text-slate-500 mb-8 text-xs font-semibold tracking-wide">MERCHANT INTELLIGENCE PLATFORM</p>
+            {errorMsg && <div className="mb-6 p-3 bg-rose-50 text-rose-600 rounded-xl text-xs font-bold flex gap-2 border border-rose-100 items-center text-left leading-snug"><AlertCircle className="w-5 h-5 shrink-0" />{errorMsg}</div>}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="flex flex-col items-center justify-center p-5 border-2 border-slate-200 border-dashed rounded-2xl bg-slate-50 relative group hover:border-[#00B14F] hover:bg-emerald-50/50 transition-all cursor-pointer">
+                  <Store className={`w-7 h-7 mb-2 transition-colors ${fileMaster ? 'text-[#00B14F]' : 'text-slate-400 group-hover:text-emerald-500'}`} />
+                  <p className="text-slate-800 font-bold text-xs mb-1">Master Outlet</p>
+                  <p className="text-[10px] text-slate-400 text-center px-2 line-clamp-2 leading-tight">{fileMaster ? fileMaster.name : 'Upload file utama (.csv)'}</p>
+                  <input type="file" accept=".csv" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => setFileMaster(e.target.files[0])} />
+                  {fileMaster && <div className="absolute top-3 right-3 bg-white rounded-full shadow-sm"><CheckCircle className="w-4 h-4 text-[#00B14F]" /></div>}
+                </div>
+                <div className="flex flex-col items-center justify-center p-5 border-2 border-slate-200 border-dashed rounded-2xl bg-slate-50 relative group hover:border-[#00B14F] hover:bg-emerald-50/50 transition-all cursor-pointer">
+                  <FileText className={`w-7 h-7 mb-2 transition-colors ${fileHistory ? 'text-[#00B14F]' : 'text-slate-400 group-hover:text-emerald-500'}`} />
+                  <p className="text-slate-800 font-bold text-xs mb-1">Data Historis</p>
+                  <p className="text-[10px] text-slate-400 text-center px-2 line-clamp-2 leading-tight">{fileHistory ? fileHistory.name : 'Upload data bulanan (opsional)'}</p>
+                  <input type="file" accept=".csv" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => setFileHistory(e.target.files[0])} />
+                  {fileHistory && <div className="absolute top-3 right-3 bg-white rounded-full shadow-sm"><CheckCircle className="w-4 h-4 text-[#00B14F]" /></div>}
+                </div>
+            </div>
+            <button onClick={handleProcessFiles} disabled={loading || !fileMaster} className={`w-full py-4 bg-slate-900 text-white rounded-2xl font-black transition-all flex items-center justify-center gap-2 mb-4 text-sm hover:bg-slate-800 shadow-xl shadow-slate-900/20 ${!fileMaster ? 'opacity-50 cursor-not-allowed shadow-none' : 'active:scale-95'}`}>
+              {loading ? <Activity className="w-5 h-5 animate-spin" /> : <UploadCloud className="w-5 h-5" />} {loading ? 'MEMPROSES DATA...' : 'MASUK KE DASHBOARD'}
+            </button>
+            <button onClick={loadDemo} disabled={loading} className="w-full py-3 bg-transparent text-slate-500 hover:text-slate-800 font-bold transition-all flex items-center justify-center gap-2 text-xs rounded-xl hover:bg-slate-50">
+              <TrendingUp className="w-4 h-4" /> Eksplorasi dengan Data Dummy
+            </button>
+            {data.length > 0 && isForceUpload && (
+               <button onClick={() => setIsForceUpload(false)} disabled={loading} className="w-full py-3 mt-2 bg-slate-100 text-slate-500 hover:text-slate-700 font-bold transition-all text-xs rounded-xl hover:bg-slate-200">Batal & Kembali</button>
+            )}
           </div>
-          <button onClick={handleProcessFiles} disabled={loading || !fileMaster} className={`w-full py-4 bg-slate-900 text-white rounded-2xl font-black transition-all flex items-center justify-center gap-2 mb-4 text-sm hover:bg-slate-800 shadow-xl shadow-slate-900/20 ${!fileMaster ? 'opacity-50 cursor-not-allowed shadow-none' : 'active:scale-95'}`}>
-            {loading ? <Activity className="w-5 h-5 animate-spin" /> : <UploadCloud className="w-5 h-5" />} {loading ? 'MEMPROSES DATA...' : 'MASUK KE DASHBOARD'}
-          </button>
-          <button onClick={loadDemo} disabled={loading} className="w-full py-3 bg-transparent text-slate-500 hover:text-slate-800 font-bold transition-all flex items-center justify-center gap-2 text-xs rounded-xl hover:bg-slate-50">
-            <TrendingUp className="w-4 h-4" /> Eksplorasi dengan Data Dummy
-          </button>
-          {data.length > 0 && isForceUpload && (
-             <button onClick={() => setIsForceUpload(false)} disabled={loading} className="w-full py-3 mt-2 bg-slate-100 text-slate-500 hover:text-slate-700 font-bold transition-all text-xs rounded-xl hover:bg-slate-200">Batal & Kembali</button>
-          )}
         </div>
-      </div>
-    );
+      );
   }
 
-  // --- RENDERING PRESENTATION MODE ---
   if (showPresentation && selectedMex) {
       const lastHist = selectedMex.history && selectedMex.history.length > 0 ? selectedMex.history[selectedMex.history.length-1] : null;
 
@@ -722,84 +729,65 @@ export default function App() {
 
                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
                          {/* Card 1: Omset */}
-                         <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
-                             <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
-                             <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-3"><Activity size={20} strokeWidth={2.5}/></div>
-                             <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Estimasi Omset</p>
-                             <p className="text-lg sm:text-xl xl:text-2xl font-black text-slate-900 px-1 break-words leading-tight">{formatCurrencyFull(selectedMex.rrBs)}</p>
-                             <div className={`mt-2 px-2.5 py-1 rounded-full text-[10px] font-black flex items-center gap-1 ${selectedMex.rrBs > selectedMex.lmBs ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
-                                 {selectedMex.rrBs > selectedMex.lmBs ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(selectedMex.rrVsLm).toFixed(1)}% vs LM
-                             </div>
-                         </div>
+                         <MetricCard 
+                            title="Estimasi Omset" 
+                            value={formatCurrencyFull(selectedMex.rrBs)} 
+                            icon={Activity} 
+                            colorClass="bg-emerald-50 text-emerald-600" 
+                            gradientClass="from-emerald-400 to-teal-500" 
+                            subText={selectedMex.rrBs > selectedMex.lmBs ? 'Naik' : 'Turun'} 
+                            subValue={`${Math.abs(((selectedMex.rrBs - selectedMex.lmBs)/selectedMex.lmBs)*100 || 0).toFixed(1)}% vs Bulan Lalu`} 
+                         />
                          
                          {/* Card 2: Pesanan */}
-                         <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
-                             <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-500"></div>
-                             <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-3"><ShoppingBag size={20} strokeWidth={2.5}/></div>
-                             <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Pesanan</p>
-                             {lastHist ? (
-                                 <p className="text-lg sm:text-xl xl:text-2xl font-black text-slate-900 px-1 break-words leading-tight">{lastHist.completed_orders} <span className="text-[10px] md:text-[11px] text-slate-500 font-bold ml-1">Orders</span></p>
-                             ) : (
-                                 <p className="text-xl lg:text-2xl font-black text-slate-300">-</p>
-                             )}
-                             <p className="text-[8px] md:text-[9px] text-slate-500 font-medium mt-2">Bulan lalu</p>
-                         </div>
+                         <MetricCard 
+                            title="Total Pesanan" 
+                            value={lastHist ? `${lastHist.completed_orders} Orders` : '-'} 
+                            icon={ShoppingBag} 
+                            colorClass="bg-blue-50 text-blue-600" 
+                            gradientClass="from-blue-400 to-indigo-500" 
+                            subText="Bulan lalu" 
+                         />
 
                          {/* Card 3: AOV */}
-                         <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
-                             <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-purple-400 to-pink-500"></div>
-                             <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center mb-3"><Target size={20} strokeWidth={2.5}/></div>
-                             <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Rata-rata Nilai Pesanan</p>
-                             {lastHist ? (
-                                 <p className="text-lg sm:text-xl xl:text-2xl font-black text-slate-900 px-1 break-words leading-tight">{formatCurrencyFull(lastHist.aov)}</p>
-                             ) : (
-                                 <p className="text-xl lg:text-2xl font-black text-slate-300">-</p>
-                             )}
-                             <p className="text-[8px] md:text-[9px] text-slate-500 font-medium mt-2">Nilai per transaksi</p>
-                         </div>
+                         <MetricCard 
+                            title="Rata-rata Nilai Pesanan" 
+                            value={lastHist ? formatCurrencyFull(lastHist.aov) : '-'} 
+                            icon={Target} 
+                            colorClass="bg-purple-50 text-purple-600" 
+                            gradientClass="from-purple-400 to-pink-500" 
+                            subText="Nilai per transaksi" 
+                         />
                          
                          {/* Card 4: Minat Promo */}
-                         <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
-                             <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-amber-400 to-orange-500"></div>
-                             <div className="w-10 h-10 md:w-12 md:h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mb-3"><ThumbsUp size={20} strokeWidth={2.5}/></div>
-                             <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tingkat Minat Promo</p>
-                             {lastHist ? (
-                                 <p className="text-lg sm:text-xl xl:text-2xl font-black text-slate-900 px-1 break-words leading-tight">{lastHist.promo_order_pct}%</p>
-                             ) : (
-                                 <p className="text-xl lg:text-2xl font-black text-slate-300">-</p>
-                             )}
-                             <p className="text-[8px] md:text-[9px] text-slate-500 font-medium mt-2">Pesanan dengan diskon</p>
-                         </div>
+                         <MetricCard 
+                            title="Tingkat Minat Promo" 
+                            value={lastHist ? `${lastHist.promo_order_pct}%` : '-'} 
+                            icon={ThumbsUp} 
+                            colorClass="bg-amber-50 text-amber-600" 
+                            gradientClass="from-amber-400 to-orange-500" 
+                            subText="Pesanan dengan diskon" 
+                         />
 
                          {/* Card 5: ROAS Iklan (BARU) */}
-                         <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
-                             <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-rose-400 to-red-500"></div>
-                             <div className="w-10 h-10 md:w-12 md:h-12 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mb-3"><Megaphone size={20} strokeWidth={2.5}/></div>
-                             <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Return On Ad Spend</p>
-                             {lastHist && lastHist.ads_total_hist > 0 ? (
-                                 <p className="text-lg sm:text-xl xl:text-2xl font-black text-slate-900 px-1 break-words leading-tight">{(lastHist.ads_sales / lastHist.ads_total_hist).toFixed(1)}x</p>
-                             ) : (
-                                 <p className="text-xl lg:text-2xl font-black text-slate-300">-</p>
-                             )}
-                             <p className="text-[8px] md:text-[9px] text-slate-500 font-medium mt-2">Performa iklan bulan lalu</p>
-                         </div>
+                         <MetricCard 
+                            title="Return On Ad Spend" 
+                            value={lastHist && lastHist.ads_total_hist > 0 ? `${(lastHist.ads_sales / lastHist.ads_total_hist).toFixed(1)}x` : '-'} 
+                            icon={Megaphone} 
+                            colorClass="bg-rose-50 text-rose-600" 
+                            gradientClass="from-rose-400 to-red-500" 
+                            subText="Performa iklan bulan lalu" 
+                         />
 
                          {/* Card 6: Pesanan dari Iklan (BARU) */}
-                         <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center relative overflow-hidden">
-                             <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-blue-500"></div>
-                             <div className="w-10 h-10 md:w-12 md:h-12 bg-cyan-50 text-cyan-600 rounded-full flex items-center justify-center mb-3"><MousePointer size={20} strokeWidth={2.5}/></div>
-                             <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pesanan dari Iklan</p>
-                             {lastHist && lastHist.ads_orders > 0 ? (
-                                 <p className="text-lg sm:text-xl xl:text-2xl font-black text-slate-900 px-1 break-words leading-tight">{lastHist.ads_orders} <span className="text-[10px] md:text-[11px] text-slate-500 font-bold ml-1">Orders</span></p>
-                             ) : (
-                                 <p className="text-xl lg:text-2xl font-black text-slate-300">-</p>
-                             )}
-                             {lastHist && lastHist.completed_orders > 0 && lastHist.ads_orders > 0 ? (
-                                 <p className="text-[8px] md:text-[9px] text-slate-500 font-medium mt-2">{((lastHist.ads_orders / lastHist.completed_orders) * 100).toFixed(1)}% dari total pesanan</p>
-                             ) : (
-                                 <p className="text-[8px] md:text-[9px] text-slate-500 font-medium mt-2">Bulan lalu</p>
-                             )}
-                         </div>
+                         <MetricCard 
+                            title="Pesanan dari Iklan" 
+                            value={lastHist && lastHist.ads_orders > 0 ? `${lastHist.ads_orders} Orders` : '-'} 
+                            icon={MousePointer} 
+                            colorClass="bg-cyan-50 text-cyan-600" 
+                            gradientClass="from-cyan-400 to-blue-500" 
+                            subText={lastHist && lastHist.completed_orders > 0 && lastHist.ads_orders > 0 ? `${((lastHist.ads_orders / lastHist.completed_orders) * 100).toFixed(1)}% dari total pesanan` : 'Bulan lalu'} 
+                         />
                      </div>
 
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 mt-4">
@@ -891,7 +879,7 @@ export default function App() {
 
                      {selectedMex.history && selectedMex.history.length > 0 && (
                          <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 mt-8">
-                             <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2 mb-6"><GrowthIcon className="text-[#00B14F] w-5 h-5"/> Perjalanan Bisnis (12 Bulan)</h3>
+                             <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2 mb-6"><TrendingUp className="text-[#00B14F] w-5 h-5"/> Perjalanan Bisnis (12 Bulan)</h3>
                              <div className="h-[250px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={selectedMex.history.slice(-12)}>
@@ -942,540 +930,342 @@ export default function App() {
       </div>
 
       {/* --- ALL MODALS --- */}
-      {showWaModal && selectedMex && (
-        <div className="fixed inset-0 z-[7000] flex items-center justify-center p-4 sm:p-6">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 ease-out animate-in fade-in" onClick={() => setShowWaModal(false)} />
-          <div className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col animate-in zoom-in-95 duration-300 ease-out overflow-hidden">
-            <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10">
-               <div>
-                  <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
-                     <MessageCircle className="w-5 h-5 text-[#00B14F]"/>
-                     Pesan WhatsApp
-                  </h3>
-                  <p className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 mt-1.5 inline-block">
-                     *Teks dipilih acak (Anti-Spam)
-                  </p>
-               </div>
-               <button onClick={() => setShowWaModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
-            </div>
-            <div className="p-5 md:p-6 bg-[#f8fafc] space-y-3">
-               <button onClick={() => handleSendWA('general')} className="w-full text-left p-4 bg-white border border-slate-200 hover:border-[#00B14F] hover:shadow-md rounded-2xl transition-all group">
-                   <p className="font-bold text-sm text-slate-800 group-hover:text-[#00B14F] mb-1">Review Performa (General)</p>
-                   <p className="text-xs text-slate-500 line-clamp-2">Ada 5 variasi pesan sapaan untuk diskusi performa secara umum dengan owner...</p>
-               </button>
-               <button onClick={() => handleSendWA('promo')} className="w-full text-left p-4 bg-white border border-slate-200 hover:border-[#00B14F] hover:shadow-md rounded-2xl transition-all group">
-                   <p className="font-bold text-sm text-slate-800 group-hover:text-[#00B14F] mb-1 flex items-center gap-1.5"><Zap size={14} className="text-amber-500"/> Penawaran Promo</p>
-                   <p className="text-xs text-slate-500 line-clamp-2">Ada 5 variasi pesan untuk mengajak merchant mengikuti program promo/campaign...</p>
-               </button>
-               {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') && (
-                   <button onClick={() => handleSendWA('mca')} className="w-full text-left p-4 bg-blue-50 border border-blue-200 hover:border-blue-500 hover:shadow-md rounded-2xl transition-all group">
-                       <p className="font-bold text-sm text-blue-800 group-hover:text-blue-600 mb-1 flex items-center gap-1.5"><Database size={14} className="text-blue-500"/> Info Limit MCA</p>
-                       <p className="text-xs text-blue-600/80 line-clamp-2">Ada 5 variasi pesan untuk menginfokan fasilitas pinjaman senilai {formatCurrency(selectedMex.mcaWlLimit)}...</p>
-                   </button>
-               )}
-               {selectedMex.zeusStatus !== 'ACTIVE' && (
-                   <button onClick={() => handleSendWA('inactive')} className="w-full text-left p-4 bg-rose-50 border border-rose-200 hover:border-rose-500 hover:shadow-md rounded-2xl transition-all group">
-                       <p className="font-bold text-sm text-rose-800 group-hover:text-rose-600 mb-1 flex items-center gap-1.5"><AlertCircle size={14} className="text-rose-500"/> Follow-up Toko Offline</p>
-                       <p className="text-xs text-rose-600/80 line-clamp-2">Ada 5 variasi sapaan untuk menanyakan kendala toko yang sedang inactive/offline...</p>
-                   </button>
-               )}
-            </div>
+      <Modal isOpen={!!(showWaModal && selectedMex)} onClose={() => setShowWaModal(false)} title="Pesan WhatsApp" icon={MessageCircle} iconColor="text-[#00B14F]" maxWidth="max-w-md" subtitle="*Teks dipilih acak (Anti-Spam)">
+          <div className="p-5 md:p-6 bg-[#f8fafc] space-y-3">
+             <button onClick={() => handleSendWA('general')} className="w-full text-left p-4 bg-white border border-slate-200 hover:border-[#00B14F] hover:shadow-md rounded-2xl transition-all group">
+                 <p className="font-bold text-sm text-slate-800 group-hover:text-[#00B14F] mb-1">Review Performa (General)</p>
+                 <p className="text-xs text-slate-500 line-clamp-2">Ada 5 variasi pesan sapaan untuk diskusi performa secara umum dengan owner...</p>
+             </button>
+             <button onClick={() => handleSendWA('promo')} className="w-full text-left p-4 bg-white border border-slate-200 hover:border-[#00B14F] hover:shadow-md rounded-2xl transition-all group">
+                 <p className="font-bold text-sm text-slate-800 group-hover:text-[#00B14F] mb-1 flex items-center gap-1.5"><Zap size={14} className="text-amber-500"/> Penawaran Promo</p>
+                 <p className="text-xs text-slate-500 line-clamp-2">Ada 5 variasi pesan untuk mengajak merchant mengikuti program promo/campaign...</p>
+             </button>
+             {selectedMex?.mcaWlLimit > 0 && !selectedMex?.mcaWlClass.includes('Not') && (
+                 <button onClick={() => handleSendWA('mca')} className="w-full text-left p-4 bg-blue-50 border border-blue-200 hover:border-blue-500 hover:shadow-md rounded-2xl transition-all group">
+                     <p className="font-bold text-sm text-blue-800 group-hover:text-blue-600 mb-1 flex items-center gap-1.5"><Database size={14} className="text-blue-500"/> Info Limit MCA</p>
+                     <p className="text-xs text-blue-600/80 line-clamp-2">Ada 5 variasi pesan untuk menginfokan fasilitas pinjaman senilai {formatCurrency(selectedMex.mcaWlLimit)}...</p>
+                 </button>
+             )}
+             {selectedMex?.zeusStatus !== 'ACTIVE' && (
+                 <button onClick={() => handleSendWA('inactive')} className="w-full text-left p-4 bg-rose-50 border border-rose-200 hover:border-rose-500 hover:shadow-md rounded-2xl transition-all group">
+                     <p className="font-bold text-sm text-rose-800 group-hover:text-rose-600 mb-1 flex items-center gap-1.5"><AlertCircle size={14} className="text-rose-500"/> Follow-up Toko Offline</p>
+                     <p className="text-xs text-rose-600/80 line-clamp-2">Ada 5 variasi sapaan untuk menanyakan kendala toko yang sedang inactive/offline...</p>
+                 </button>
+             )}
           </div>
-        </div>
-      )}
+      </Modal>
 
-      {/* MODAL DAFTAR MERCHANT PER SEGMEN CAMPAIGN */}
-      {activeSegmentModal && (
-        <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 sm:p-6">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in" onClick={() => setActiveSegmentModal(null)} />
-          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-300 ease-out overflow-hidden">
-            <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10">
-               <div>
-                  <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
-                     <Target className="w-5 h-5 text-[#00B14F]"/>
-                     Segmen: <span className="text-[#00B14F]">{activeSegmentModal}</span>
-                  </h3>
-                  <p className="text-xs text-slate-500 font-medium mt-1">Daftar {filteredSegmentMerchants.length} merchant dalam kategori ini</p>
-               </div>
-               <button onClick={() => setActiveSegmentModal(null)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
-            </div>
-            <div className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar bg-[#f8fafc]">
-               {filteredSegmentMerchants.length === 0 ? (
-                 <div className="flex flex-col items-center justify-center h-48 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
-                    <Store className="w-10 h-10 mb-3 opacity-30" />
-                    <p className="text-xs font-bold uppercase tracking-widest">Kosong</p>
-                 </div>
-               ) : (
-                 <div className="grid grid-cols-1 gap-3">
-                    {filteredSegmentMerchants.map((mex, idx) => (
-                       <div key={mex.id} style={{ animationDelay: `${idx * 30}ms` }} onClick={() => { setSelectedMex(mex); setActiveSegmentModal(null); setActiveTab('overview'); }} className="animate-fade-in-up flex justify-between items-center p-4 bg-white border border-slate-200 rounded-2xl hover:border-[#00B14F] hover:shadow-lg hover:shadow-emerald-500/10 cursor-pointer transition-all duration-300 group">
-                          <div className="min-w-0 pr-4">
-                             <p className="font-bold text-sm md:text-base text-slate-800 group-hover:text-[#00B14F] truncate transition-colors">{mex.name}</p>
-                             <div className="-mt-0.5">
-                                {renderMerchantCampaigns(mex.campaigns)}
-                             </div>
-                          </div>
-                          <div className="text-right shrink-0 flex flex-col items-end">
-                             <p className="font-black text-sm md:text-base text-slate-800">{formatCurrency(mex.mtdBs)}</p>
-                             <div className="flex items-center gap-1.5 mt-1">
-                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">MTD Sales</p>
-                                <span className={`flex items-center gap-0.5 px-1 py-0.5 rounded-md text-[8px] font-black border ${mex.campaignPoint > 0 ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-slate-50 text-slate-400 border-slate-200'}`} title="Campaign Points">
-                                   <Award size={10} /> {mex.campaignPoint || 0}
-                                </span>
-                             </div>
-                          </div>
-                       </div>
-                    ))}
-                 </div>
-               )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL DAFTAR MERCHANT PENCAIRAN MCA */}
-      {showMcaModal && (
-        <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 sm:p-6">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in" onClick={() => setShowMcaModal(false)} />
-          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-300 ease-out overflow-hidden">
-            <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10">
-               <div>
-                  <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
-                     <Database className="w-5 h-5 text-amber-500"/>
-                     Merchant Pencairan MCA
-                  </h3>
-                  <p className="text-xs text-slate-500 font-medium mt-1">Daftar {disbursedMerchants.length} merchant yang telah mencairkan dana</p>
-               </div>
-               <button onClick={() => setShowMcaModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
-            </div>
-            <div className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar bg-[#f8fafc]">
-               {disbursedMerchants.length === 0 ? (
-                 <div className="flex flex-col items-center justify-center h-48 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
-                    <Store className="w-10 h-10 mb-3 opacity-30" />
-                    <p className="text-xs font-bold uppercase tracking-widest">Belum ada pencairan</p>
-                 </div>
-               ) : (
-                 <div className="grid grid-cols-1 gap-3">
-                    {disbursedMerchants.map((mex, idx) => {
-                       const isPending = mex.mcaDisburseStatus && String(mex.mcaDisburseStatus).toLowerCase().includes('pending');
-                       return (
-                       <div key={mex.id} style={{ animationDelay: `${idx * 30}ms` }} onClick={() => { setSelectedMex(mex); setShowMcaModal(false); setActiveTab('overview'); }} className={`animate-fade-in-up flex justify-between items-center p-4 bg-white border border-slate-200 rounded-2xl cursor-pointer transition-all duration-300 group ${isPending ? 'hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/10' : 'hover:border-amber-400 hover:shadow-lg hover:shadow-amber-500/10'}`}>
-                          <div className="min-w-0 pr-4 flex-1">
-                             <div className="flex items-center gap-2 min-w-0">
-                                {mex.mcaPriority && mex.mcaPriority !== '-' && (
-                                   <span className={`px-1.5 py-0.5 rounded text-[9px] font-black shrink-0 border ${getPriorityBadgeClass(mex.mcaPriority)}`}>
-                                      {mex.mcaPriority}
-                                   </span>
-                                )}
-                                <p className={`font-bold text-sm md:text-base text-slate-800 truncate transition-colors ${isPending ? 'group-hover:text-blue-600' : 'group-hover:text-amber-600'}`}>{mex.name}</p>
-                             </div>
-                             <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[9px] font-black text-white bg-indigo-600/[0.65] border border-indigo-700/[0.65] px-1.5 py-0.5 rounded uppercase tracking-widest flex items-center gap-1 shadow-sm backdrop-blur-sm"><Users size={10} className="text-indigo-100" /> {getShortAMName(mex.amName)}</span>
-                                {mex.disbursedDate && String(mex.disbursedDate).trim() !== '-' && (
-                                   <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-widest text-white shadow-sm backdrop-blur-sm ${isPending ? 'bg-blue-600/[0.65] border-blue-700/[0.65]' : 'bg-amber-600/[0.65] border-amber-700/[0.65]'}`}>{mex.disbursedDate}</span>
-                                )}
-                             </div>
-                          </div>
-                          <div className="text-right shrink-0 flex flex-col items-end">
-                             <p className={`font-black text-sm md:text-base ${isPending ? 'text-blue-600' : 'text-amber-600'}`}>{formatCurrency(mex.mcaAmount)}</p>
-                             <p className={`text-[9px] font-bold uppercase tracking-widest mt-1 ${isPending ? 'text-blue-500' : 'text-slate-400'}`}>{isPending ? 'Pending' : 'Telah Cair'}</p>
-                          </div>
-                       </div>
-                    )})}
-                 </div>
-               )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL MERCHANT INVESTMENT (MI) RATIO DETAIL */}
-      {showMiModal && kpi && (
-        <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 sm:p-6">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in" onClick={() => setShowMiModal(false)} />
-          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col animate-in zoom-in-95 duration-300 ease-out overflow-hidden">
-            <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10">
-               <div>
-                  <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
-                     <Percent className="w-5 h-5 text-teal-500"/>
-                     Investment Ratio (MI/BS)
-                  </h3>
-                  <p className="text-xs text-slate-500 font-medium mt-1">Detail persentase beban promo terhadap omset merchant</p>
-               </div>
-               <button onClick={() => setShowMiModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
-            </div>
-            <div className="p-4 md:p-6 bg-[#f8fafc] space-y-5 custom-scrollbar overflow-y-auto max-h-[75vh]">
-               <div className="bg-white rounded-[28px] p-6 border border-slate-200 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center gap-6 animate-fade-in-up stagger-1">
-                   <div className="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none"></div>
-                   <div className="flex-1 w-full relative z-10 text-center md:text-left">
-                       <p className="text-[11px] font-black text-teal-600 uppercase tracking-widest mb-2 flex items-center justify-center md:justify-start gap-1.5"><Activity size={14}/> Projected Ratio</p>
-                       <div className="flex items-baseline justify-center md:justify-start gap-1 mb-2">
-                           <span className="text-6xl font-black text-slate-800 tracking-tighter">
-                               {kpi?.rr ? ((kpi.miRr / kpi.rr) * 100).toFixed(1) : 0}
-                           </span>
-                           <span className="text-3xl font-black text-slate-400">%</span>
-                       </div>
-                       <p className="text-[10px] md:text-xs text-slate-500 font-medium leading-relaxed max-w-sm mx-auto md:mx-0">
-                           Diproyeksikan bahwa beban investasi (MI) akan memakan <strong className="text-slate-700">{kpi?.rr ? ((kpi.miRr / kpi.rr) * 100).toFixed(1) : 0}%</strong> dari total Omset bulan ini.
-                       </p>
-                   </div>
-                   <div className="flex-1 w-full flex flex-col gap-4 relative z-10 border-t md:border-t-0 md:border-l border-slate-100 pt-5 md:pt-0 md:pl-6">
-                       <div>
-                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1"><TrendingUp size={12}/> Projected Sales (BS)</p>
-                           <p className="text-xl md:text-2xl font-black text-slate-800">{formatCurrency(kpi.rr)}</p>
-                       </div>
-                       <div>
-                           <p className="text-[10px] font-bold text-teal-500 uppercase tracking-widest mb-1 flex items-center gap-1"><DollarSign size={12}/> Projected Invest (MI)</p>
-                           <p className="text-xl md:text-2xl font-black text-teal-600">{formatCurrency(kpi.miRr)}</p>
-                       </div>
-                   </div>
-               </div>
-
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fade-in-up stagger-2">
-                   <div className="bg-white rounded-[24px] p-5 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-slate-300 transition-colors">
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Last Month</p>
-                       <div className="flex justify-between items-end mb-2">
-                           <span className="text-4xl font-black text-slate-700 tracking-tight">{kpi?.lm ? ((kpi.miLm / kpi.lm) * 100).toFixed(1) : 0}%</span>
-                       </div>
-                       <div className="w-full bg-slate-100 rounded-full h-2.5 mb-5 overflow-hidden">
-                           <div className="bg-slate-400 h-2.5 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, kpi?.lm ? ((kpi.miLm / kpi.lm) * 100) : 0)}%` }}></div>
-                       </div>
-                       <div className="space-y-2.5 pt-4 border-t border-slate-50">
-                           <div className="flex justify-between items-center text-xs">
-                               <span className="text-slate-500 font-medium">Sales (BS)</span>
-                               <span className="font-bold text-slate-800">{formatCurrency(kpi.lm)}</span>
-                           </div>
-                           <div className="flex justify-between items-center text-xs">
-                               <span className="text-slate-500 font-medium">Invest (MI)</span>
-                               <span className="font-bold text-slate-600">{formatCurrency(kpi.miLm)}</span>
-                           </div>
-                       </div>
-                   </div>
-                   <div className="bg-white rounded-[24px] p-5 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-teal-300 transition-colors">
-                       <div className="flex justify-between items-center mb-3">
-                          <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest flex items-center gap-1.5"><Clock size={12}/> MTD Actual</p>
-                       </div>
-                       <div className="flex justify-between items-end mb-2">
-                           <span className="text-4xl font-black text-teal-600 tracking-tight">{kpi?.mtd ? ((kpi.miMtd / kpi.mtd) * 100).toFixed(1) : 0}%</span>
-                       </div>
-                       <div className="w-full bg-teal-50 rounded-full h-2.5 mb-5 overflow-hidden">
-                           <div className="bg-teal-500 h-2.5 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, kpi?.mtd ? ((kpi.miMtd / kpi.mtd) * 100) : 0)}%` }}></div>
-                       </div>
-                       <div className="space-y-2.5 pt-4 border-t border-slate-50">
-                           <div className="flex justify-between items-center text-xs">
-                               <span className="text-slate-500 font-medium">Sales (BS)</span>
-                               <span className="font-bold text-slate-800">{formatCurrency(kpi.mtd)}</span>
-                           </div>
-                           <div className="flex justify-between items-center text-xs">
-                               <span className="text-slate-500 font-medium">Invest (MI)</span>
-                               <span className="font-bold text-teal-600">{formatCurrency(kpi.miMtd)}</span>
-                           </div>
-                       </div>
-                   </div>
-               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL ADS SPEND BREAKDOWN */}
-      {showAdsModal && (kpi || selectedMex) && (
-        <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 sm:p-6">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in" onClick={() => setShowAdsModal(false)} />
-          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col animate-in zoom-in-95 duration-300 ease-out overflow-hidden">
-            <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10">
-               <div>
-                  <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
-                     <Megaphone className="w-5 h-5 text-rose-500"/>
-                     Ads Spend Breakdown
-                  </h3>
-                  <p className="text-xs text-slate-500 font-medium mt-1">Rincian alokasi biaya iklan {selectedMex ? selectedMex.name : 'berdasarkan platform'}</p>
-               </div>
-               <button onClick={() => setShowAdsModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
-            </div>
-            <div className="p-4 md:p-6 bg-[#f8fafc] space-y-5 custom-scrollbar overflow-y-auto max-h-[75vh]">
-               <div className="bg-white rounded-[28px] p-6 md:p-8 border border-slate-200 shadow-sm relative overflow-hidden flex flex-col gap-6 animate-fade-in-up stagger-1">
-                   <div className="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none"></div>
-                   {(() => {
-                       const adsData = selectedMex ? {
-                           total: selectedMex.adsTotal || 0, rr: selectedMex.adsRR || 0, mob: selectedMex.adsMob || 0, web: selectedMex.adsWeb || 0, dir: selectedMex.adsDir || 0
-                       } : {
-                           total: kpi?.adsMtd || 0, rr: kpi?.adsRr || 0, mob: kpi?.adsMobMtd || 0, web: kpi?.adsWebMtd || 0, dir: kpi?.adsDirMtd || 0
-                       };
-                       const totalAds = adsData.total || 1; 
-                       const mobPct = ((adsData.mob / totalAds) * 100).toFixed(1);
-                       const webPct = ((adsData.web / totalAds) * 100).toFixed(1);
-                       const dirPct = ((adsData.dir / totalAds) * 100).toFixed(1);
-
-                       return (
-                           <Fragment>
-                               <div className="flex-1 w-full relative z-10 flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10">
-                                   <div className="flex-1 text-center sm:text-left">
-                                       <p className="text-[11px] font-black text-rose-600 uppercase tracking-widest mb-2 flex items-center justify-center sm:justify-start gap-1.5"><Activity size={14}/> Total Ads (MTD)</p>
-                                       <p className="text-4xl md:text-5xl font-black text-slate-800 tracking-tight">
-                                           {formatCurrency(adsData.total)}
-                                       </p>
-                                   </div>
-                                   <div className="hidden sm:block w-px h-16 bg-slate-200"></div>
-                                   <div className="flex-1 text-center sm:text-left">
-                                       <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center sm:justify-start gap-1.5"><TrendingUp size={14}/> Projected Runrate</p>
-                                       <p className="text-4xl md:text-5xl font-black text-slate-400 tracking-tight">
-                                           {formatCurrency(adsData.rr)}
-                                       </p>
-                                   </div>
-                               </div>
-                               <div className="space-y-4 relative z-10 w-full mt-2 border-t border-slate-100 pt-6">
-                                   <div className="bg-white rounded-2xl p-4 md:p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center gap-4 group hover:border-blue-300 transition-colors">
-                                       <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center shrink-0 shadow-inner group-hover:bg-blue-100 transition-colors"><Smartphone size={24} /></div>
-                                       <div className="flex-1 w-full">
-                                           <div className="flex justify-between items-end mb-1">
-                                               <div><h4 className="font-black text-slate-800 text-sm md:text-base">Ads Mobile</h4><p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">Marketing Self Serve</p></div>
-                                               <div className="text-right"><p className="font-black text-blue-600 text-lg md:text-xl leading-none">{formatCurrency(adsData.mob)}</p><p className="text-xs font-bold text-slate-500 mt-1">{adsData.total > 0 ? mobPct : 0}% Porsi</p></div>
-                                           </div>
-                                           <div className="w-full bg-slate-100 rounded-full h-2 mt-2 overflow-hidden"><div className="bg-blue-500 h-2 rounded-full transition-all duration-1000 delay-300" style={{ width: `${Math.min(100, adsData.total > 0 ? mobPct : 0)}%` }}></div></div>
-                                       </div>
-                                   </div>
-                                   <div className="bg-white rounded-2xl p-4 md:p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center gap-4 group hover:border-amber-300 transition-colors">
-                                       <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center shrink-0 shadow-inner group-hover:bg-amber-100 transition-colors"><ExternalLink size={24} /></div>
-                                       <div className="flex-1 w-full">
-                                           <div className="flex justify-between items-end mb-1">
-                                               <div><h4 className="font-black text-slate-800 text-sm md:text-base">Ads Web</h4><p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">Marketing Manager</p></div>
-                                               <div className="text-right"><p className="font-black text-amber-600 text-lg md:text-xl leading-none">{formatCurrency(adsData.web)}</p><p className="text-xs font-bold text-slate-500 mt-1">{adsData.total > 0 ? webPct : 0}% Porsi</p></div>
-                                           </div>
-                                           <div className="w-full bg-slate-100 rounded-full h-2 mt-2 overflow-hidden"><div className="bg-amber-500 h-2 rounded-full transition-all duration-1000 delay-500" style={{ width: `${Math.min(100, adsData.total > 0 ? webPct : 0)}%` }}></div></div>
-                                       </div>
-                                   </div>
-                                   <div className="bg-white rounded-2xl p-4 md:p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center gap-4 group hover:border-purple-300 transition-colors">
-                                       <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-xl flex items-center justify-center shrink-0 shadow-inner group-hover:bg-purple-100 transition-colors"><Zap size={24} /></div>
-                                       <div className="flex-1 w-full">
-                                           <div className="flex justify-between items-end mb-1">
-                                               <div><h4 className="font-black text-slate-800 text-sm md:text-base">Direct Ads</h4><p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">Customize Ads</p></div>
-                                               <div className="text-right"><p className="font-black text-purple-600 text-lg md:text-xl leading-none">{formatCurrency(adsData.dir)}</p><p className="text-xs font-bold text-slate-500 mt-1">{adsData.total > 0 ? dirPct : 0}% Porsi</p></div>
-                                           </div>
-                                           <div className="w-full bg-slate-100 rounded-full h-2 mt-2 overflow-hidden"><div className="bg-purple-500 h-2 rounded-full transition-all duration-1000 delay-700" style={{ width: `${Math.min(100, adsData.total > 0 ? dirPct : 0)}%` }}></div></div>
-                                       </div>
-                                   </div>
-                               </div>
-                           </Fragment>
-                       );
-                   })()}
-               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL OUTLETS ATTENTION (INACTIVE & 0-TRX) */}
-      {showOutletsModal && (
-        <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 sm:p-6">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in" onClick={() => setShowOutletsModal(false)} />
-          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-300 ease-out overflow-hidden">
-            <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-100 shrink-0 bg-white relative z-10">
-               <div>
-                  <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
-                     <Store className="w-5 h-5 text-blue-500"/>
-                     Outlets Attention
-                  </h3>
-                  <p className="text-xs text-slate-500 font-medium mt-1">Daftar merchant yang perlu perhatian khusus</p>
-               </div>
-               <button onClick={() => setShowOutletsModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
-            </div>
-            
-            <div className="flex px-5 pt-4 gap-2 bg-[#f8fafc] border-b border-slate-100 shrink-0">
-                <button onClick={() => setOutletModalTab('inactive')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest rounded-t-xl transition-all border-b-2 ${outletModalTab === 'inactive' ? 'border-slate-800 text-slate-800 bg-white shadow-sm' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>Inactive ({kpi?.inactiveMex || 0})</button>
-                <button onClick={() => setOutletModalTab('zerotrx')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest rounded-t-xl transition-all border-b-2 ${outletModalTab === 'zerotrx' ? 'border-rose-500 text-rose-600 bg-rose-50' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>0-Trx MTD ({kpi?.zeroTrxMex || 0})</button>
-            </div>
-
-            <div className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar bg-[#f8fafc]">
-               {(() => {
-                   const displayList = outletModalTab === 'inactive' ? inactiveMerchants : zeroTrxMerchants;
-                   if (displayList.length === 0) {
-                       return (
-                           <div className="flex flex-col items-center justify-center h-48 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
-                               <CheckCircle className="w-10 h-10 mb-3 opacity-30 text-emerald-500" />
-                               <p className="text-[11px] font-bold uppercase tracking-widest">Semua Aman!</p>
-                           </div>
-                       );
-                   }
-                   return (
-                       <div className="grid grid-cols-1 gap-3">
-                          {displayList.map((mex, idx) => (
-                              <div key={mex.id} style={{ animationDelay: `${idx * 30}ms` }} onClick={() => { setSelectedMex(mex); setShowOutletsModal(false); setActiveTab('overview'); }} className={`animate-fade-in-up flex justify-between items-center p-4 bg-white border border-slate-200 rounded-2xl cursor-pointer transition-all duration-300 group hover:shadow-lg ${outletModalTab === 'inactive' ? 'hover:border-slate-400 hover:shadow-slate-500/10' : 'hover:border-rose-400 hover:shadow-rose-500/10'}`}>
-                                  <div className="min-w-0 pr-4 flex-1">
-                                      <p className={`font-bold text-sm md:text-base text-slate-800 truncate transition-colors ${outletModalTab === 'inactive' ? 'group-hover:text-blue-600' : 'group-hover:text-rose-600'}`}>{mex.name}</p>
-                                      <div className="flex flex-wrap items-center gap-2 mt-1">
-                                          <span className="text-[9px] font-black text-white bg-indigo-600/[0.65] border border-indigo-700/[0.65] px-1.5 py-0.5 rounded uppercase tracking-widest flex items-center gap-1 shadow-sm backdrop-blur-sm"><Users size={10} className="text-indigo-100" /> {getShortAMName(mex.amName)}</span>
-                                          {outletModalTab === 'zerotrx' && (
-                                              <span className="text-[9px] font-bold text-white bg-slate-600/[0.65] px-1.5 py-0.5 rounded border border-slate-700/[0.65] uppercase tracking-widest shadow-sm backdrop-blur-sm" title="Omset Bulan Lalu">LM: {formatCurrency(mex.lmBs)}</span>
-                                          )}
-                                      </div>
-                                      {renderMerchantCampaigns(mex.campaigns, true)}
-                                  </div>
-                                  <div className="text-right shrink-0 flex flex-col items-end">
-                                     <div className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest shadow-sm ${outletModalTab === 'inactive' ? 'bg-slate-100 text-slate-500 border border-slate-200' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
-                                        {outletModalTab === 'inactive' ? 'Inactive' : '0-Trx'}
-                                     </div>
-                                  </div>
-                              </div>
-                          ))}
-                       </div>
-                   );
-               })()}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL COMPARE PERFORMANCE */}
-      {showCompareModal && selectedMex && (
-        <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 sm:p-6">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in" onClick={() => setShowCompareModal(false)} />
-          <div className="relative w-full max-w-4xl bg-[#f8fafc] rounded-[32px] shadow-2xl border border-slate-200 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300 ease-out overflow-hidden">
-            <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-200 shrink-0 bg-white relative z-10 shadow-sm">
-               <div>
-                  <h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2">
-                     <BarChart2 className="w-5 h-5 text-indigo-500"/>
-                     Performance Comparison
-                  </h3>
-                  <p className="text-xs text-slate-500 font-medium mt-1">{selectedMex.name}</p>
-               </div>
-               <button onClick={() => setShowCompareModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"><X size={20}/></button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 custom-scrollbar flex flex-col">
-                {compareChartData.length > 0 && (
-                    <div className="mb-4 md:mb-6 bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 shadow-sm animate-fade-in-up shrink-0" style={{ animationDelay: '100ms' }}>
-                        <h4 className="text-xs md:text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <Activity className="text-[#00B14F] w-4 h-4"/> Grafik Tren Sales, Invest, AOV & Orders
-                        </h4>
-                        <div className="h-[200px] md:h-[250px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <ComposedChart data={compareChartData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                    <XAxis dataKey="month" tickFormatter={formatMonth} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} dy={5} />
-                                    <YAxis yAxisId="left" tickFormatter={(v) => v >= 1000000 ? `${(v/1000000).toFixed(0)}M` : `${(v/1000).toFixed(0)}K`} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} width={40} />
-                                    <YAxis yAxisId="aov" orientation="right" tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} tick={{ fill: '#3b82f6', fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} width={35} />
-                                    <YAxis yAxisId="right" orientation="right" tick={{ fill: '#f59e0b', fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} width={25} />
-                                    <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, name) => [name === 'Orders' ? v : formatCurrency(v), name]} labelFormatter={formatMonth}/>
-                                    <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '20px', fontSize: '11px', fontWeight: 'bold' }} iconType="circle" />
-                                    
-                                    <Bar yAxisId="left" dataKey="net_sales" stackId="a" name="Net Sales" fill="#10b981" maxBarSize={40} />
-                                    <Bar yAxisId="left" dataKey="total_investment" stackId="a" name="Total Invest" fill="#f43f5e" radius={[4,4,0,0]} maxBarSize={40} />
-                                    
-                                    <Bar yAxisId="aov" dataKey="aov" name="AOV" fill="#3b82f6" radius={[4,4,0,0]} maxBarSize={40} />
-                                    <Bar yAxisId="right" dataKey="completed_orders" name="Orders" fill="#f59e0b" radius={[4,4,0,0]} maxBarSize={40} />
-                                </ComposedChart>
-                            </ResponsiveContainer>
+      <Modal isOpen={activeSegmentModal !== null} onClose={() => setActiveSegmentModal(null)} title={`Segmen: ${activeSegmentModal}`} icon={Target} iconColor="text-[#00B14F]" subtitle={`Daftar ${filteredSegmentMerchants.length} merchant dalam kategori ini`}>
+          <div className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar bg-[#f8fafc]">
+             {filteredSegmentMerchants.length === 0 ? (
+               <div className="flex flex-col items-center justify-center h-48 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200"><Store className="w-10 h-10 mb-3 opacity-30" /><p className="text-xs font-bold uppercase tracking-widest">Kosong</p></div>
+             ) : (
+               <div className="grid grid-cols-1 gap-3">
+                  {filteredSegmentMerchants.map((mex, idx) => (
+                     <div key={mex.id} style={{ animationDelay: `${idx * 30}ms` }} onClick={() => { setSelectedMex(mex); setActiveSegmentModal(null); setActiveTab('overview'); }} className="animate-fade-in-up flex justify-between items-center p-4 bg-white border border-slate-200 rounded-2xl hover:border-[#00B14F] hover:shadow-lg hover:shadow-emerald-500/10 cursor-pointer transition-all duration-300 group">
+                        <div className="min-w-0 pr-4">
+                           <p className="font-bold text-sm md:text-base text-slate-800 group-hover:text-[#00B14F] truncate transition-colors">{mex.name}</p>
+                           <div className="-mt-0.5">{renderMerchantCampaigns(mex.campaigns)}</div>
                         </div>
-                    </div>
-                )}
-
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3 text-center md:hidden animate-pulse flex items-center justify-center gap-1.5"><ChevronLeft size={12}/> Geser kartu untuk membandingkan <ChevronRight size={12}/></p>
-                <div className="flex flex-nowrap md:grid md:grid-cols-3 gap-3 md:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 md:pb-0 hide-scrollbar shrink-0" style={{ WebkitOverflowScrolling: 'touch' }}>
-                    {[0, 1, 2].map((idx) => {
-                        const selectedMonth = compareMonths[idx];
-                        const hist = selectedMex.history.find(h => h.month === selectedMonth);
-                        
-                        const getGrowth = (current, previous) => {
-                            if (!previous || previous === 0) return 0;
-                            return ((current - previous) / previous) * 100;
-                        };
-                        
-                        let prev = null;
-                        if (hist) {
-                            const currentIndex = selectedMex.history.findIndex(h => h.month === selectedMonth);
-                            if (currentIndex > 0) prev = selectedMex.history[currentIndex - 1];
-                        }
-
-                        const renderGrowthBadge = (val, invert = false) => {
-                            if (!val || val === 0) return null;
-                            const isUp = val > 0;
-                            const isGood = invert ? !isUp : isUp;
-                            return (
-                                <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] md:text-[10px] font-black shadow-sm ${isGood ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
-                                    {isUp ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />} {Math.abs(val).toFixed(1)}%
-                                </span>
-                            );
-                        };
-
-                        return (
-                            <div key={idx} className="w-[200px] sm:w-[240px] md:w-auto md:flex-1 shrink-0 snap-center bg-white rounded-2xl md:rounded-3xl border border-slate-200 p-3 md:p-5 shadow-sm flex flex-col relative overflow-hidden animate-fade-in-up" style={{ animationDelay: `${300 + (idx * 100)}ms` }}>
-                                <div className="mb-3 md:mb-5 relative z-10">
-                                    <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 md:mb-2">Bulan {idx + 1}</label>
-                                    <select 
-                                        value={selectedMonth}
-                                        onChange={(e) => {
-                                            const newMonths = [...compareMonths];
-                                            newMonths[idx] = e.target.value;
-                                            setCompareMonths(newMonths);
-                                        }}
-                                        className="w-full bg-slate-50 border border-slate-200 text-slate-700 text-xs md:text-sm font-bold rounded-lg md:rounded-xl px-2 py-1.5 md:px-3 md:py-2 focus:outline-none focus:border-indigo-400 transition-colors cursor-pointer"
-                                    >
-                                        <option value="">-- Pilih Bulan --</option>
-                                        {[...selectedMex.history].reverse().map(h => (
-                                            <option key={h.month} value={h.month}>{formatMonth(h.month)}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                {hist ? (
-                                    <div className="relative z-10 flex flex-col mt-auto gap-2.5 md:gap-4">
-                                        <div className="bg-emerald-600/70 border border-emerald-500/50 rounded-xl md:rounded-2xl p-2.5 md:p-4 flex flex-col items-center justify-center text-center shadow-inner backdrop-blur-sm relative overflow-hidden">
-                                            <div className="absolute top-0 right-0 w-12 h-12 md:w-16 h-16 bg-white/10 rounded-bl-full opacity-50 -mr-2 -mt-2 pointer-events-none"></div>
-                                            <p className="text-[9px] md:text-[10px] font-black text-emerald-50 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Activity size={12}/> Gross Sales</p>
-                                            <p className="text-lg md:text-2xl font-black text-white tracking-tight mb-1.5 md:mb-2 truncate w-full px-1" title={formatCurrency(hist.basket_size)}>{formatCurrency(hist.basket_size)}</p>
-                                            {renderGrowthBadge(getGrowth(hist.basket_size, prev?.basket_size))}
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-2 md:gap-3">
-                                            <div className="bg-slate-50 border border-slate-100 rounded-lg md:rounded-xl p-2 md:p-3 flex flex-col items-center justify-center text-center shadow-sm min-w-0">
-                                                <p className="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1 truncate w-full justify-center"><ShoppingBag size={10} className="shrink-0"/> Orders</p>
-                                                <p className="text-xs md:text-lg font-black text-slate-700 mb-1 truncate w-full" title={hist.completed_orders}>{hist.completed_orders}</p>
-                                                {renderGrowthBadge(getGrowth(hist.completed_orders, prev?.completed_orders))}
-                                            </div>
-                                            <div className="bg-slate-50 border border-slate-100 rounded-lg md:rounded-xl p-2 md:p-3 flex flex-col items-center justify-center text-center shadow-sm min-w-0">
-                                                <p className="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1 truncate w-full justify-center"><Target size={10} className="shrink-0"/> AOV</p>
-                                                <p className="text-xs md:text-lg font-black text-slate-700 mb-1 truncate w-full" title={formatCurrency(hist.aov)}>{formatCurrency(hist.aov)}</p>
-                                                {renderGrowthBadge(getGrowth(hist.aov, prev?.aov))}
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-rose-600/70 border border-rose-500/50 rounded-lg md:rounded-xl p-2.5 md:p-4 flex flex-col gap-2 md:gap-3 shadow-inner backdrop-blur-sm">
-                                            <div className="flex justify-between items-center pb-2 md:pb-3 border-b border-rose-400/40 gap-1">
-                                                <div className="min-w-0">
-                                                    <p className="text-[8px] md:text-[9px] font-bold text-rose-50 uppercase tracking-widest mb-0.5 flex items-center gap-1 truncate"><Zap size={10} className="shrink-0"/> Promo</p>
-                                                    <p className="text-[11px] md:text-sm font-black text-white truncate" title={formatCurrency(hist.total_investment)}>{formatCurrency(hist.total_investment)}</p>
-                                                </div>
-                                                <div className="shrink-0">{renderGrowthBadge(getGrowth(hist.total_investment, prev?.total_investment), true)}</div>
-                                            </div>
-                                            <div className="flex justify-between items-center gap-1">
-                                                <div className="min-w-0">
-                                                    <p className="text-[8px] md:text-[9px] font-bold text-rose-50 uppercase tracking-widest mb-0.5 flex items-center gap-1 truncate"><Megaphone size={10} className="shrink-0"/> Ads</p>
-                                                    <p className="text-[11px] md:text-sm font-black text-white truncate" title={formatCurrency(hist.ads_total_hist)}>{formatCurrency(hist.ads_total_hist)}</p>
-                                                </div>
-                                                <div className="shrink-0">{renderGrowthBadge(getGrowth(hist.ads_total_hist, prev?.ads_total_hist), true)}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="flex-1 flex flex-col items-center justify-center text-slate-300 mt-6 md:mt-10">
-                                        <BarChart2 className="w-10 h-10 md:w-12 md:h-12 mb-2 md:mb-3 opacity-20" />
-                                        <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-center">Pilih bulan<br/>untuk melihat data</p>
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
+                        <div className="text-right shrink-0 flex flex-col items-end">
+                           <p className="font-black text-sm md:text-base text-slate-800">{formatCurrency(mex.mtdBs)}</p>
+                           <div className="flex items-center gap-1.5 mt-1">
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">MTD Sales</p>
+                              <span className={`flex items-center gap-0.5 px-1 py-0.5 rounded-md text-[8px] font-black border ${mex.campaignPoint > 0 ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-slate-50 text-slate-400 border-slate-200'}`} title="Campaign Points"><Award size={10} /> {mex.campaignPoint || 0}</span>
+                           </div>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+             )}
           </div>
-        </div>
-      )}
+      </Modal>
 
-      {/* FULL WIDTH ENTERPRISE SAAS HEADER */}
+      <Modal isOpen={showMcaModal} onClose={() => setShowMcaModal(false)} title="Merchant Pencairan MCA" icon={Database} iconColor="text-amber-500" subtitle={`Daftar ${disbursedMerchants.length} merchant yang telah mencairkan dana`}>
+          <div className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar bg-[#f8fafc]">
+             {disbursedMerchants.length === 0 ? (
+               <div className="flex flex-col items-center justify-center h-48 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200"><Store className="w-10 h-10 mb-3 opacity-30" /><p className="text-xs font-bold uppercase tracking-widest">Belum ada pencairan</p></div>
+             ) : (
+               <div className="grid grid-cols-1 gap-3">
+                  {disbursedMerchants.map((mex, idx) => {
+                     const isPending = mex.mcaDisburseStatus && String(mex.mcaDisburseStatus).toLowerCase().includes('pending');
+                     return (
+                     <div key={mex.id} style={{ animationDelay: `${idx * 30}ms` }} onClick={() => { setSelectedMex(mex); setShowMcaModal(false); setActiveTab('overview'); }} className={`animate-fade-in-up flex justify-between items-center p-4 bg-white border border-slate-200 rounded-2xl cursor-pointer transition-all duration-300 group ${isPending ? 'hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/10' : 'hover:border-amber-400 hover:shadow-lg hover:shadow-amber-500/10'}`}>
+                        <div className="min-w-0 pr-4 flex-1">
+                           <div className="flex items-center gap-2 min-w-0">
+                              {mex.mcaPriority && mex.mcaPriority !== '-' && (<span className={`px-1.5 py-0.5 rounded text-[9px] font-black shrink-0 border ${getPriorityBadgeClass(mex.mcaPriority)}`}>{mex.mcaPriority}</span>)}
+                              <p className={`font-bold text-sm md:text-base text-slate-800 truncate transition-colors ${isPending ? 'group-hover:text-blue-600' : 'group-hover:text-amber-600'}`}>{mex.name}</p>
+                           </div>
+                           <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[9px] font-black text-white bg-indigo-600/[0.65] border border-indigo-700/[0.65] px-1.5 py-0.5 rounded uppercase tracking-widest flex items-center gap-1 shadow-sm backdrop-blur-sm"><Users size={10} className="text-indigo-100" /> {getShortAMName(mex.amName)}</span>
+                              {mex.disbursedDate && String(mex.disbursedDate).trim() !== '-' && (<span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-widest text-white shadow-sm backdrop-blur-sm ${isPending ? 'bg-blue-600/[0.65] border-blue-700/[0.65]' : 'bg-amber-600/[0.65] border-amber-700/[0.65]'}`}>{mex.disbursedDate}</span>)}
+                           </div>
+                        </div>
+                        <div className="text-right shrink-0 flex flex-col items-end">
+                           <p className={`font-black text-sm md:text-base ${isPending ? 'text-blue-600' : 'text-amber-600'}`}>{formatCurrency(mex.mcaAmount)}</p>
+                           <p className={`text-[9px] font-bold uppercase tracking-widest mt-1 ${isPending ? 'text-blue-500' : 'text-slate-400'}`}>{isPending ? 'Pending' : 'Telah Cair'}</p>
+                        </div>
+                     </div>
+                  )})}
+               </div>
+             )}
+          </div>
+      </Modal>
+
+      <Modal isOpen={!!(showMiModal && kpi)} onClose={() => setShowMiModal(false)} title="Investment Ratio (MI/BS)" icon={Percent} iconColor="text-teal-500" subtitle="Detail persentase beban promo terhadap omset merchant">
+          <div className="p-4 md:p-6 bg-[#f8fafc] space-y-5 custom-scrollbar overflow-y-auto max-h-[75vh]">
+             <div className="bg-white rounded-[28px] p-6 border border-slate-200 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center gap-6 animate-fade-in-up stagger-1">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none"></div>
+                 <div className="flex-1 w-full relative z-10 text-center md:text-left">
+                     <p className="text-[11px] font-black text-teal-600 uppercase tracking-widest mb-2 flex items-center justify-center md:justify-start gap-1.5"><Activity size={14}/> Projected Ratio</p>
+                     <div className="flex items-baseline justify-center md:justify-start gap-1 mb-2">
+                         <span className="text-6xl font-black text-slate-800 tracking-tighter">{kpi?.rr ? ((kpi.miRr / kpi.rr) * 100).toFixed(1) : 0}</span>
+                         <span className="text-3xl font-black text-slate-400">%</span>
+                     </div>
+                     <p className="text-[10px] md:text-xs text-slate-500 font-medium leading-relaxed max-w-sm mx-auto md:mx-0">
+                         Diproyeksikan bahwa beban investasi (MI) akan memakan <strong className="text-slate-700">{kpi?.rr ? ((kpi.miRr / kpi.rr) * 100).toFixed(1) : 0}%</strong> dari total Omset bulan ini.
+                     </p>
+                 </div>
+                 <div className="flex-1 w-full flex flex-col gap-4 relative z-10 border-t md:border-t-0 md:border-l border-slate-100 pt-5 md:pt-0 md:pl-6">
+                     <div>
+                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1"><TrendingUp size={12}/> Projected Sales (BS)</p>
+                         <p className="text-xl md:text-2xl font-black text-slate-800">{formatCurrency(kpi?.rr || 0)}</p>
+                     </div>
+                     <div>
+                         <p className="text-[10px] font-bold text-teal-500 uppercase tracking-widest mb-1 flex items-center gap-1"><DollarSign size={12}/> Projected Invest (MI)</p>
+                         <p className="text-xl md:text-2xl font-black text-teal-600">{formatCurrency(kpi?.miRr || 0)}</p>
+                     </div>
+                 </div>
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fade-in-up stagger-2">
+                 <div className="bg-white rounded-[24px] p-5 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-slate-300 transition-colors">
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Last Month</p>
+                     <div className="flex justify-between items-end mb-2"><span className="text-4xl font-black text-slate-700 tracking-tight">{kpi?.lm ? ((kpi.miLm / kpi.lm) * 100).toFixed(1) : 0}%</span></div>
+                     <div className="w-full bg-slate-100 rounded-full h-2.5 mb-5 overflow-hidden"><div className="bg-slate-400 h-2.5 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, kpi?.lm ? ((kpi.miLm / kpi.lm) * 100) : 0)}%` }}></div></div>
+                     <div className="space-y-2.5 pt-4 border-t border-slate-50">
+                         <div className="flex justify-between items-center text-xs"><span className="text-slate-500 font-medium">Sales (BS)</span><span className="font-bold text-slate-800">{formatCurrency(kpi?.lm || 0)}</span></div>
+                         <div className="flex justify-between items-center text-xs"><span className="text-slate-500 font-medium">Invest (MI)</span><span className="font-bold text-slate-600">{formatCurrency(kpi?.miLm || 0)}</span></div>
+                     </div>
+                 </div>
+                 <div className="bg-white rounded-[24px] p-5 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-teal-300 transition-colors">
+                     <div className="flex justify-between items-center mb-3"><p className="text-[10px] font-black text-teal-600 uppercase tracking-widest flex items-center gap-1.5"><Clock size={12}/> MTD Actual</p></div>
+                     <div className="flex justify-between items-end mb-2"><span className="text-4xl font-black text-teal-600 tracking-tight">{kpi?.mtd ? ((kpi.miMtd / kpi.mtd) * 100).toFixed(1) : 0}%</span></div>
+                     <div className="w-full bg-teal-50 rounded-full h-2.5 mb-5 overflow-hidden"><div className="bg-teal-500 h-2.5 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, kpi?.mtd ? ((kpi.miMtd / kpi.mtd) * 100) : 0)}%` }}></div></div>
+                     <div className="space-y-2.5 pt-4 border-t border-slate-50">
+                         <div className="flex justify-between items-center text-xs"><span className="text-slate-500 font-medium">Sales (BS)</span><span className="font-bold text-slate-800">{formatCurrency(kpi?.mtd || 0)}</span></div>
+                         <div className="flex justify-between items-center text-xs"><span className="text-slate-500 font-medium">Invest (MI)</span><span className="font-bold text-teal-600">{formatCurrency(kpi?.miMtd || 0)}</span></div>
+                     </div>
+                 </div>
+             </div>
+          </div>
+      </Modal>
+
+      <Modal isOpen={!!(showAdsModal && (kpi || selectedMex))} onClose={() => setShowAdsModal(false)} title="Ads Spend Breakdown" icon={Megaphone} iconColor="text-rose-500" subtitle={`Rincian alokasi biaya iklan ${selectedMex ? selectedMex.name : 'berdasarkan platform'}`}>
+          <div className="p-4 md:p-6 bg-[#f8fafc] space-y-5 custom-scrollbar overflow-y-auto max-h-[75vh]">
+             <div className="bg-white rounded-[28px] p-6 md:p-8 border border-slate-200 shadow-sm relative overflow-hidden flex flex-col gap-6 animate-fade-in-up stagger-1">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none"></div>
+                 {(() => {
+                     const adsData = selectedMex ? { total: selectedMex.adsTotal || 0, rr: selectedMex.adsRR || 0, mob: selectedMex.adsMob || 0, web: selectedMex.adsWeb || 0, dir: selectedMex.adsDir || 0 } : { total: kpi?.adsMtd || 0, rr: kpi?.adsRr || 0, mob: kpi?.adsMobMtd || 0, web: kpi?.adsWebMtd || 0, dir: kpi?.adsDirMtd || 0 };
+                     const totalAds = adsData.total || 1; 
+                     const mobPct = ((adsData.mob / totalAds) * 100).toFixed(1); const webPct = ((adsData.web / totalAds) * 100).toFixed(1); const dirPct = ((adsData.dir / totalAds) * 100).toFixed(1);
+
+                     return (
+                         <Fragment>
+                             <div className="flex-1 w-full relative z-10 flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10">
+                                 <div className="flex-1 text-center sm:text-left">
+                                     <p className="text-[11px] font-black text-rose-600 uppercase tracking-widest mb-2 flex items-center justify-center sm:justify-start gap-1.5"><Activity size={14}/> Total Ads (MTD)</p>
+                                     <p className="text-4xl md:text-5xl font-black text-slate-800 tracking-tight">{formatCurrency(adsData.total)}</p>
+                                 </div>
+                                 <div className="hidden sm:block w-px h-16 bg-slate-200"></div>
+                                 <div className="flex-1 text-center sm:text-left">
+                                     <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center sm:justify-start gap-1.5"><TrendingUp size={14}/> Projected Runrate</p>
+                                     <p className="text-4xl md:text-5xl font-black text-slate-400 tracking-tight">{formatCurrency(adsData.rr)}</p>
+                                 </div>
+                             </div>
+                             <div className="space-y-4 relative z-10 w-full mt-2 border-t border-slate-100 pt-6">
+                                 <div className="bg-white rounded-2xl p-4 md:p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center gap-4 group hover:border-blue-300 transition-colors">
+                                     <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center shrink-0 shadow-inner group-hover:bg-blue-100 transition-colors"><Smartphone size={24} /></div>
+                                     <div className="flex-1 w-full">
+                                         <div className="flex justify-between items-end mb-1">
+                                             <div><h4 className="font-black text-slate-800 text-sm md:text-base">Ads Mobile</h4><p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">Marketing Self Serve</p></div>
+                                             <div className="text-right"><p className="font-black text-blue-600 text-lg md:text-xl leading-none">{formatCurrency(adsData.mob)}</p><p className="text-xs font-bold text-slate-500 mt-1">{adsData.total > 0 ? mobPct : 0}% Porsi</p></div>
+                                         </div>
+                                         <div className="w-full bg-slate-100 rounded-full h-2 mt-2 overflow-hidden"><div className="bg-blue-500 h-2 rounded-full transition-all duration-1000 delay-300" style={{ width: `${Math.min(100, adsData.total > 0 ? mobPct : 0)}%` }}></div></div>
+                                     </div>
+                                 </div>
+                                 <div className="bg-white rounded-2xl p-4 md:p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center gap-4 group hover:border-amber-300 transition-colors">
+                                     <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center shrink-0 shadow-inner group-hover:bg-amber-100 transition-colors"><ExternalLink size={24} /></div>
+                                     <div className="flex-1 w-full">
+                                         <div className="flex justify-between items-end mb-1">
+                                             <div><h4 className="font-black text-slate-800 text-sm md:text-base">Ads Web</h4><p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">Marketing Manager</p></div>
+                                             <div className="text-right"><p className="font-black text-amber-600 text-lg md:text-xl leading-none">{formatCurrency(adsData.web)}</p><p className="text-xs font-bold text-slate-500 mt-1">{adsData.total > 0 ? webPct : 0}% Porsi</p></div>
+                                         </div>
+                                         <div className="w-full bg-slate-100 rounded-full h-2 mt-2 overflow-hidden"><div className="bg-amber-500 h-2 rounded-full transition-all duration-1000 delay-500" style={{ width: `${Math.min(100, adsData.total > 0 ? webPct : 0)}%` }}></div></div>
+                                     </div>
+                                 </div>
+                                 <div className="bg-white rounded-2xl p-4 md:p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center gap-4 group hover:border-purple-300 transition-colors">
+                                     <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-xl flex items-center justify-center shrink-0 shadow-inner group-hover:bg-purple-100 transition-colors"><Zap size={24} /></div>
+                                     <div className="flex-1 w-full">
+                                         <div className="flex justify-between items-end mb-1">
+                                             <div><h4 className="font-black text-slate-800 text-sm md:text-base">Direct Ads</h4><p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">Customize Ads</p></div>
+                                             <div className="text-right"><p className="font-black text-purple-600 text-lg md:text-xl leading-none">{formatCurrency(adsData.dir)}</p><p className="text-xs font-bold text-slate-500 mt-1">{adsData.total > 0 ? dirPct : 0}% Porsi</p></div>
+                                         </div>
+                                         <div className="w-full bg-slate-100 rounded-full h-2 mt-2 overflow-hidden"><div className="bg-purple-500 h-2 rounded-full transition-all duration-1000 delay-700" style={{ width: `${Math.min(100, adsData.total > 0 ? dirPct : 0)}%` }}></div></div>
+                                     </div>
+                                 </div>
+                             </div>
+                         </Fragment>
+                     );
+                 })()}
+             </div>
+          </div>
+      </Modal>
+
+      <Modal isOpen={showOutletsModal} onClose={() => setShowOutletsModal(false)} title="Outlets Attention" icon={Store} iconColor="text-blue-500" subtitle="Daftar merchant yang perlu perhatian khusus">
+          <div className="flex px-5 pt-4 gap-2 bg-[#f8fafc] border-b border-slate-100 shrink-0">
+              <button onClick={() => setOutletModalTab('inactive')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest rounded-t-xl transition-all border-b-2 ${outletModalTab === 'inactive' ? 'border-slate-800 text-slate-800 bg-white shadow-sm' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>Inactive ({kpi?.inactiveMex || 0})</button>
+              <button onClick={() => setOutletModalTab('zerotrx')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest rounded-t-xl transition-all border-b-2 ${outletModalTab === 'zerotrx' ? 'border-rose-500 text-rose-600 bg-rose-50' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>0-Trx MTD ({kpi?.zeroTrxMex || 0})</button>
+          </div>
+          <div className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar bg-[#f8fafc]">
+             {(() => {
+                 const displayList = outletModalTab === 'inactive' ? inactiveMerchants : zeroTrxMerchants;
+                 if (displayList.length === 0) return (<div className="flex flex-col items-center justify-center h-48 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200"><CheckCircle className="w-10 h-10 mb-3 opacity-30 text-emerald-500" /><p className="text-[11px] font-bold uppercase tracking-widest">Semua Aman!</p></div>);
+                 return (
+                     <div className="grid grid-cols-1 gap-3">
+                        {displayList.map((mex, idx) => (
+                            <div key={mex.id} style={{ animationDelay: `${idx * 30}ms` }} onClick={() => { setSelectedMex(mex); setShowOutletsModal(false); setActiveTab('overview'); }} className={`animate-fade-in-up flex justify-between items-center p-4 bg-white border border-slate-200 rounded-2xl cursor-pointer transition-all duration-300 group hover:shadow-lg ${outletModalTab === 'inactive' ? 'hover:border-slate-400 hover:shadow-slate-500/10' : 'hover:border-rose-400 hover:shadow-rose-500/10'}`}>
+                                <div className="min-w-0 pr-4 flex-1">
+                                    <p className={`font-bold text-sm md:text-base text-slate-800 truncate transition-colors ${outletModalTab === 'inactive' ? 'group-hover:text-blue-600' : 'group-hover:text-rose-600'}`}>{mex.name}</p>
+                                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                                        <span className="text-[9px] font-black text-white bg-indigo-600/[0.65] border border-indigo-700/[0.65] px-1.5 py-0.5 rounded uppercase tracking-widest flex items-center gap-1 shadow-sm backdrop-blur-sm"><Users size={10} className="text-indigo-100" /> {getShortAMName(mex.amName)}</span>
+                                        {outletModalTab === 'zerotrx' && (<span className="text-[9px] font-bold text-white bg-slate-600/[0.65] px-1.5 py-0.5 rounded border border-slate-700/[0.65] uppercase tracking-widest shadow-sm backdrop-blur-sm" title="Omset Bulan Lalu">LM: {formatCurrency(mex.lmBs)}</span>)}
+                                    </div>
+                                    {renderMerchantCampaigns(mex.campaigns, true)}
+                                </div>
+                                <div className="text-right shrink-0 flex flex-col items-end">
+                                   <div className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest shadow-sm ${outletModalTab === 'inactive' ? 'bg-slate-100 text-slate-500 border border-slate-200' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
+                                      {outletModalTab === 'inactive' ? 'Inactive' : '0-Trx'}
+                                   </div>
+                                </div>
+                            </div>
+                        ))}
+                     </div>
+                 );
+             })()}
+          </div>
+      </Modal>
+
+      <Modal isOpen={!!(showCompareModal && selectedMex)} onClose={() => setShowCompareModal(false)} title="Performance Comparison" icon={BarChart2} iconColor="text-indigo-500" subtitle={selectedMex?.name} maxWidth="max-w-4xl">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 custom-scrollbar flex flex-col">
+              {compareChartData.length > 0 && (
+                  <div className="mb-4 md:mb-6 bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 shadow-sm animate-fade-in-up shrink-0" style={{ animationDelay: '100ms' }}>
+                      <h4 className="text-xs md:text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2"><Activity className="text-[#00B14F] w-4 h-4"/> Grafik Tren Sales, Invest, AOV & Orders</h4>
+                      <div className="h-[200px] md:h-[250px] w-full">
+                          <ResponsiveContainer width="100%" height="100%">
+                              <ComposedChart data={compareChartData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                  <XAxis dataKey="month" tickFormatter={formatMonth} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} dy={5} />
+                                  <YAxis yAxisId="left" tickFormatter={(v) => v >= 1000000 ? `${(v/1000000).toFixed(0)}M` : `${(v/1000).toFixed(0)}K`} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} width={40} />
+                                  <YAxis yAxisId="aov" orientation="right" tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} tick={{ fill: '#3b82f6', fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} width={35} />
+                                  <YAxis yAxisId="right" orientation="right" tick={{ fill: '#f59e0b', fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} width={25} />
+                                  <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, name) => [name === 'Orders' ? v : formatCurrency(v), name]} labelFormatter={formatMonth}/>
+                                  <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '20px', fontSize: '11px', fontWeight: 'bold' }} iconType="circle" />
+                                  
+                                  <Bar yAxisId="left" dataKey="net_sales" stackId="a" name="Net Sales" fill="#10b981" maxBarSize={40} />
+                                  <Bar yAxisId="left" dataKey="total_investment" stackId="a" name="Total Invest" fill="#f43f5e" radius={[4,4,0,0]} maxBarSize={40} />
+                                  <Bar yAxisId="aov" dataKey="aov" name="AOV" fill="#3b82f6" radius={[4,4,0,0]} maxBarSize={40} />
+                                  <Bar yAxisId="right" dataKey="completed_orders" name="Orders" fill="#f59e0b" radius={[4,4,0,0]} maxBarSize={40} />
+                              </ComposedChart>
+                          </ResponsiveContainer>
+                      </div>
+                  </div>
+              )}
+
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3 text-center md:hidden animate-pulse flex items-center justify-center gap-1.5"><ChevronLeft size={12}/> Geser kartu untuk membandingkan <ChevronRight size={12}/></p>
+              <div className="flex flex-nowrap md:grid md:grid-cols-3 gap-3 md:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 md:pb-0 hide-scrollbar shrink-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+                  {[0, 1, 2].map((idx) => {
+                      const selectedMonth = compareMonths[idx];
+                      const hist = selectedMex?.history?.find(h => h.month === selectedMonth);
+                      const getGrowth = (current, previous) => { if (!previous || previous === 0) return 0; return ((current - previous) / previous) * 100; };
+                      let prev = null;
+                      if (hist) {
+                          const currentIndex = selectedMex.history.findIndex(h => h.month === selectedMonth);
+                          if (currentIndex > 0) prev = selectedMex.history[currentIndex - 1];
+                      }
+                      const renderGrowthBadge = (val, invert = false) => {
+                          if (!val || val === 0) return null; const isUp = val > 0; const isGood = invert ? !isUp : isUp;
+                          return (<span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] md:text-[10px] font-black shadow-sm ${isGood ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>{isUp ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />} {Math.abs(val).toFixed(1)}%</span>);
+                      };
+
+                      return (
+                          <div key={idx} className="w-[200px] sm:w-[240px] md:w-auto md:flex-1 shrink-0 snap-center bg-white rounded-2xl md:rounded-3xl border border-slate-200 p-3 md:p-5 shadow-sm flex flex-col relative overflow-hidden animate-fade-in-up" style={{ animationDelay: `${300 + (idx * 100)}ms` }}>
+                              <div className="mb-3 md:mb-5 relative z-10">
+                                  <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 md:mb-2">Bulan {idx + 1}</label>
+                                  <select 
+                                      value={selectedMonth}
+                                      onChange={(e) => { const newMonths = [...compareMonths]; newMonths[idx] = e.target.value; setCompareMonths(newMonths); }}
+                                      className="w-full bg-slate-50 border border-slate-200 text-slate-700 text-xs md:text-sm font-bold rounded-lg md:rounded-xl px-2 py-1.5 md:px-3 md:py-2 focus:outline-none focus:border-indigo-400 transition-colors cursor-pointer"
+                                  >
+                                      <option value="">-- Pilih Bulan --</option>
+                                      {selectedMex && [...selectedMex.history].reverse().map(h => (<option key={h.month} value={h.month}>{formatMonth(h.month)}</option>))}
+                                  </select>
+                              </div>
+
+                              {hist ? (
+                                  <div className="relative z-10 flex flex-col mt-auto gap-2.5 md:gap-4">
+                                      <div className="bg-emerald-600/70 border border-emerald-500/50 rounded-xl md:rounded-2xl p-2.5 md:p-4 flex flex-col items-center justify-center text-center shadow-inner backdrop-blur-sm relative overflow-hidden">
+                                          <div className="absolute top-0 right-0 w-12 h-12 md:w-16 h-16 bg-white/10 rounded-bl-full opacity-50 -mr-2 -mt-2 pointer-events-none"></div>
+                                          <p className="text-[9px] md:text-[10px] font-black text-emerald-50 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Activity size={12}/> Gross Sales</p>
+                                          <p className="text-lg md:text-2xl font-black text-white tracking-tight mb-1.5 md:mb-2 truncate w-full px-1" title={formatCurrency(hist.basket_size)}>{formatCurrency(hist.basket_size)}</p>
+                                          {renderGrowthBadge(getGrowth(hist.basket_size, prev?.basket_size))}
+                                      </div>
+
+                                      <div className="grid grid-cols-2 gap-2 md:gap-3">
+                                          <div className="bg-slate-50 border border-slate-100 rounded-lg md:rounded-xl p-2 md:p-3 flex flex-col items-center justify-center text-center shadow-sm min-w-0">
+                                              <p className="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1 truncate w-full justify-center"><ShoppingBag size={10} className="shrink-0"/> Orders</p>
+                                              <p className="text-xs md:text-lg font-black text-slate-700 mb-1 truncate w-full" title={hist.completed_orders}>{hist.completed_orders}</p>
+                                              {renderGrowthBadge(getGrowth(hist.completed_orders, prev?.completed_orders))}
+                                          </div>
+                                          <div className="bg-slate-50 border border-slate-100 rounded-lg md:rounded-xl p-2 md:p-3 flex flex-col items-center justify-center text-center shadow-sm min-w-0">
+                                              <p className="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1 truncate w-full justify-center"><Target size={10} className="shrink-0"/> AOV</p>
+                                              <p className="text-xs md:text-lg font-black text-slate-700 mb-1 truncate w-full" title={formatCurrency(hist.aov)}>{formatCurrency(hist.aov)}</p>
+                                              {renderGrowthBadge(getGrowth(hist.aov, prev?.aov))}
+                                          </div>
+                                      </div>
+
+                                      <div className="bg-rose-600/70 border border-rose-500/50 rounded-lg md:rounded-xl p-2.5 md:p-4 flex flex-col gap-2 md:gap-3 shadow-inner backdrop-blur-sm">
+                                          <div className="flex justify-between items-center pb-2 md:pb-3 border-b border-rose-400/40 gap-1">
+                                              <div className="min-w-0">
+                                                  <p className="text-[8px] md:text-[9px] font-bold text-rose-50 uppercase tracking-widest mb-0.5 flex items-center gap-1 truncate"><Zap size={10} className="shrink-0"/> Promo</p>
+                                                  <p className="text-[11px] md:text-sm font-black text-white truncate" title={formatCurrency(hist.total_investment)}>{formatCurrency(hist.total_investment)}</p>
+                                              </div>
+                                              <div className="shrink-0">{renderGrowthBadge(getGrowth(hist.total_investment, prev?.total_investment), true)}</div>
+                                          </div>
+                                          <div className="flex justify-between items-center gap-1">
+                                              <div className="min-w-0">
+                                                  <p className="text-[8px] md:text-[9px] font-bold text-rose-50 uppercase tracking-widest mb-0.5 flex items-center gap-1 truncate"><Megaphone size={10} className="shrink-0"/> Ads</p>
+                                                  <p className="text-[11px] md:text-sm font-black text-white truncate" title={formatCurrency(hist.ads_total_hist)}>{formatCurrency(hist.ads_total_hist)}</p>
+                                              </div>
+                                              <div className="shrink-0">{renderGrowthBadge(getGrowth(hist.ads_total_hist, prev?.ads_total_hist), true)}</div>
+                                          </div>
+                                      </div>
+                                  </div>
+                              ) : (
+                                  <div className="flex-1 flex flex-col items-center justify-center text-slate-300 mt-6 md:mt-10">
+                                      <BarChart2 className="w-10 h-10 md:w-12 md:h-12 mb-2 md:mb-3 opacity-20" />
+                                      <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-center">Pilih bulan<br/>untuk melihat data</p>
+                                  </div>
+                              )}
+                          </div>
+                      );
+                  })}
+              </div>
+          </div>
+      </Modal>
+
       <header className="flex-none relative z-50 w-full bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
         <div className="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 h-16 md:h-20 flex items-center justify-between gap-4 md:gap-8">
-          
           <div className="flex items-center gap-4 md:gap-6 flex-1 min-w-0">
              <div className="flex items-center gap-2.5 cursor-pointer group shrink-0" onClick={() => { setSelectedMex(null); setActiveTab('overview'); setSearchTerm(''); }}>
                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-[#00B14F] to-emerald-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-all">
@@ -1487,9 +1277,7 @@ export default function App() {
                  </h1>
                </div>
              </div>
-
              <div className="hidden md:block w-px h-6 bg-slate-200 dark:bg-slate-700 shrink-0"></div>
-
              <div className="hidden md:flex items-center flex-1 min-w-0 relative">
                  {!selectedMex ? (
                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
@@ -1502,16 +1290,13 @@ export default function App() {
                     </div>
                  ) : (
                     <div className="flex items-center gap-2 text-xs font-bold text-slate-400 truncate animate-in slide-in-from-left-4 fade-in duration-300">
-                        <button onClick={() => setSelectedMex(null)} className="hover:text-[#00B14F] transition-colors flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm active:scale-95">
-                           <ArrowLeft className="w-3.5 h-3.5" /> Beranda
-                        </button>
-                        <span className="text-slate-300 dark:text-slate-600">{'/'}</span>
+                        <button onClick={() => setSelectedMex(null)} className="hover:text-[#00B14F] transition-colors flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm active:scale-95"><ArrowLeft className="w-3.5 h-3.5" /> Beranda</button>
+                        <span className="text-slate-300 dark:text-slate-600">/</span>
                         <span className="text-slate-800 dark:text-slate-200 truncate">{selectedMex.name}</span>
                     </div>
                  )}
              </div>
           </div>
-
           <div className="flex items-center gap-3 md:gap-4 shrink-0">
              {!selectedMex && (
                  <div className="flex items-center bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg lg:rounded-xl px-2.5 lg:px-3 h-9 sm:h-10 hover:border-[#00B14F] transition-colors">
@@ -1534,26 +1319,14 @@ export default function App() {
                  {globalLastUpdate && !selectedMex && (
                      <div className="flex flex-col justify-center px-2 lg:px-3 text-right hidden lg:flex">
                          <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">Last Sync</span>
-                         <span className="text-[10px] font-bold text-[#00B14F] dark:text-emerald-400 leading-none flex items-center gap-1 justify-end">
-                             <Clock size={10} /> {globalLastUpdate}
-                         </span>
+                         <span className="text-[10px] font-bold text-[#00B14F] dark:text-emerald-400 leading-none flex items-center gap-1 justify-end"><Clock size={10} /> {globalLastUpdate}</span>
                      </div>
                  )}
                  {!selectedMex && <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1 hidden lg:block"></div>}
-                 
-                 <button 
-                     onClick={() => setIsForceUpload(true)} 
-                     className="flex items-center justify-center text-slate-500 hover:text-[#00B14F] dark:text-slate-400 dark:hover:text-emerald-400 w-8 h-8 md:w-9 md:h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group shadow-sm border border-slate-200/50 dark:border-slate-700 active:scale-95"
-                     title="Update Data"
-                 >
+                 <button onClick={() => setIsForceUpload(true)} className="flex items-center justify-center text-slate-500 hover:text-[#00B14F] dark:text-slate-400 dark:hover:text-emerald-400 w-8 h-8 md:w-9 md:h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group shadow-sm border border-slate-200/50 dark:border-slate-700 active:scale-95" title="Update Data">
                      <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
                  </button>
-                 
-                 <button 
-                     onClick={() => setIsDarkMode(!isDarkMode)} 
-                     className="flex items-center justify-center text-slate-500 hover:text-indigo-500 dark:text-slate-400 dark:hover:text-indigo-400 w-8 h-8 md:w-9 md:h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group shadow-sm border border-slate-200/50 dark:border-slate-700 active:scale-95"
-                     title={isDarkMode ? "Beralih ke Light Mode" : "Beralih ke Dark Mode"}
-                 >
+                 <button onClick={() => setIsDarkMode(!isDarkMode)} className="flex items-center justify-center text-slate-500 hover:text-indigo-500 dark:text-slate-400 dark:hover:text-indigo-400 w-8 h-8 md:w-9 md:h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group shadow-sm border border-slate-200/50 dark:border-slate-700 active:scale-95" title={isDarkMode ? "Beralih ke Light Mode" : "Beralih ke Dark Mode"}>
                      {isDarkMode ? <Sun className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" /> : <Moon className="w-4 h-4 group-hover:-rotate-12 transition-transform duration-500" />}
                  </button>
              </div>
@@ -1609,231 +1382,37 @@ export default function App() {
               {activeTab === 'overview' && (
                 <div className="space-y-5 md:space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-500 ease-out fill-mode-forwards absolute inset-0 w-full overflow-visible">
                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-                      <div className="animate-fade-in-up stagger-1 bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1 group h-full">
-                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500"></div>
-                         <Activity className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                         <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-5 pl-2 relative z-10">
-                             <div className="flex items-center gap-2 lg:gap-3">
-                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0"><Activity size={18} strokeWidth={2.5}/></div>
-                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest truncate">Basketsize</p>
-                             </div>
-                             {(() => {
-                                 let trend = 0; 
-                                 if (kpi?.lm > 0) trend = ((kpi.rr - kpi.lm) / kpi.lm) * 100; 
-                                 else if (kpi?.rr > 0) trend = 100; 
-                                 const isUp = trend >= 0;
-                                 return (
-                                     <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap transition-colors ${isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                                         {isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%
-                                     </div>
-                                 );
-                             })()}
-                         </div>
-                         <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
-                             <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">MTD Sales</p>
-                             <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.mtd || 0)}</p>
-                             <div className="flex flex-wrap items-center gap-1.5 lg:gap-2 mb-1 lg:mb-2">
-                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Runrate:</span>
-                                 <span className="text-xs lg:text-sm font-black text-slate-800">{formatCurrency(kpi?.rr || 0)}</span>
-                             </div>
-                         </div>
-                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
-                             <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Last Month</span>
-                             <span className="text-[10px] lg:text-xs font-black text-slate-700">{formatCurrency(kpi?.lm || 0)}</span>
-                         </div>
-                      </div>
-
-                      <div onClick={() => setShowMiModal(true)} className="animate-fade-in-up stagger-2 cursor-pointer bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-teal-500/5 hover:-translate-y-1 group h-full">
-                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-teal-500"></div>
-                         <DollarSign className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                         <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-5 pl-2 relative z-10">
-                             <div className="flex items-center gap-2 lg:gap-3">
-                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0"><DollarSign size={18} strokeWidth={2.5}/></div>
-                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">Invest <MousePointer size={10} className="text-slate-300 group-hover:text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-0.5 shrink-0 hidden lg:block"/></p>
-                             </div>
-                             {(() => {
-                                 let trend = 0; 
-                                 if (kpi?.miLm > 0) trend = ((kpi.miRr - kpi.miLm) / kpi.miLm) * 100; 
-                                 else if (kpi?.miRr > 0) trend = 100; 
-                                 const isUp = trend > 0;
-                                 return (
-                                     <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap transition-colors ${!isUp ? 'bg-teal-50 text-teal-600' : 'bg-rose-50 text-rose-600'}`}>
-                                         {isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%
-                                     </div>
-                                 );
-                             })()}
-                         </div>
-                         <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
-                             <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                                 <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest">MTD Invest</p>
-                                 <span className="text-[8px] lg:text-[9px] font-bold bg-slate-100 text-teal-600 px-1.5 py-0.5 rounded-md leading-none">{kpi?.mtd ? ((kpi.miMtd / kpi.mtd) * 100).toFixed(1) : 0}%</span>
-                             </div>
-                             <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.miMtd || 0)}</p>
-                             <div className="flex flex-wrap items-center gap-1.5 lg:gap-2 mb-1 lg:mb-2">
-                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Runrate:</span>
-                                 <span className="text-xs lg:text-sm font-black text-slate-800">{formatCurrency(kpi?.miRr || 0)}</span>
-                                 <span className="text-[8px] lg:text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md leading-none hidden lg:block">{kpi?.rr ? ((kpi.miRr / kpi.rr) * 100).toFixed(1) : 0}%</span>
-                             </div>
-                         </div>
-                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
-                             <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Last Month</span>
-                             <div className="flex items-center gap-1.5">
-                                 <span className="text-[10px] lg:text-xs font-black text-slate-700">{formatCurrency(kpi?.miLm || 0)}</span>
-                                 <span className="text-[8px] lg:text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md leading-none hidden sm:block">{kpi?.lm ? ((kpi.miLm / kpi.lm) * 100).toFixed(1) : 0}%</span>
-                             </div>
-                         </div>
-                      </div>
-
-                      <div onClick={() => setShowAdsModal(true)} className="animate-fade-in-up stagger-3 cursor-pointer bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-rose-500/5 hover:-translate-y-1 group h-full">
-                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500"></div>
-                         <Megaphone className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                         <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-5 pl-2 relative z-10">
-                             <div className="flex items-center gap-2 lg:gap-3">
-                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0"><Megaphone size={18} strokeWidth={2.5}/></div>
-                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">Ads <MousePointer size={10} className="text-slate-300 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-0.5 shrink-0 hidden lg:block"/></p>
-                             </div>
-                             {(() => {
-                                 let trend = 0; 
-                                 if (kpi?.adsLm > 0) trend = ((kpi.adsRr - kpi.adsLm) / kpi.adsLm) * 100; 
-                                 else if (kpi?.adsRr > 0) trend = 100; 
-                                 const isUp = trend > 0;
-                                 return (
-                                     <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap transition-colors ${!isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                                         {isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%
-                                     </div>
-                                 );
-                             })()}
-                         </div>
-                         <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
-                             <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">MTD Ads</p>
-                             <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.adsMtd || 0)}</p>
-                             
-                             <div className="flex flex-wrap items-center gap-1.5 lg:gap-2 mb-1 lg:mb-2">
-                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Runrate:</span>
-                                 <span className="text-xs lg:text-sm font-black text-slate-800">{formatCurrency(kpi?.adsRr || 0)}</span>
-                             </div>
-                         </div>
-                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
-                             <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Last Month</span>
-                             <span className="text-[10px] lg:text-xs font-black text-slate-700">{formatCurrency(kpi?.adsLm || 0)}</span>
-                         </div>
-                      </div>
-
-                      <div onClick={() => setShowMcaModal(true)} className="animate-fade-in-up stagger-4 cursor-pointer bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 hover:-translate-y-1 group h-full">
-                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500"></div>
-                         <Database className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                         <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
-                             <div className="flex items-center gap-2 lg:gap-3">
-                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0"><Database size={18} strokeWidth={2.5}/></div>
-                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">MCA <MousePointer size={10} className="text-slate-300 group-hover:text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-0.5 shrink-0 hidden lg:block"/></p>
-                             </div>
-                         </div>
-                         <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
-                             <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Disbursed</p>
-                             <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(kpi?.mcaDis || 0)}</p>
-                             <div className="flex flex-wrap items-center gap-1.5 lg:gap-2 mb-1 lg:mb-2">
-                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Eligibility:</span>
-                                 <span className="text-xs lg:text-sm font-black text-slate-800">{formatCurrency(kpi?.mcaEli || 0)}</span>
-                             </div>
-                         </div>
-                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
-                             <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Total Toko</span>
-                             <span className="px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black uppercase bg-slate-100 text-slate-600">{kpi?.mcaDisCount || 0} Toko</span>
-                         </div>
-                      </div>
-
-                      <div className="animate-fade-in-up stagger-5 bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 group h-full">
-                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500"></div>
-                         <Award className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                         <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
-                             <div className="flex items-center gap-2 lg:gap-3">
-                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0"><Award size={18} strokeWidth={2.5}/></div>
-                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest truncate">Campaigns</p>
-                             </div>
-                         </div>
-                         <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
-                             <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Points</p>
-                             <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{(kpi?.totalPoints || 0).toLocaleString('id-ID')}</p>
-                             <div className="flex flex-wrap items-center gap-1.5 lg:gap-2 mb-1 lg:mb-2">
-                                 <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Joiners:</span>
-                                 <span className="text-xs lg:text-sm font-black text-slate-800">{kpi?.joiners || 0} Toko</span>
-                             </div>
-                         </div>
-                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10">
-                             <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Avg Points</span>
-                             <span className="text-[10px] lg:text-xs font-black text-slate-700">{kpi?.avgPtsPerJoiner || 0} pts</span>
-                         </div>
-                      </div>
-                      
-                      <div onClick={() => setShowOutletsModal(true)} className="animate-fade-in-up stagger-6 cursor-pointer bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 group h-full">
-                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
-                         <Store className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                         <div className="flex justify-between items-start mb-5 pl-2 relative z-10">
-                             <div className="flex items-center gap-2 lg:gap-3">
-                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0"><Store size={18} strokeWidth={2.5}/></div>
-                                 <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">Outlets <MousePointer size={10} className="text-slate-300 group-hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-0.5 shrink-0 hidden lg:block"/></p>
-                             </div>
-                         </div>
-                         <div className="pl-2 relative z-10 flex-1 flex flex-col justify-center">
-                             <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Managed</p>
-                             <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{kpi?.totalMex || 0}</p>
-                             <div className="flex items-center gap-3 mb-1 lg:mb-2">
-                                 <div className="flex items-center gap-1.5">
-                                     <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                     <span className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active:</span>
-                                     <span className="text-xs lg:text-sm font-black text-slate-800">{kpi?.activeMex || 0}</span>
-                                 </div>
-                             </div>
-                         </div>
-                         <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10 gap-2">
-                             <div className="flex items-center gap-1 lg:gap-1.5 flex-1 min-w-0">
-                                 <span className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-slate-400 shrink-0"></span>
-                                 <span className="text-[8px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">Inactive</span>
-                                 <span className="text-[9px] lg:text-xs font-black text-slate-700 ml-auto pl-1">{kpi?.inactiveMex || 0}</span>
-                             </div>
-                             <div className="w-px h-4 bg-slate-200 shrink-0"></div>
-                             <div className="flex items-center gap-1 lg:gap-1.5 flex-1 min-w-0">
-                                 <span className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-rose-500 shrink-0"></span>
-                                 <span className="text-[8px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">0-Trx</span>
-                                 <span className="text-[9px] lg:text-xs font-black text-rose-600 ml-auto pl-1">{kpi?.zeroTrxMex || 0}</span>
-                             </div>
-                         </div>
-                      </div>
+                      <DashboardCard title="Basketsize" value={formatCurrency(kpi?.mtd || 0)} subLabel="Last Month" subValue={formatCurrency(kpi?.lm || 0)} icon={Activity} color="emerald" trend={kpi?.lm > 0 ? ((kpi.rr - kpi.lm) / kpi.lm) * 100 : (kpi?.rr > 0 ? 100 : 0)} borderClass="emerald-300" />
+                      <DashboardCard title="Invest" value={formatCurrency(kpi?.miMtd || 0)} subLabel="Last Month" subValue={formatCurrency(kpi?.miLm || 0)} icon={DollarSign} color="teal" onClick={() => setShowMiModal(true)} trend={kpi?.miLm > 0 ? ((kpi.miRr - kpi.miLm) / kpi.miLm) * 100 : (kpi?.miRr > 0 ? 100 : 0)} borderClass="teal-300" />
+                      <DashboardCard title="Ads" value={formatCurrency(kpi?.adsMtd || 0)} subLabel="Last Month" subValue={formatCurrency(kpi?.adsLm || 0)} icon={Megaphone} color="rose" onClick={() => setShowAdsModal(true)} trend={kpi?.adsLm > 0 ? ((kpi.adsRr - kpi.adsLm) / kpi.adsLm) * 100 : (kpi?.adsRr > 0 ? 100 : 0)} borderClass="rose-300" />
+                      <DashboardCard title="MCA Config" value={formatCurrency(kpi?.mcaDis || 0)} subLabel="Total Toko" subValue={`${kpi?.mcaDisCount || 0} Toko`} icon={Database} color="amber" onClick={() => setShowMcaModal(true)} borderClass="amber-300" />
+                      <DashboardCard title="Campaigns" value={(kpi?.totalPoints || 0).toLocaleString('id-ID')} subLabel="Avg Points" subValue={`${kpi?.avgPtsPerJoiner || 0} pts`} icon={Award} color="indigo" borderClass="indigo-300" />
+                      <DashboardCard title="Outlets" value={kpi?.totalMex || 0} subLabel="Inactive" subValue={kpi?.inactiveMex || 0} icon={Store} color="blue" onClick={() => setShowOutletsModal(true)} borderClass="blue-300" />
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6 mt-6">
-                      <div className="animate-fade-in-up stagger-7 lg:col-span-2 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6 mt-6">
+                      <div className="animate-fade-in-up stagger-7 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8 shrink-0 min-h-[44px]">
                             <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="text-[#00B14F] w-5 h-5"/> Top 10 Merchants <span className="text-slate-400 font-bold normal-case text-xs bg-slate-50 px-2 py-1 rounded-lg border border-slate-100 hidden sm:inline-block">(MTD Sales)</span></h3>
                         </div>
                         <div className="h-[280px] md:h-[360px] w-full mt-auto">
                           <ResponsiveContainer width="100%" height="100%">
-                            <ComposedChart data={chartsData.mtd} onClick={onChartClick} margin={{ top: 20, right: 10, left: 0, bottom: 5 }}>
+                            <ComposedChart data={chartsData.mtd} onClick={onChartClick} margin={{ top: 20, right: 30, left: -15, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                               <XAxis dataKey="name" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => v.substring(0, 6)+'.'} height={20} dy={5} />
-                              <YAxis tick={{ fill: COLORS.slate400, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={65} />
+                              <YAxis tick={{ fill: COLORS.slate400, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={45} />
                               <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, name) => [formatCurrency(v), name]} />
                               <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold', width: '100%', left: 0, display: 'flex', justifyContent: 'center' }} iconType="circle"/>
                               <Bar dataKey="lmBs" name="LM Sales" fill={COLORS.slate500} radius={[6,6,0,0]} maxBarSize={28} cursor="pointer" />
                               <Bar dataKey="mtdBs" name="MTD Sales" fill={COLORS.primary} radius={[6,6,0,0]} maxBarSize={28} cursor="pointer" />
                               <Line type="monotone" dataKey="rrBs" name="Runrate" stroke={COLORS.growth} strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r: 6}} cursor="pointer">
                                   <LabelList 
-                                      dataKey="rrVsLm" 
-                                      position="top" 
-                                      offset={12}
+                                      dataKey="rrVsLm" position="top" offset={12}
                                       content={(props) => {
-                                          const { x, y, value } = props;
-                                          if (value === undefined || value === null) return null;
-                                          const numVal = parseFloat(value);
-                                          const isPositive = numVal >= 0;
-                                          const fill = isPositive ? '#10b981' : '#ef4444';
+                                          const { x, y, value } = props; if (value === undefined || value === null) return null;
+                                          const numVal = parseFloat(value); const isPositive = numVal >= 0; const fill = isPositive ? '#10b981' : '#ef4444';
                                           const textStr = `${isPositive ? '+' : ''}${numVal.toFixed(0)}%`;
-                                          return (
-                                              <g>
-                                                  <text x={x} y={y - 12} fill="none" stroke="#ffffff" strokeWidth={4} strokeLinejoin="round" fontSize={10} fontWeight="900" textAnchor="middle">{textStr}</text>
-                                                  <text x={x} y={y - 12} fill={fill} fontSize={10} fontWeight="900" textAnchor="middle">{textStr}</text>
-                                              </g>
-                                          );
+                                          return ( <g><text x={x} y={y - 12} fill="none" stroke="#ffffff" strokeWidth={4} strokeLinejoin="round" fontSize={10} fontWeight="900" textAnchor="middle">{textStr}</text><text x={x} y={y - 12} fill={fill} fontSize={10} fontWeight="900" textAnchor="middle">{textStr}</text></g> );
                                       }}
                                   />
                               </Line>
@@ -1842,87 +1421,28 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div className="animate-fade-in-up stagger-8 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
-                        <div className="flex justify-between items-center mb-8 shrink-0 min-h-[44px]">
-                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Target className="text-indigo-500 w-5 h-5"/> Campaign Segment</h3>
-                            <span className="bg-indigo-50 text-indigo-700 font-black text-[10px] md:text-xs px-2.5 py-1 rounded-lg border border-indigo-100 transition-transform hover:scale-105">
-                                {(( (kpi?.joiners || 0) / Math.max(1, (kpi?.joiners || 0) + campaignStats.zeroInvest)) * 100).toFixed(0)}% Rate
-                            </span>
-                        </div>
-                        <div className="h-[250px] md:h-[320px] w-full mt-auto overflow-hidden">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <BarChart 
-                                data={campaignStats.classification} 
-                                layout="vertical" 
-                                margin={{ top: 10, right: 40, left: 0, bottom: 5 }}
-                                onClick={(state) => {
-                                  if (state && state.activePayload && state.activePayload.length > 0) {
-                                    setActiveSegmentModal(state.activePayload[0].payload.name);
-                                  }
-                                }}
-                            >
-                              <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
-                              <XAxis type="number" hide />
-                              <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: COLORS.slate500, fontSize: 11, fontWeight: 700 }} width={90} />
-                              <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '12px', border:'none', padding: '10px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
-                              <Bar 
-                                dataKey="count" 
-                                name="Total Merchant" 
-                                radius={[0, 8, 8, 0]} 
-                                barSize={26} 
-                                cursor="pointer"
-                                label={{ position: 'right', fill: '#475569', fontSize: 12, fontWeight: 900 }}
-                              >
-                                {campaignStats.classification.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.fill} className="transition-all duration-300 hover:opacity-80" />
-                                ))}
-                              </Bar>
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </div>
-                        <p className="text-[10px] font-bold text-slate-400 text-center mt-4 bg-slate-50 py-2 rounded-xl">*Klik bar grafik untuk detail</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6 mt-6">
-                      <div className="animate-fade-in-up stagger-9 lg:col-span-2 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
+                      <div className="animate-fade-in-up stagger-9 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
                         <div className="flex justify-between items-center mb-8 shrink-0 min-h-[44px]">
                             <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Megaphone className="text-rose-500 w-5 h-5"/> Top 10 Ads Spender <span className="text-slate-400 font-bold normal-case text-xs bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">(vs LM & RR)</span></h3>
                         </div>
                         <div className="h-[280px] md:h-[360px] w-full mt-auto">
                           <ResponsiveContainer width="100%" height="100%">
-                            <ComposedChart data={chartsData.ads} onClick={onChartClick} margin={{ top: 20, right: 10, left: 0, bottom: 5 }}>
+                            <ComposedChart data={chartsData.ads} onClick={onChartClick} margin={{ top: 20, right: 30, left: -15, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                               <XAxis dataKey="name" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => v.substring(0, 8)+'.'} height={20} dy={5} />
-                              <YAxis tick={{ fill: COLORS.slate400, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={65} />
+                              <YAxis tick={{ fill: COLORS.slate400, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={45} />
                               <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding:'12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v) => formatCurrency(v)} />
                               <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold', width: '100%', left: 0, display: 'flex', justifyContent: 'center' }} iconType="circle" />
                               <Bar dataKey="adsLM" name="Ads LM" fill={COLORS.slate500} radius={[6,6,0,0]} maxBarSize={32} cursor="pointer" />
                               <Bar dataKey="adsTotal" name="Ads MTD" fill="#fb923c" radius={[6,6,0,0]} maxBarSize={32} cursor="pointer" />
                               <Line type="monotone" dataKey="adsRR" name="Ads RR" stroke="#2dd4bf" strokeWidth={4} dot={{r:4, fill: '#ffffff', strokeWidth: 3}} activeDot={{r: 6}} cursor="pointer">
                                  <LabelList 
-                                      dataKey="adsTotal" 
-                                      position="top" 
-                                      offset={12}
+                                      dataKey="adsTotal" position="top" offset={12}
                                       content={(props) => {
-                                          const { x, y, index } = props;
-                                          const item = chartsData.ads[index];
-                                          if (!item) return null;
-                                          
-                                          let adsTrend = 0;
-                                          if (item.adsLM > 0) adsTrend = ((item.adsRR - item.adsLM) / item.adsLM) * 100;
-                                          else if (item.adsRR > 0) adsTrend = 100;
-                                          
-                                          const isPositive = adsTrend >= 0;
-                                          const fill = isPositive ? '#ef4444' : '#10b981'; 
-                                          const textStr = `${isPositive ? '+' : ''}${adsTrend.toFixed(0)}%`;
-                                          
-                                          return (
-                                              <g>
-                                                  <text x={x} y={y - 12} fill="none" stroke="#ffffff" strokeWidth={4} strokeLinejoin="round" fontSize={10} fontWeight="900" textAnchor="middle">{textStr}</text>
-                                                  <text x={x} y={y - 12} fill={fill} fontSize={10} fontWeight="900" textAnchor="middle">{textStr}</text>
-                                              </g>
-                                          );
+                                          const { x, y, index } = props; const item = chartsData.ads[index]; if (!item) return null;
+                                          let adsTrend = 0; if (item.adsLM > 0) adsTrend = ((item.adsRR - item.adsLM) / item.adsLM) * 100; else if (item.adsRR > 0) adsTrend = 100;
+                                          const isPositive = adsTrend >= 0; const fill = isPositive ? '#ef4444' : '#10b981'; const textStr = `${isPositive ? '+' : ''}${adsTrend.toFixed(0)}%`;
+                                          return ( <g><text x={x} y={y - 12} fill="none" stroke="#ffffff" strokeWidth={4} strokeLinejoin="round" fontSize={10} fontWeight="900" textAnchor="middle">{textStr}</text><text x={x} y={y - 12} fill={fill} fontSize={10} fontWeight="900" textAnchor="middle">{textStr}</text></g> );
                                       }}
                                   />
                               </Line>
@@ -1930,10 +1450,11 @@ export default function App() {
                           </ResponsiveContainer>
                         </div>
                       </div>
+                    </div>
 
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6 mt-6">
                       <div className="animate-fade-in-up stagger-10 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col justify-between h-full relative overflow-hidden hover:shadow-2xl transition-shadow duration-500">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none transition-transform duration-700 hover:scale-110"></div>
-                        
                         <div className="flex justify-between items-end mb-4 relative z-10 shrink-0 min-h-[44px]">
                             <div>
                                 <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Activity className="text-blue-500 w-5 h-5"/> Portfolio Health</h3>
@@ -1944,30 +1465,14 @@ export default function App() {
                         <div className="flex-1 w-full relative min-h-[180px] my-2">
                            <ResponsiveContainer width="100%" height="100%">
                               <PieChart>
-                                <Pie
-                                  data={chartsData.health}
-                                  cx="50%"
-                                  cy="50%"
-                                  innerRadius="65%"
-                                  outerRadius="90%"
-                                  paddingAngle={5}
-                                  dataKey="count"
-                                  stroke="none"
-                                >
-                                  {chartsData.health.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} cursor="pointer" className="hover:opacity-80 transition-all duration-300" />
-                                  ))}
+                                <Pie data={chartsData.health} cx="50%" cy="50%" innerRadius="65%" outerRadius="90%" paddingAngle={5} dataKey="count" stroke="none">
+                                  {chartsData.health.map((entry, index) => ( <Cell key={`cell-${index}`} fill={entry.color} cursor="pointer" className="hover:opacity-80 transition-all duration-300" /> ))}
                                 </Pie>
-                                <RechartsTooltip 
-                                    cursor={{fill: '#f8fafc'}} 
-                                    contentStyle={{ borderRadius: '12px', border:'none', padding: '10px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                                    formatter={(value, name, props) => [`${value} Toko (${props.payload.percentage}%)`, name]}
-                                />
+                                <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '12px', border:'none', padding: '10px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} formatter={(value, name, props) => [`${value} Toko (${props.payload.percentage}%)`, name]} />
                               </PieChart>
                            </ResponsiveContainer>
-                           
                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none animate-in zoom-in-95 duration-700 delay-300">
-                              <span className="text-3xl font-black text-[#00B14F] leading-none drop-shadow-sm">{chartsData.health[0].percentage}%</span>
+                              <span className="text-3xl font-black text-[#00B14F] leading-none drop-shadow-sm">{chartsData.health[0]?.percentage || 0}%</span>
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Growing</span>
                            </div>
                         </div>
@@ -1975,13 +1480,50 @@ export default function App() {
                         <div className="grid grid-cols-1 gap-2.5 relative z-10 mt-4 shrink-0">
                             {chartsData.health.map((h, i) => (
                                 <div key={i} className="flex items-center justify-between text-sm bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 hover:bg-slate-100/50 transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-3.5 h-3.5 rounded-md shadow-sm" style={{ backgroundColor: h.color }} />
-                                        <span className="font-bold text-slate-700 text-xs">{h.name}</span>
-                                    </div>
+                                    <div className="flex items-center gap-3"><div className="w-3.5 h-3.5 rounded-md shadow-sm" style={{ backgroundColor: h.color }} /><span className="font-bold text-slate-700 text-xs">{h.name}</span></div>
                                     <span className="font-black text-slate-900 bg-white px-2 py-0.5 rounded-md shadow-sm border border-slate-100">{h.count} <span className="text-[10px] text-slate-400 font-bold ml-1.5">({h.percentage}%)</span></span>
                                 </div>
                             ))}
+                        </div>
+                      </div>
+
+                      <div className="animate-fade-in-up stagger-11 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col justify-between h-full relative overflow-hidden hover:shadow-2xl transition-shadow duration-500">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none transition-transform duration-700 hover:scale-110"></div>
+                        <div className="flex justify-between items-end mb-4 relative z-10 shrink-0 min-h-[44px]">
+                            <div>
+                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Zap className="text-amber-500 w-5 h-5"/> Campaign Segments</h3>
+                                <p className="text-[11px] font-bold text-slate-500 mt-1">Distribusi & Popularitas Program</p>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 w-full relative min-h-[180px] my-2">
+                           <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                <Pie data={campaignStats.classification} cx="50%" cy="50%" innerRadius="65%" outerRadius="90%" paddingAngle={5} dataKey="count" stroke="none">
+                                  {campaignStats.classification.map((entry, index) => ( <Cell key={`cell-${index}`} fill={entry.fill} cursor="pointer" onClick={() => setActiveSegmentModal(entry.name)} className="hover:opacity-80 transition-all duration-300 outline-none" /> ))}
+                                </Pie>
+                                <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '12px', border:'none', padding: '10px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} formatter={(value, name) => [`${value} Toko`, name]} />
+                              </PieChart>
+                           </ResponsiveContainer>
+                           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none animate-in zoom-in-95 duration-700 delay-300">
+                              <span className="text-3xl font-black text-amber-500 leading-none drop-shadow-sm">{campaignStats.joiners}</span>
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Joiners</span>
+                           </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2 md:gap-3 relative z-10 mt-4 shrink-0 pt-4 border-t border-slate-50">
+                            <div className="bg-blue-50/80 border border-blue-100 p-2 md:p-3 rounded-xl flex flex-col items-center justify-center text-center shadow-sm">
+                                <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-0.5">GMS</span>
+                                <span className="text-base font-black text-blue-700">{campaignStats.list.filter(c => c.name.toLowerCase().includes('gms')).reduce((a, b) => a + b.count, 0)}</span>
+                            </div>
+                            <div className="bg-amber-50/80 border border-amber-100 p-2 md:p-3 rounded-xl flex flex-col items-center justify-center text-center shadow-sm">
+                                <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-0.5">Booster</span>
+                                <span className="text-base font-black text-amber-700">{campaignStats.list.filter(c => c.name.toLowerCase().includes('booster') && !c.name.toLowerCase().includes('booster+')).reduce((a, b) => a + b.count, 0)}</span>
+                            </div>
+                            <div className="bg-emerald-50/80 border border-emerald-100 p-2 md:p-3 rounded-xl flex flex-col items-center justify-center text-center shadow-sm">
+                                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-0.5">Cuan</span>
+                                <span className="text-base font-black text-emerald-700">{campaignStats.list.filter(c => c.name.toLowerCase().includes('cuan')).reduce((a, b) => a + b.count, 0)}</span>
+                            </div>
                         </div>
                       </div>
                     </div>
@@ -1994,16 +1536,14 @@ export default function App() {
                   <div className="p-4 md:p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#f8fafc] shrink-0">
                     <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Table className="w-5 h-5 text-indigo-500"/> Master Data Directory</h3>
                     <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <div className="flex items-center bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm flex-1 sm:flex-none hover:border-indigo-400 transition-colors focus-within:ring-2 focus-within:ring-indigo-100">
+                        <div className="flex items-center bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm flex-1 sm:flex-none hover:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100 transition-colors">
                            <Filter className="w-3.5 h-3.5 text-slate-400 mr-2" />
-                           <select value={selectedPriority} onChange={(e) => { setSelectedPriority(e.target.value); setSelectedMex(null); setCurrentPage(1); }} className="bg-transparent text-slate-700 text-xs font-bold focus:outline-none w-full sm:w-32 cursor-pointer appearance-none transition-colors">
+                           <select value={selectedPriority} onChange={(e) => { setSelectedPriority(e.target.value); setSelectedMex(null); setCurrentPage(1); }} className="bg-transparent text-slate-700 text-xs font-bold focus:outline-none w-full sm:w-32 cursor-pointer appearance-none">
                               {priorityOptions.map(p => <option key={p} value={p}>{p === 'All' ? 'Semua Priority' : `Priority: ${p}`}</option>)}
                            </select>
                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1 pointer-events-none" />
                         </div>
-                        <div className="bg-indigo-100 text-indigo-700 px-3 py-2 rounded-xl text-xs font-black shadow-sm shrink-0 transition-transform hover:scale-105">
-                          {filtered.length} Toko
-                        </div>
+                        <div className="bg-indigo-100 text-indigo-700 px-3 py-2 rounded-xl text-xs font-black shadow-sm shrink-0 transition-transform hover:scale-105">{filtered.length} Toko</div>
                     </div>
                   </div>
                   
@@ -2018,22 +1558,22 @@ export default function App() {
                          <thead className="bg-white text-slate-400 text-[10px] font-black uppercase tracking-widest border-b-2 border-slate-100 sticky top-0 z-10">
                            <tr>
                              <th className="px-4 py-4 text-center w-12">No.</th>
-                             <th className="px-4 py-4 cursor-pointer hover:text-slate-700 transition-colors select-none group" onClick={() => requestSort('name')}>
+                             <th className="px-4 py-4 cursor-pointer hover:text-slate-700 select-none group" onClick={() => requestSort('name')}>
                                <div className="flex items-center gap-1">Merchant {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 text-[#00B14F]" /> : <ArrowDown className="w-3 h-3 text-[#00B14F]" />)}</div>
                              </th>
-                             <th className="px-4 py-4 text-center hidden md:table-cell cursor-pointer hover:text-slate-700 transition-colors select-none group" onClick={() => requestSort('campaigns')}>
+                             <th className="px-4 py-4 text-center hidden md:table-cell cursor-pointer hover:text-slate-700 select-none group" onClick={() => requestSort('campaigns')}>
                                <div className="flex items-center justify-center gap-1">Campaign {sortConfig.key === 'campaigns' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 text-[#00B14F]" /> : <ArrowDown className="w-3 h-3 text-[#00B14F]" />)}</div>
                              </th>
-                             <th className="px-4 py-4 text-center cursor-pointer hover:text-slate-700 transition-colors select-none group" onClick={() => requestSort('rrVsLm')}>
-                               <div className="flex items-center justify-center gap-1">Trend vs LM {sortConfig.key === 'rrVsLm' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 text-[#00B14F]" /> : <ArrowDown className="w-3 h-3 text-[#00B14F]" />)}</div>
+                             <th className="px-4 py-4 text-center cursor-pointer hover:text-slate-700 select-none group" onClick={() => requestSort('rrVsLm')}>
+                               <div className="flex items-center justify-center gap-1">Trend {sortConfig.key === 'rrVsLm' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 text-[#00B14F]" /> : <ArrowDown className="w-3 h-3 text-[#00B14F]" />)}</div>
                              </th>
-                             <th className="px-4 py-4 text-center hidden lg:table-cell cursor-pointer hover:text-slate-700 transition-colors select-none group" onClick={() => requestSort('mcaPriority')}>
+                             <th className="px-4 py-4 text-center hidden lg:table-cell cursor-pointer hover:text-slate-700 select-none group" onClick={() => requestSort('mcaPriority')}>
                                <div className="flex items-center justify-center gap-1">Priority {sortConfig.key === 'mcaPriority' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 text-[#00B14F]" /> : <ArrowDown className="w-3 h-3 text-[#00B14F]" />)}</div>
                              </th>
-                             <th className="px-5 py-4 text-right cursor-pointer hover:text-slate-700 transition-colors select-none group" onClick={() => requestSort('mtdBs')}>
+                             <th className="px-5 py-4 text-right cursor-pointer hover:text-slate-700 select-none group" onClick={() => requestSort('mtdBs')}>
                                <div className="flex items-center justify-end gap-1">MTD Sales {sortConfig.key === 'mtdBs' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 text-[#00B14F]" /> : <ArrowDown className="w-3 h-3 text-[#00B14F]" />)}</div>
                              </th>
-                             <th className="px-5 py-4 text-center cursor-pointer hover:text-slate-700 transition-colors select-none group" onClick={() => requestSort('zeusStatus')}>
+                             <th className="px-5 py-4 text-center cursor-pointer hover:text-slate-700 select-none group" onClick={() => requestSort('zeusStatus')}>
                                <div className="flex items-center justify-center gap-1">Status {sortConfig.key === 'zeusStatus' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 text-[#00B14F]" /> : <ArrowDown className="w-3 h-3 text-[#00B14F]" />)}</div>
                              </th>
                            </tr>
@@ -2044,29 +1584,18 @@ export default function App() {
                                 <td className="px-4 py-3 text-center font-bold text-slate-400 text-xs">{(currentPage - 1) * itemsPerPage + index + 1}</td>
                                 <td className="px-4 py-3 min-w-[200px]">
                                   <p className="font-bold text-slate-800 text-xs md:text-sm group-hover:text-[#00B14F] truncate transition-colors">{r.name}</p>
-                                  <div className="flex items-center gap-2 mt-0.5">
-                                    <p className="text-[10px] text-slate-400 font-mono bg-slate-100 px-1.5 py-0.5 rounded group-hover:bg-emerald-50 transition-colors">{r.id}</p>
-                                  </div>
+                                  <div className="flex items-center gap-2 mt-0.5"><p className="text-[10px] text-slate-400 font-mono bg-slate-100 px-1.5 py-0.5 rounded group-hover:bg-emerald-50 transition-colors">{r.id}</p></div>
                                 </td>
                                 <td className="px-4 py-3 text-center hidden md:table-cell">
-                                  {r.campaigns && r.campaigns !== '-' && !r.campaigns.toLowerCase().includes('no campaign') ? (
-                                    <div className="inline-flex items-center justify-center bg-indigo-50 p-1 rounded-md border border-indigo-100 shadow-sm group-hover:scale-110 transition-transform" title="Active Campaign">
-                                        <Check className="w-4 h-4 text-indigo-600" strokeWidth={3} />
-                                    </div>
-                                  ) : (
-                                    <span className="text-slate-300 font-bold">-</span>
-                                  )}
+                                  {r.campaigns && r.campaigns !== '-' && !r.campaigns.toLowerCase().includes('no campaign') ? (<div className="inline-flex items-center justify-center bg-indigo-50 p-1 rounded-md border border-indigo-100 shadow-sm group-hover:scale-110 transition-transform"><Check className="w-4 h-4 text-indigo-600" strokeWidth={3} /></div>) : (<span className="text-slate-300 font-bold">-</span>)}
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-black shadow-sm transition-transform group-hover:scale-105 ${r.rrBs > r.lmBs ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
-                                      {r.rrBs > r.lmBs ? <ArrowUpRight className="w-3.5 h-3.5"/> : <ArrowDownRight className="w-3.5 h-3.5"/>}
-                                      {Math.abs(r.rrVsLm).toFixed(0)}%
+                                      {r.rrBs > r.lmBs ? <ArrowUpRight className="w-3.5 h-3.5"/> : <ArrowDownRight className="w-3.5 h-3.5"/>} {Math.abs(r.rrVsLm).toFixed(0)}%
                                    </span>
                                 </td>
                                 <td className="px-4 py-3 text-center hidden lg:table-cell">
-                                   <span className={`text-[10px] font-black px-2 py-1 rounded-md border ${getPriorityBadgeClass(r.mcaPriority)}`}>
-                                      {r.mcaPriority}
-                                   </span>
+                                   <span className={`text-[10px] font-black px-2 py-1 rounded-md border ${getPriorityBadgeClass(r.mcaPriority)}`}>{r.mcaPriority}</span>
                                 </td>
                                 <td className="px-5 py-3 font-mono text-slate-800 font-black text-right text-xs md:text-sm">{formatCurrency(r.mtdBs)}</td>
                                 <td className="px-5 py-3 text-center">
@@ -2082,19 +1611,11 @@ export default function App() {
                   {/* PAGINATION CONTROLS */}
                   {totalPages > 1 && (
                       <div className="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#f8fafc] shrink-0">
-                          <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest">
-                              Menampilkan <span className="text-slate-800">{(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filtered.length)}</span> dari {filtered.length} Toko
-                          </span>
+                          <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest">Menampilkan <span className="text-slate-800">{(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filtered.length)}</span> dari {filtered.length} Toko</span>
                           <div className="flex items-center gap-2">
-                              <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 rounded-xl bg-white border border-slate-200 hover:border-[#00B14F] hover:text-[#00B14F] disabled:opacity-50 disabled:bg-slate-50 disabled:cursor-not-allowed transition-colors shadow-sm">
-                                  <ChevronLeft className="w-4 h-4" />
-                              </button>
-                              <span className="text-xs font-black text-slate-700 bg-white shadow-sm px-4 py-2 rounded-xl border border-slate-200">
-                                  {currentPage} <span className="text-slate-400 font-bold mx-1">/</span> {totalPages}
-                              </span>
-                              <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2 rounded-xl bg-white border border-slate-200 hover:border-[#00B14F] hover:text-[#00B14F] disabled:opacity-50 disabled:bg-slate-50 disabled:cursor-not-allowed transition-colors shadow-sm">
-                                  <ChevronRight className="w-4 h-4" />
-                              </button>
+                              <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 rounded-xl bg-white border border-slate-200 hover:border-[#00B14F] hover:text-[#00B14F] disabled:opacity-50 disabled:bg-slate-50 disabled:cursor-not-allowed shadow-sm"><ChevronLeft className="w-4 h-4" /></button>
+                              <span className="text-xs font-black text-slate-700 bg-white shadow-sm px-4 py-2 rounded-xl border border-slate-200">{currentPage} <span className="text-slate-400 font-bold mx-1">/</span> {totalPages}</span>
+                              <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2 rounded-xl bg-white border border-slate-200 hover:border-[#00B14F] hover:text-[#00B14F] disabled:opacity-50 disabled:bg-slate-50 disabled:cursor-not-allowed shadow-sm"><ChevronRight className="w-4 h-4" /></button>
                           </div>
                       </div>
                   )}
@@ -2106,7 +1627,6 @@ export default function App() {
             // VIEW MERCHANT DETAIL
             // =========================================================
             <div className="animate-in fade-in slide-in-from-right-8 duration-500 ease-out space-y-5 md:space-y-6 pb-12 w-full">
-
                <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6 relative overflow-hidden animate-fade-in-up stagger-1">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none transition-transform duration-700 hover:scale-110"></div>
                   <div className="relative z-10 w-full lg:w-auto">
@@ -2125,150 +1645,73 @@ export default function App() {
                         <span className="text-slate-700 font-bold uppercase tracking-wider text-xs flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-slate-400" /> Owner: <span className="text-slate-900">{selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Tidak Diketahui'}</span></span>
                      </div>
                   </div>
-                  
                   <div className="relative z-10 shrink-0 w-full lg:w-auto flex flex-col sm:flex-row items-center justify-start lg:justify-end gap-3 mt-4 lg:mt-0 pt-4 lg:pt-0 border-t border-slate-100 lg:border-none">
                       {selectedMex.history && selectedMex.history.length > 0 && (
-                          <button onClick={() => { const hist = selectedMex.history || []; const defaultMonths = [ hist.length > 2 ? hist[hist.length - 3].month : '', hist.length > 1 ? hist[hist.length - 2].month : '', hist.length > 0 ? hist[hist.length - 1].month : '' ]; setCompareMonths(defaultMonths); setShowCompareModal(true); }} className="w-full sm:w-auto bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border border-indigo-200 shadow-sm group active:scale-95">
-                             <BarChart2 size={16} className="group-hover:scale-110 transition-transform" /> Compare
-                          </button>
+                          <button onClick={() => { const hist = selectedMex.history || []; const defaultMonths = [ hist.length > 2 ? hist[hist.length - 3].month : '', hist.length > 1 ? hist[hist.length - 2].month : '', hist.length > 0 ? hist[hist.length - 1].month : '' ]; setCompareMonths(defaultMonths); setShowCompareModal(true); }} className="w-full sm:w-auto bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border border-indigo-200 shadow-sm group active:scale-95"><BarChart2 size={16} className="group-hover:scale-110 transition-transform" /> Compare</button>
                       )}
                   </div>
                </div>
 
                {/* REWORKED: 2 Columns on Mobile, 4 on Desktop */}
                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
-                  {/* CARD 1: SALES */}
-                  <div className="bg-white rounded-[20px] md:rounded-[28px] border border-slate-200 p-4 md:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1 group animate-fade-in-up stagger-2">
-                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500"></div>
-                     <Activity className="absolute -bottom-4 -right-4 md:-bottom-6 md:-right-6 w-24 h-24 md:w-32 md:h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                     <div className="flex items-start mb-3 md:mb-5 pl-1.5 md:pl-2 relative z-10">
-                        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 lg:gap-3">
-                           <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center transition-colors group-hover:bg-emerald-100"><Activity size={16} className="md:w-[18px] md:h-[18px]" strokeWidth={2.5} /></div>
-                           <p className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest truncate w-full">Sales</p>
-                        </div>
-                     </div>
-                     <div className="pl-1.5 md:pl-2 relative z-10 flex-1 flex flex-col justify-center min-w-0">
-                         <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-2 mb-1">
-                             <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest">MTD Sales</p>
-                             {(() => {
-                                 let trend = 0; if (selectedMex.lmBs > 0) trend = ((selectedMex.rrBs - selectedMex.lmBs) / selectedMex.lmBs) * 100; else if (selectedMex.rrBs > 0) trend = 100; const isUp = trend >= 0;
-                                 return (<div className={`px-1.5 py-0.5 rounded-md text-[8px] md:text-[9px] font-black flex items-center gap-0.5 w-fit transition-colors ${isUp ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' : 'bg-rose-50 text-rose-600 group-hover:bg-rose-100'}`}>{isUp ? <ArrowUpRight size={10}/> : <ArrowDownRight size={10}/>} {Math.abs(trend).toFixed(1)}%</div>);
-                             })()}
-                         </div>
-                         <p className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-slate-900 tracking-tight leading-none mb-2 md:mb-4 truncate" title={formatCurrency(selectedMex.mtdBs)}>{formatCurrency(selectedMex.mtdBs)}</p>
-                         <div className="flex flex-col lg:flex-row lg:items-center gap-0.5 lg:gap-2 mb-1 md:mb-2">
-                             <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Projected:</span>
-                             <span className="text-[11px] sm:text-xs md:text-sm font-black text-slate-800 truncate">{formatCurrency(selectedMex.rrBs)}</span>
-                         </div>
-                     </div>
-                     <div className="mt-auto pt-2 md:pt-4 border-t border-slate-100 flex flex-col lg:flex-row lg:justify-between lg:items-center pl-1.5 md:pl-2 relative z-10 gap-0.5">
-                         <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Last Month</span>
-                         <span className="text-[11px] sm:text-xs font-black text-slate-700 truncate">{formatCurrency(selectedMex.lmBs)}</span>
-                     </div>
+                  <DashboardCard title="Sales" value={formatCurrency(selectedMex.mtdBs)} subLabel="Last Month" subValue={formatCurrency(selectedMex.lmBs)} icon={Activity} color="emerald" trend={selectedMex.lmBs > 0 ? ((selectedMex.rrBs - selectedMex.lmBs) / selectedMex.lmBs) * 100 : (selectedMex.rrBs > 0 ? 100 : 0)} borderClass="emerald-300" />
+                  
+                  <div className="bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 hover:-translate-y-1 group animate-fade-in-up stagger-3 h-full">
+                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500"></div>
+                      <Award className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
+                      <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-4 lg:mb-5 pl-2 relative z-10 shrink-0 min-h-[44px]">
+                          <div className="flex items-center gap-2 lg:gap-3">
+                              <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0"><Zap size={18} strokeWidth={2.5} /></div>
+                              <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">Campaigns</p>
+                          </div>
+                          <div className="self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap opacity-0 pointer-events-none select-none">
+                              <ArrowUpRight size={12}/> 0.0%
+                          </div>
+                      </div>
+                      <div className="pl-2 relative z-10 flex-1 flex flex-col justify-start">
+                          <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Points</p>
+                          <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{selectedMex.campaignPoint || 0}</p>
+                      </div>
+                      <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex items-center justify-between pl-2 relative z-10 shrink-0 min-h-[40px] lg:min-h-[44px]">
+                          <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2 shrink-0">Active List</span>
+                          <div className="flex overflow-x-auto hide-scrollbar gap-1.5 w-full justify-end" style={{ WebkitOverflowScrolling: 'touch' }}>
+                              {(!selectedMex.campaigns || selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || selectedMex.campaigns.toLowerCase().includes('no campaign')) ? (
+                                  <span className="text-slate-400 text-[10px] font-semibold italic">Tidak ada</span>
+                              ) : (
+                                  selectedMex.campaigns.split(/[|,]/).map(c => c.trim()).filter(Boolean).map((camp, idx) => (
+                                      <span key={idx} className="shrink-0 bg-amber-50 text-amber-600 border border-amber-100 px-1.5 py-0.5 rounded text-[9px] lg:text-[10px] font-black uppercase tracking-wider transition-colors">{camp}</span>
+                                  ))
+                              )}
+                          </div>
+                      </div>
                   </div>
-
-                  {/* CARD 2: CAMPAIGNS */}
-                  <div className="bg-white rounded-[20px] md:rounded-[28px] border border-slate-200 p-4 md:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 hover:-translate-y-1 group animate-fade-in-up stagger-3">
-                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500"></div>
-                     <Award className="absolute -bottom-4 -right-4 md:-bottom-6 md:-right-6 w-24 h-24 md:w-32 md:h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                     <div className="flex items-start mb-3 md:mb-5 pl-1.5 md:pl-2 relative z-10">
-                        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 lg:gap-3">
-                           <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center transition-colors group-hover:bg-amber-100"><Zap size={16} className="md:w-[18px] md:h-[18px]" strokeWidth={2.5} /></div>
-                           <p className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest truncate w-full">Campaigns</p>
-                        </div>
-                     </div>
-                     <div className="pl-1.5 md:pl-2 relative z-10 flex-1 flex flex-col justify-center min-w-0">
-                         <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1 md:mb-2">Total Points</p>
-                         <p className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-slate-900 tracking-tight leading-none mb-2 md:mb-4">{selectedMex.campaignPoint || 0}</p>
-                         <div className="min-w-0 w-full">
-                             <div className="flex items-center gap-1.5 mb-1 md:mb-2">
-                                 <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active List:</p>
-                                 {(() => {
-                                     const count = (!selectedMex.campaigns || selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || selectedMex.campaigns.toLowerCase().includes('no campaign')) ? 0 : selectedMex.campaigns.split(/[|,]/).map(c => c.trim()).filter(Boolean).length;
-                                     return count > 0 ? <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md text-xs sm:text-sm font-black leading-none shadow-sm">{count}</span> : null;
-                                 })()}
-                             </div>
-                             <div className="flex overflow-x-auto hide-scrollbar gap-1 md:gap-1.5 pb-1 w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
-                                {(!selectedMex.campaigns || selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || selectedMex.campaigns.toLowerCase().includes('no campaign')) ? (
-                                    <span className="text-slate-400 text-[10px] md:text-[11px] font-semibold italic shrink-0">Tidak ada</span>
-                                ) : (
-                                    selectedMex.campaigns.split(/[|,]/).map(c => c.trim()).filter(Boolean).map((camp, idx) => (
-                                        <span key={idx} className="shrink-0 bg-slate-100 text-slate-600 px-2 py-1 rounded-md text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-colors hover:bg-slate-200" title={camp}>
-                                            {camp}
-                                        </span>
-                                    ))
-                                )}
-                             </div>
-                         </div>
-                     </div>
-                  </div>
-
-                  {/* CARD 3: MARKETING */}
-                  <div className="bg-white rounded-[20px] md:rounded-[28px] border border-slate-200 p-4 md:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-rose-500/5 hover:-translate-y-1 group animate-fade-in-up stagger-4 cursor-pointer" onClick={() => setShowAdsModal(true)}>
-                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500"></div>
-                     <Megaphone className="absolute -bottom-4 -right-4 md:-bottom-6 md:-right-6 w-24 h-24 md:w-32 md:h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                     <div className="flex items-start mb-3 md:mb-5 pl-1.5 md:pl-2 relative z-10">
-                        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 lg:gap-3">
-                           <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center transition-colors group-hover:bg-rose-100"><Megaphone size={16} className="md:w-[18px] md:h-[18px]" strokeWidth={2.5} /></div>
-                           <p className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest truncate w-full flex items-center gap-1">Ads <MousePointer size={10} className="text-slate-300 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-0.5 shrink-0 hidden lg:block"/></p>
-                        </div>
-                     </div>
-                     <div className="pl-1.5 md:pl-2 relative z-10 flex-1 flex flex-col justify-center min-w-0">
-                         <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-2 mb-1">
-                             <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest">Ads Spend</p>
-                             {(() => {
-                                 let adsTrend = 0; if (selectedMex.adsLM > 0) adsTrend = ((selectedMex.adsRR - selectedMex.adsLM) / selectedMex.adsLM) * 100; else if (selectedMex.adsRR > 0) adsTrend = 100; const isAdsUp = adsTrend > 0;
-                                 return (<div className={`px-1.5 py-0.5 rounded-md text-[8px] md:text-[9px] font-black flex items-center gap-0.5 w-fit transition-colors ${!isAdsUp ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' : 'bg-rose-50 text-rose-600 group-hover:bg-rose-100'}`}>{isAdsUp ? <ArrowUpRight size={10}/> : <ArrowDownRight size={10}/>} {Math.abs(adsTrend).toFixed(1)}%</div>);
-                             })()}
-                         </div>
-                         <p className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-slate-900 tracking-tight leading-none mb-2 md:mb-4 truncate" title={formatCurrency(selectedMex.adsTotal)}>{formatCurrency(selectedMex.adsTotal)}</p>
-                         <div className="flex flex-col lg:flex-row lg:items-center gap-0.5 lg:gap-2 mb-1 md:mb-2">
-                             <span className="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Projected:</span>
-                             <span className="text-[10px] md:text-sm font-black text-slate-800 truncate">{formatCurrency(selectedMex.adsRR)}</span>
-                         </div>
-                     </div>
-                     <div className="mt-auto pt-2 md:pt-4 border-t border-slate-100 flex flex-col lg:flex-row lg:justify-between lg:items-center pl-1.5 md:pl-2 relative z-10 gap-0.5">
-                         <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Last Month</span>
-                         <span className="text-[11px] sm:text-xs font-black text-slate-700 truncate">{formatCurrency(selectedMex.adsLM)}</span>
-                     </div>
-                  </div>
-
-                  {/* CARD 4: MCA LIMIT */}
-                  <div className="bg-white rounded-[20px] md:rounded-[28px] border border-slate-200 p-4 md:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 group animate-fade-in-up stagger-5">
+                  
+                  <DashboardCard title="Ads Spend" value={formatCurrency(selectedMex.adsTotal)} subLabel="Last Month" subValue={formatCurrency(selectedMex.adsLM)} icon={Megaphone} color="rose" onClick={() => setShowAdsModal(true)} borderClass="rose-300" trend={selectedMex.adsLM > 0 ? ((selectedMex.adsRR - selectedMex.adsLM) / selectedMex.adsLM) * 100 : (selectedMex.adsRR > 0 ? 100 : 0)} />
+                  
+                  <div className="bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group h-full animate-fade-in-up stagger-5">
                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
-                     <Database className="absolute -bottom-4 -right-4 md:-bottom-6 md:-right-6 w-24 h-24 md:w-32 md:h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                     <div className="flex items-start mb-3 md:mb-5 pl-1.5 md:pl-2 relative z-10">
-                        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 lg:gap-3">
-                           <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center transition-colors group-hover:bg-blue-100"><Database size={16} className="md:w-[18px] md:h-[18px]" strokeWidth={2.5} /></div>
-                           <p className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest truncate w-full">MCA Config</p>
-                        </div>
-                     </div>
-                     <div className="pl-1.5 md:pl-2 relative z-10 flex-1 flex flex-col justify-center min-w-0">
-                         {(() => {
-                             const isPending = selectedMex.mcaDisburseStatus && String(selectedMex.mcaDisburseStatus).toLowerCase().includes('pending');
-                             const textColor = isPending ? 'text-amber-500' : 'text-blue-500';
-                             const labelText = isPending ? 'Pending Disburse' : 'Disbursed';
-                             return (
-                                 <div className="mb-2 md:mb-4">
-                                     <p className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1">{labelText}</p>
-                                     <p className={`text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black ${textColor} tracking-tight leading-none truncate`} title={formatCurrency(selectedMex.mcaAmount)}>{formatCurrency(selectedMex.mcaAmount)}</p>
-                                 </div>
-                             );
-                         })()}
-                         <div className="flex flex-col lg:flex-row lg:items-center gap-0.5 lg:gap-2 mb-1 md:mb-2">
-                             <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Tersedia:</span>
-                             <span className="text-[11px] sm:text-xs md:text-sm font-black text-slate-800 truncate">{selectedMex.mcaWlLimit > 0 ? formatCurrency(selectedMex.mcaWlLimit) : 'Rp 0'}</span>
+                     <Database className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
+                     <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-4 lg:mb-5 pl-2 relative z-10 shrink-0 min-h-[44px]">
+                         <div className="flex items-center gap-2 lg:gap-3">
+                             <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0"><Database size={18} strokeWidth={2.5}/></div>
+                             <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">MCA Config</p>
+                         </div>
+                         <div className="self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap opacity-0 pointer-events-none select-none">
+                              <ArrowUpRight size={12}/> 0.0%
                          </div>
                      </div>
-                     <div className="mt-auto pt-2 md:pt-4 border-t border-slate-100 flex flex-col lg:flex-row lg:justify-between lg:items-center pl-1.5 md:pl-2 relative z-10 gap-1.5">
-                         <span className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase">Eligibility</span>
-                         <div className="flex flex-wrap items-center gap-1">
-                             {selectedMex.mcaPriority && selectedMex.mcaPriority !== '-' && (
-                                 <span className={`px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black uppercase tracking-widest border ${getPriorityBadgeClass(selectedMex.mcaPriority)}`}>{selectedMex.mcaPriority}</span>
-                             )}
-                             <span className={`px-2 py-1 rounded-md text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-colors ${selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100' : 'bg-slate-100 text-slate-500'}`}>
-                                 {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') ? 'Eligible' : 'Not Eligible'}
-                             </span>
+                     <div className="pl-2 relative z-10 flex-1 flex flex-col justify-start">
+                         <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Disbursed Amount</p>
+                         <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(selectedMex.mcaAmount)}</p>
+                     </div>
+                     <div className="mt-auto flex flex-col gap-1.5 pl-2 relative z-10 shrink-0 min-h-[40px] lg:min-h-[44px]">
+                         <div className="pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center">
+                             <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Limit Tersedia</span>
+                             <span className="text-[10px] lg:text-xs font-black text-slate-700">{formatCurrency(selectedMex.mcaWlLimit)}</span>
+                         </div>
+                         <div className="flex justify-between items-center">
+                             <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Drop Off</span>
+                             <span className={`text-[9px] lg:text-[10px] font-black px-2 py-0.5 rounded-md ${(!selectedMex.mcaDropOff || selectedMex.mcaDropOff === '-' || String(selectedMex.mcaDropOff).trim() === '0') ? 'bg-slate-100 text-slate-500' : 'bg-rose-100 text-rose-700'}`}>{(!selectedMex.mcaDropOff || selectedMex.mcaDropOff === '-' || String(selectedMex.mcaDropOff).trim() === '0') ? '-Not Yet-' : selectedMex.mcaDropOff}</span>
                          </div>
                      </div>
                   </div>
@@ -2280,12 +1723,6 @@ export default function App() {
                            <div className="animate-fade-in-up stagger-6 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
                                 <div className="flex justify-between items-start md:items-center mb-8 gap-2 shrink-0 min-h-[44px]">
                                    <div><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="text-blue-500 w-5 h-5"/> 12-Month Review</h3></div>
-                                   {selectedMex.lastUpdate && (
-                                       <div className="flex flex-col text-right justify-center bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100 shadow-sm shrink-0">
-                                           <span className="text-[8px] md:text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Last Update</span>
-                                           <span className="text-[10px] md:text-xs font-black text-slate-700 leading-none">{selectedMex.lastUpdate}</span>
-                                       </div>
-                                   )}
                                 </div>
                                 <div className="h-[280px] md:h-[360px] w-full mt-auto">
                                     <ResponsiveContainer width="100%" height="100%">
@@ -2295,8 +1732,7 @@ export default function App() {
                                         <YAxis yAxisId="left" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={60} />
                                         <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fill: '#f97316', fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={40} />
                                         <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [n.includes('%') ? `${v}%` : formatCurrency(v), n]} labelFormatter={formatMonth}/>
-                                        <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold', width: '100%', left: 0, display: 'flex', justifyContent: 'center' }} />
-                                        
+                                        <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold' }} />
                                         <Bar yAxisId="left" dataKey="net_sales" stackId="a" name="Net Sales" fill={COLORS.netSales} maxBarSize={28} radius={[4,4,0,0]} />
                                         <Bar yAxisId="left" dataKey="total_investment" stackId="a" name="MI (Rp)" fill="#f43f5e" radius={[4,4,0,0]} maxBarSize={28} />
                                         <Line yAxisId="right" type="monotone" dataKey="mi_percentage" name="MI %" stroke="#f97316" strokeWidth={2} strokeDasharray="4 4" dot={{r:3, fill: '#ffffff', strokeWidth: 2}} activeDot={{r: 5}} />
@@ -2307,26 +1743,15 @@ export default function App() {
                            </div>
 
                            <div className="animate-fade-in-up stagger-7 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
-                                <div className="flex justify-between items-start mb-8 shrink-0 min-h-[44px]">
-                                   <div className="flex items-center gap-2">
-                                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><DollarSign className="text-rose-500 w-5 h-5"/> Investment (MI)</h3>
-                                   </div>
-                                   <div className="bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-100 flex items-center gap-1.5 shadow-sm transition-transform hover:scale-105">
-                                      <Percent className="w-3.5 h-3.5 text-rose-500"/>
-                                      <span className="text-[11px] font-black text-rose-700" title="MI % dari Basket Size Bulan Terakhir">
-                                          {selectedMex.history[selectedMex.history.length-1].mi_percentage}%
-                                      </span>
-                                   </div>
-                                </div>
+                                <div className="flex items-center mb-8 shrink-0 min-h-[44px]"><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><DollarSign className="text-rose-500 w-5 h-5"/> Investment (MI) Breakdown</h3></div>
                                 <div className="h-[280px] md:h-[360px] w-full mt-auto">
                                   <ResponsiveContainer width="100%" height="100%">
-                                      <BarChart data={selectedMex.history.slice(-12)} margin={{ top: 20, right: 45, left: -5, bottom: 5 }}>
+                                      <BarChart data={selectedMex.history.slice(-12)} margin={{ top: 20, right: 0, left: -5, bottom: 5 }}>
                                           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                           <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} height={20} dy={5} />
                                           <YAxis tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={60} />
                                           <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v) => formatCurrency(v)} labelFormatter={formatMonth}/>
-                                          <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold', width: '100%', left: 0, display: 'flex', justifyContent: 'center' }} iconType="circle" />
-                                          
+                                          <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold' }} iconType="circle" />
                                           <Bar dataKey="mfp" stackId="a" name="Local Promo" fill="#3b82f6" maxBarSize={32} />
                                           <Bar dataKey="mfc" stackId="a" name="Harga Coret" fill="#22c55e" maxBarSize={32} />
                                           <Bar dataKey="cpo" stackId="a" name="GMS" fill="#f97316" maxBarSize={32} />
@@ -2339,18 +1764,14 @@ export default function App() {
 
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 mt-2">
                             <div className="animate-fade-in-up stagger-8 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
-                                <div className="flex items-start gap-2 mb-8 shrink-0 min-h-[44px]">
-                                   <ShoppingBag className="w-5 h-5 text-indigo-500 shrink-0"/>
-                                   <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-tight">Completed Orders</h3>
-                                </div>
+                                <div className="flex items-start gap-2 mb-8 shrink-0 min-h-[44px]"><ShoppingBag className="w-5 h-5 text-indigo-500 shrink-0"/><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-tight">Completed Orders</h3></div>
                                 <div className="h-[280px] md:h-[360px] w-full mt-auto">
                                   <ResponsiveContainer width="100%" height="100%">
-                                      <BarChart data={selectedMex.history.slice(-12)} margin={{ top: 30, right: 45, left: -5, bottom: 5 }}>
+                                      <BarChart data={selectedMex.history.slice(-12)} margin={{ top: 30, right: 0, left: -5, bottom: 5 }}>
                                           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                           <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} height={20} dy={5} />
                                           <YAxis tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} width={45} />
                                           <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} labelFormatter={formatMonth}/>
-                                          <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold', width: '100%', left: 0, display: 'flex', justifyContent: 'center' }} iconType="circle" />
                                           <Bar dataKey="completed_orders" name="Completed Orders" fill="#10b981" radius={[4,4,0,0]} maxBarSize={32}>
                                               <LabelList dataKey="completed_orders" position="top" offset={10} fontSize={10} fontWeight={800} fill="#10b981" />
                                           </Bar>
@@ -2360,27 +1781,17 @@ export default function App() {
                             </div>
 
                             <div className="animate-fade-in-up stagger-9 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
-                                <div className="flex items-start gap-2 mb-8 shrink-0 min-h-[44px]">
-                                   <Target className="w-5 h-5 text-teal-500 shrink-0"/>
-                                   <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-tight">
-                                       AOV & Promo Usage <span className="text-[10px] text-slate-400 font-bold normal-case tracking-normal block mt-0.5">(Gms & Cofund Only)</span>
-                                   </h3>
-                                </div>
+                                <div className="flex items-start gap-2 mb-8 shrink-0 min-h-[44px]"><Target className="w-5 h-5 text-teal-500 shrink-0"/><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-tight">AOV & Promo Usage</h3></div>
                                 <div className="h-[280px] md:h-[360px] w-full mt-auto">
                                   <ResponsiveContainer width="100%" height="100%">
-                                      <ComposedChart data={selectedMex.history.slice(-12)} margin={{ top: 30, right: 10, left: -5, bottom: 5 }}>
-                                          <defs>
-                                              <linearGradient id="colorAov" x1="0" y1="0" x2="0" y2="1">
-                                                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
-                                                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                                              </linearGradient>
-                                          </defs>
+                                      <ComposedChart data={selectedMex.history.slice(-12)} margin={{ top: 30, right: 0, left: -5, bottom: 5 }}>
+                                          <defs><linearGradient id="colorAov" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/><stop offset="95%" stopColor="#6366f1" stopOpacity={0}/></linearGradient></defs>
                                           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                           <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} height={20} dy={5} />
                                           <YAxis yAxisId="left" domain={['auto', 'auto']} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={45} />
                                           <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={40} />
                                           <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [n.includes('%') ? `${v}%` : formatCurrency(v), n]} labelFormatter={formatMonth}/>
-                                          <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold', width: '100%', left: 0, display: 'flex', justifyContent: 'center' }} iconType="circle" />
+                                          <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold' }} iconType="circle" />
                                           <Area yAxisId="left" type="monotone" dataKey="aov" name="AOV" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorAov)">
                                               <LabelList dataKey="aov" position="top" offset={10} fontSize={9} fontWeight={800} fill="#6366f1" formatter={(v) => `${(v/1000).toFixed(0)}K`} />
                                           </Area>
@@ -2394,52 +1805,16 @@ export default function App() {
                )}
 
                <div className="animate-fade-in-up stagger-10 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-5 md:p-8 mt-6 hover:shadow-2xl transition-shadow duration-500">
-                  <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
-                     <Info className="w-5 h-5 text-indigo-500"/>
-                     <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Informasi Kontak & Lokasi</h3>
-                  </div>
-                  
+                  <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100"><Info className="w-5 h-5 text-indigo-500"/><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Informasi Kontak & Lokasi</h3></div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
                       <div className="bg-slate-50 p-4 md:p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center gap-4 transition-colors hover:bg-slate-100/50">
-                         <div className="flex items-start gap-3">
-                            <Phone className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/>
-                            <div className="flex flex-col">
-                               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Phone Number</span>
-                               {selectedMex.phone && selectedMex.phone !== '-' ? (
-                                  <button onClick={() => setShowWaModal(true)} className="text-sm md:text-base font-black text-slate-800 hover:text-[#00B14F] transition-colors flex items-center gap-1.5 group cursor-pointer text-left" title="Pilih Template Pesan WhatsApp">
-                                     {selectedMex.phone}
-                                     <MessageCircle className="w-3.5 h-3.5 text-[#00B14F] opacity-0 group-hover:opacity-100 transition-opacity" />
-                                  </button>
-                               ) : (<span className="text-sm md:text-base font-black text-slate-800">-</span>)}
-                            </div>
-                         </div>
-                         <div className="flex items-start gap-3">
-                            <Mail className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/>
-                            <div className="flex flex-col">
-                               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Email Address</span>
-                               <span className="text-sm font-bold text-indigo-600 break-all">{selectedMex.email || '-'}</span>
-                            </div>
-                         </div>
+                         <div className="flex items-start gap-3"><Phone className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/><div className="flex flex-col"><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Phone Number</span>{selectedMex.phone && selectedMex.phone !== '-' ? (<button onClick={() => setShowWaModal(true)} className="text-sm md:text-base font-black text-slate-800 hover:text-[#00B14F] transition-colors flex items-center gap-1.5 group cursor-pointer text-left">{selectedMex.phone}<MessageCircle className="w-3.5 h-3.5 text-[#00B14F] opacity-0 group-hover:opacity-100 transition-opacity" /></button>) : (<span className="text-sm md:text-base font-black text-slate-800">-</span>)}</div></div>
+                         <div className="flex items-start gap-3"><Mail className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/><div className="flex flex-col"><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Email Address</span><span className="text-sm font-bold text-indigo-600 break-all">{selectedMex.email || '-'}</span></div></div>
                       </div>
-
                       <div className="bg-slate-50 p-4 md:p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center gap-4 lg:col-span-2 transition-colors hover:bg-slate-100/50">
-                         <div className="flex items-start gap-3">
-                            <MapPin className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/>
-                            <div className="flex flex-col">
-                               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Address</span>
-                               <span className="text-sm font-semibold text-slate-700 leading-relaxed">{selectedMex.city ? `${selectedMex.address}, ${selectedMex.city}` : '-'}</span>
-                            </div>
-                         </div>
+                         <div className="flex items-start gap-3"><MapPin className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/><div className="flex flex-col"><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Address</span><span className="text-sm font-semibold text-slate-700 leading-relaxed">{selectedMex.city ? `${selectedMex.address}, ${selectedMex.city}` : '-'}</span></div></div>
                          {(selectedMex.latitude || selectedMex.longitude) && (
-                            <div className="flex items-start gap-3">
-                               <ExternalLink className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/>
-                               <div className="flex flex-col">
-                                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Maps Coords</span>
-                                  <a href={`https://maps.google.com/?q=${selectedMex.latitude},${selectedMex.longitude}`} target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-blue-500 hover:text-blue-700 transition-colors font-bold break-all">
-                                      {selectedMex.latitude}, {selectedMex.longitude}
-                                  </a>
-                               </div>
-                            </div>
+                            <div className="flex items-start gap-3"><ExternalLink className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/><div className="flex flex-col"><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Maps Coords</span><a href={`https://maps.google.com/?q=${selectedMex.latitude},${selectedMex.longitude}`} target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-blue-500 hover:text-blue-700 transition-colors font-bold break-all">{selectedMex.latitude}, {selectedMex.longitude}</a></div></div>
                          )}
                       </div>
                   </div>
@@ -2448,10 +1823,7 @@ export default function App() {
                {/* FITUR BARU: ACTIVITY & NOTES SECTION */}
                <div className="animate-fade-in-up stagger-10 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 mt-6 hover:shadow-2xl transition-shadow duration-500">
                    <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-                       <div className="flex items-center gap-2">
-                           <StickyNote className="w-5 h-5 text-amber-500"/>
-                           <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Catatan Visit & Aktivitas</h3>
-                       </div>
+                       <div className="flex items-center gap-2"><StickyNote className="w-5 h-5 text-amber-500"/><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Catatan Visit & Aktivitas</h3></div>
                        <span className="bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg text-[10px] font-black border border-amber-200 shadow-sm">{selectedMex.notes?.length || 0} Catatan</span>
                    </div>
                    
