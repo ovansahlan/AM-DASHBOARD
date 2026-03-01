@@ -1878,27 +1878,27 @@ export default function App() {
             <div className="animate-in fade-in slide-in-from-right-8 duration-500 ease-out space-y-5 md:space-y-6 pb-12 w-full">
                
                {/* KARTU 1: MERCHANT INFO HEADER (FULL WIDTH) */}
-               <div className="bg-white/80 dark:bg-slate-800/60 backdrop-blur-2xl rounded-[32px] shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100/50 dark:border-slate-700/50 p-6 md:p-8 flex flex-col relative overflow-hidden h-full transition-shadow hover:shadow-2xl animate-fade-in-up stagger-1">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-slate-100/50 to-transparent dark:from-slate-700/30 rounded-bl-full opacity-60 -mr-16 -mt-16 pointer-events-none transition-transform duration-700 hover:scale-110"></div>
+               <div className="panel-info-backdrop bg-white/80 backdrop-blur-2xl rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100/50 p-6 md:p-8 flex flex-col relative overflow-hidden h-full transition-shadow hover:shadow-2xl animate-fade-in-up stagger-1">
+                  <div className="panel-info-blob absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-slate-100/50 to-transparent rounded-bl-full opacity-60 -mr-16 -mt-16 pointer-events-none transition-transform duration-700 hover:scale-110"></div>
                   
                   <div className="relative z-10 flex flex-col lg:flex-row gap-5 lg:gap-6">
                      {/* KIRI: PROFIL & INFO */}
-                     <div className="flex-1 min-w-0 flex flex-col justify-center bg-gradient-to-br from-emerald-50/80 to-white dark:from-emerald-900/40 dark:to-slate-800/80 border border-emerald-100 dark:border-emerald-800/60 rounded-[24px] p-6 lg:p-8 relative overflow-hidden shadow-sm">
+                     <div className="panel-profile-card flex-1 min-w-0 flex flex-col justify-center bg-gradient-to-br from-emerald-50/80 to-white border border-emerald-100 rounded-[24px] p-6 lg:p-8 relative overflow-hidden shadow-sm">
                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#00B14F]"></div>
-                        <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-emerald-100 dark:bg-emerald-900/40 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+                        <div className="panel-profile-blob absolute -bottom-8 -right-8 w-32 h-32 bg-emerald-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
                         
                         <div className="relative z-10 pr-2">
-                            <h2 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white leading-tight tracking-tight">{selectedMex.name}</h2>
+                            <h2 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-900 leading-tight tracking-tight">{selectedMex.name}</h2>
                             <div className="flex flex-wrap items-center gap-y-2 gap-x-3 md:gap-x-4 mt-4">
-                                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-1.5"><MapPin size={14} className="text-[#00B14F] dark:text-emerald-400"/> {selectedMex.city || 'Tidak diketahui'}</p>
-                                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 hidden sm:block"></div>
-                                <div className="flex items-center gap-1.5 text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300" title={selectedMex.zeusStatus === 'ACTIVE' ? 'Status: Aktif' : 'Status: Inactive'}>
-                                   {selectedMex.zeusStatus === 'ACTIVE' ? <CheckCircle className="w-4 h-4 text-[#00B14F] dark:text-emerald-400" /> : <AlertCircle className="w-4 h-4 text-slate-400 dark:text-slate-500" />}
+                                <p className="panel-text-muted text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5"><MapPin size={14} className="panel-icon-primary text-[#00B14F]"/> {selectedMex.city || 'Tidak diketahui'}</p>
+                                <div className="panel-divider w-1.5 h-1.5 rounded-full bg-slate-300 hidden sm:block"></div>
+                                <div className="panel-text-muted text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-600" title={selectedMex.zeusStatus === 'ACTIVE' ? 'Status: Aktif' : 'Status: Inactive'}>
+                                   {selectedMex.zeusStatus === 'ACTIVE' ? <CheckCircle className="panel-icon-primary w-4 h-4 text-[#00B14F]" /> : <AlertCircle className="w-4 h-4 text-slate-400" />}
                                    <span className="font-mono">{selectedMex.id}</span>
                                 </div>
-                                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 hidden sm:block"></div>
-                                <div className="flex items-center gap-1.5 text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                                   <Users className="w-4 h-4 text-[#00B14F] dark:text-emerald-400" />
+                                <div className="panel-divider w-1.5 h-1.5 rounded-full bg-slate-300 hidden sm:block"></div>
+                                <div className="panel-text-muted text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-600">
+                                   <Users className="panel-icon-primary w-4 h-4 text-[#00B14F]" />
                                    <span className="truncate max-w-[150px] sm:max-w-[200px]">{selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Unknown Owner'}</span>
                                 </div>
                             </div>
@@ -1906,31 +1906,31 @@ export default function App() {
                      </div>
 
                      {/* KANAN: RECENT NOTES & ACTION */}
-                     <div className="w-full lg:w-[400px] xl:w-[450px] shrink-0 flex flex-col bg-slate-50 dark:bg-slate-800/80 rounded-[24px] border border-slate-200 dark:border-slate-700/80 p-5 md:p-6 shadow-sm">
+                     <div className="panel-notes-card w-full lg:w-[400px] xl:w-[450px] shrink-0 flex flex-col bg-slate-50 rounded-[24px] border border-slate-200 p-5 md:p-6 shadow-sm">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xs md:text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest flex items-center gap-2"><StickyNote className="w-4 h-4 text-amber-500"/> Recent Notes</h3>
-                            <button onClick={() => setShowNotesModal(true)} className="bg-amber-50 dark:bg-amber-500/20 hover:bg-amber-100 dark:hover:bg-amber-500/30 text-amber-600 dark:text-amber-400 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors border border-amber-200 dark:border-amber-500/30 shadow-sm flex items-center gap-1.5 active:scale-95">
+                            <h3 className="panel-notes-title text-xs md:text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><StickyNote className="w-4 h-4 text-amber-500"/> Recent Notes</h3>
+                            <button onClick={() => setShowNotesModal(true)} className="panel-notes-btn bg-amber-50 hover:bg-amber-100 text-amber-600 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors border border-amber-200 shadow-sm flex items-center gap-1.5 active:scale-95">
                                 <Plus size={12}/> {selectedMex.notes?.length > 0 ? 'See All' : 'Add Note'}
                             </button>
                         </div>
 
                         <div className="flex-1 flex flex-col gap-3 overflow-hidden">
                             {(!selectedMex.notes || selectedMex.notes.length === 0) ? (
-                                <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 py-6 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50/50 dark:bg-slate-900/30">
+                                <div className="panel-notes-empty flex-1 flex flex-col items-center justify-center text-slate-400 py-6 border border-dashed border-slate-300 rounded-xl bg-slate-50/50">
                                     <FileText className="w-8 h-8 mb-2 opacity-20" />
                                     <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-center">Belum ada catatan.</p>
                                 </div>
                             ) : (
                                 selectedMex.notes.slice(0, 2).map((note, idx) => (
-                                    <div key={note.id} className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 p-3.5 rounded-xl shadow-sm flex gap-3 group">
-                                        <div className="w-8 h-8 bg-amber-50 dark:bg-amber-500/10 rounded-full flex items-center justify-center shrink-0 border border-amber-100 dark:border-amber-500/20">
-                                            <Calendar size={14} className="text-amber-500 dark:text-amber-400" />
+                                    <div key={note.id} className="panel-note-item bg-white border border-slate-200 p-3.5 rounded-xl shadow-sm flex gap-3 group">
+                                        <div className="panel-note-icon w-8 h-8 bg-amber-50 rounded-full flex items-center justify-center shrink-0 border border-amber-100">
+                                            <Calendar size={14} className="text-amber-500" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1.5 uppercase tracking-widest">
+                                            <p className="panel-note-date text-[9px] font-black text-slate-400 mb-1 flex items-center gap-1.5 uppercase tracking-widest">
                                                 {new Date(note.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                                             </p>
-                                            <p className="text-xs text-slate-700 dark:text-slate-300 font-medium whitespace-pre-wrap leading-relaxed line-clamp-3">{note.text}</p>
+                                            <p className="panel-note-text text-xs text-slate-700 font-medium whitespace-pre-wrap leading-relaxed line-clamp-3">{note.text}</p>
                                         </div>
                                     </div>
                                 ))
@@ -1938,7 +1938,7 @@ export default function App() {
                             
                             {selectedMex.notes && selectedMex.notes.length > 2 && (
                                 <div className="text-center pt-2">
-                                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest cursor-pointer hover:text-amber-500 dark:hover:text-amber-400 transition-colors" onClick={() => setShowNotesModal(true)}>
+                                    <span className="panel-note-more text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer hover:text-amber-500 transition-colors" onClick={() => setShowNotesModal(true)}>
                                         + {selectedMex.notes.length - 2} catatan lainnya
                                     </span>
                                 </div>
@@ -2247,6 +2247,29 @@ export default function App() {
         .dark-theme .hover\\:bg-slate-50\\/80:hover { background-color: #1e293b !important; }
         .dark-theme .hover\\:border-slate-300:hover { border-color: #475569 !important; }
         .dark-theme .hover\\:border-slate-400:hover { border-color: #64748b !important; }
+
+        /* Panel Info Merchant Specific Dark Mode */
+        .dark-theme .panel-info-backdrop { background-color: rgba(30, 41, 59, 0.6) !important; border-color: rgba(51, 65, 85, 0.5) !important; box-shadow: none !important; }
+        .dark-theme .panel-info-blob { background-image: linear-gradient(to bottom left, rgba(51, 65, 85, 0.3), transparent) !important; }
+        .dark-theme .panel-profile-card { background-image: linear-gradient(to bottom right, rgba(6, 78, 59, 0.4), rgba(30, 41, 59, 0.8)) !important; border-color: rgba(6, 78, 59, 0.6) !important; }
+        .dark-theme .panel-profile-blob { background-color: rgba(6, 78, 59, 0.4) !important; }
+        .dark-theme .panel-text-muted { color: #94a3b8 !important; }
+        .dark-theme .panel-icon-primary { color: #34d399 !important; }
+        .dark-theme .panel-divider { background-color: #475569 !important; }
+        
+        .dark-theme .panel-notes-card { background-color: rgba(30, 41, 59, 0.8) !important; border-color: rgba(51, 65, 85, 0.8) !important; }
+        .dark-theme .panel-notes-title { color: #f8fafc !important; }
+        .dark-theme .panel-notes-btn { background-color: rgba(245, 158, 11, 0.2) !important; border-color: rgba(245, 158, 11, 0.3) !important; color: #fbbf24 !important; }
+        .dark-theme .panel-notes-btn:hover { background-color: rgba(245, 158, 11, 0.3) !important; }
+        
+        .dark-theme .panel-notes-empty { background-color: rgba(15, 23, 42, 0.3) !important; border-color: #475569 !important; color: #94a3b8 !important; }
+        .dark-theme .panel-note-item { background-color: rgba(15, 23, 42, 0.6) !important; border-color: #334155 !important; }
+        .dark-theme .panel-note-icon { background-color: rgba(245, 158, 11, 0.1) !important; border-color: rgba(245, 158, 11, 0.2) !important; }
+        .dark-theme .panel-note-icon svg { color: #fbbf24 !important; }
+        .dark-theme .panel-note-date { color: #94a3b8 !important; }
+        .dark-theme .panel-note-text { color: #cbd5e1 !important; }
+        .dark-theme .panel-note-more { color: #94a3b8 !important; }
+        .dark-theme .panel-note-more:hover { color: #fbbf24 !important; }
       `}} />
     </div>
   );
