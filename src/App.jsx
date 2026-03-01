@@ -114,6 +114,30 @@ const getShortAMName = (fullName) => {
     return amShort;
 };
 
+const parseSafeDate = (dateStr) => {
+    if (!dateStr) return new Date().toISOString();
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) return d.toISOString();
+    
+    try {
+        const str = String(dateStr).trim();
+        const parts = str.split(/[\s,]+/);
+        if (parts.length > 0 && parts[0].includes('/')) {
+            const [day, month, year] = parts[0].split('/');
+            let timeStr = '00:00:00';
+            if (parts.length > 1) {
+                let t = parts[1].replace(/\./g, ':');
+                if (t.split(':').length === 2) t += ':00';
+                timeStr = t;
+            }
+            const iso = `${year.length === 2 ? '20'+year : year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}T${timeStr}`;
+            const test = new Date(iso);
+            if (!isNaN(test.getTime())) return test.toISOString();
+        }
+    } catch(e) {}
+    return new Date().toISOString();
+};
+
 // ============================================================================
 // INDEXEDDB BROWSER STORAGE
 // ============================================================================
@@ -374,7 +398,7 @@ export default function App() {
                                 if (!notesMap[mId]) notesMap[mId] = [];
                                 notesMap[mId].push({
                                     id: String(row.timestamp), 
-                                    date: row.timestamp, 
+                                    date: parseSafeDate(row.timestamp), 
                                     text: row.note
                                 });
                             });
@@ -552,7 +576,7 @@ export default function App() {
 
       if (GOOGLE_SHEETS_API_URL) {
           try {
-              const payload = { timestamp: new Date().toLocaleString('id-ID'), merchantId: selectedMex.id, merchantName: selectedMex.name, amName: selectedMex.amName || 'Unassigned', note: newNote.text };
+              const payload = { timestamp: new Date().toISOString(), merchantId: selectedMex.id, merchantName: selectedMex.name, amName: selectedMex.amName || 'Unassigned', note: newNote.text };
               await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
           } catch (err) { console.error("Gagal mengirim ke Google Sheets:", err); }
       }
