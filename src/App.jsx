@@ -609,9 +609,10 @@ export default function App() {
               const histLines = parseCSVString(histText); const hHeaders = (histLines[0] || []).map(h => h ? String(h).trim() : '');
               const hMexIdx = hHeaders.indexOf('merchant_id'); const hMonthIdx = hHeaders.indexOf('first_day_of_month'); const hBsIdx = hHeaders.indexOf('basket_size'); const hTotOrdIdx = hHeaders.indexOf('total_orders'); const hCompOrdIdx = hHeaders.indexOf('completed_orders'); const hPromoOrdIdx = hHeaders.indexOf('orders_with_promo_mfp_gms'); const hAovIdx = hHeaders.indexOf('aov'); const hMfcIdx = hHeaders.indexOf('mfc_mex_spend'); const hMfpIdx = hHeaders.indexOf('mfp_mex_spend'); const hCpoIdx = hHeaders.indexOf('cpo'); const hGmsIdx = hHeaders.indexOf('gms'); const hCommIdx = hHeaders.indexOf('basic_commission'); const hAdsWebIdx = hHeaders.indexOf('ads_web'); const hAdsMobIdx = hHeaders.indexOf('ads_mobile'); const hAdsDirIdx = hHeaders.indexOf('ads_direct');
               
-              // Temukan index kolom Z (merchant_id ke-2) dan AE (hours_from_month)
+              // Temukan index kolom Z (merchant_id ke-2), AD (penetration), dan AE (hours_from_month)
               const hMexIdxRight = hHeaders.lastIndexOf('merchant_id');
               const hMonthIdxRight = hHeaders.indexOf('month_id');
+              const hPenetrationIdx = hHeaders.indexOf('penetration');
               const hHoursIdx = hHeaders.indexOf('hours_from_month');
 
               for (let i = 1; i < histLines.length; i++) {
@@ -625,7 +626,7 @@ export default function App() {
                           const monthStr = String(vals[hMonthIdx]).trim();
                           let histEntry = pMap.get(mexId).history.find(h => h.month === monthStr);
                           if (!histEntry) {
-                              histEntry = { month: monthStr, operational_hours: 0 };
+                              histEntry = { month: monthStr, operational_hours: 0, penetration: 0 };
                               pMap.get(mexId).history.push(histEntry);
                           }
                           const baseBs = cleanNumber(vals[hBsIdx]); const totOrd = cleanNumber(vals[hTotOrdIdx]); const promoOrd = cleanNumber(vals[hPromoOrdIdx]);
@@ -639,22 +640,32 @@ export default function App() {
                       }
                   }
 
-                  // 2. Proses Data Kanan (Jam Operasional)
+                  // 2. Proses Data Kanan (Jam Operasional & Penetration)
                   if (hMexIdxRight !== -1 && hMexIdxRight !== hMexIdx && hMonthIdxRight !== -1 && vals[hMexIdxRight]) {
                       const mexIdRight = String(vals[hMexIdxRight]).trim();
                       if (pMap.has(mexIdRight)) {
                           const monthStrRight = String(vals[hMonthIdxRight]).trim();
                           let histEntryRight = pMap.get(mexIdRight).history.find(h => h.month === monthStrRight);
                           if (!histEntryRight) {
-                              histEntryRight = { month: monthStrRight, basket_size: 0, net_sales: 0, total_orders: 0, completed_orders: 0, aov: 0, promo_order_pct: 0, mi_percentage: 0, total_investment: 0, ads_total_hist: 0, operational_hours: 0 };
+                              histEntryRight = { month: monthStrRight, basket_size: 0, net_sales: 0, total_orders: 0, completed_orders: 0, aov: 0, promo_order_pct: 0, mi_percentage: 0, total_investment: 0, ads_total_hist: 0, operational_hours: 0, penetration: 0 };
                               pMap.get(mexIdRight).history.push(histEntryRight);
                           }
                           histEntryRight.operational_hours = hHoursIdx !== -1 ? cleanNumber(vals[hHoursIdx]) : 0;
+                          histEntryRight.penetration = hPenetrationIdx !== -1 ? cleanNumber(vals[hPenetrationIdx]) : 0;
                       }
                   }
               }
           }
-          const finalData = Array.from(pMap.values()).map(m => { if (m.history.length > 0) m.history.sort((a, b) => new Date(a.month) - new Date(b.month)); return m; });
+          const finalData = Array.from(pMap.values()).map(m => { 
+              if (m.history.length > 0) {
+                  m.history.sort((a, b) => new Date(a.month) - new Date(b.month));
+                  // Ambil penetration terbaru untuk ditaruh di info merchant level atas
+                  m.latest_penetration = m.history[m.history.length - 1].penetration || 0;
+              } else {
+                  m.latest_penetration = 0;
+              }
+              return m; 
+          });
           await saveToLocal(finalData, updateStr);
       } catch (err) { setErrorMsg(err.message || "Gagal memproses data."); setLoading(false); }
   };
@@ -676,13 +687,13 @@ export default function App() {
               const lm = Math.floor(Math.random() * 50000000) + 5000000; const rr = Math.random() > 0.4 ? lm * (1 + Math.random() * 0.5) : lm * (1 - Math.random() * 0.3); const mca = Math.random() > 0.8 ? Math.floor(Math.random() * 50000000) + 10000000 : 0; let baseBs = Math.floor(Math.random() * 15000000) + 5000000;
               const hist = m.map(mon => {
                   baseBs = Math.max(1000000, baseBs * (1 + (Math.random() * 0.4 - 0.2))); const ord = Math.floor(baseBs / 40000); const adsTotHist = Math.random() > 0.3 ? Math.floor(Math.random() * 500000) + 100000 : 0; const adsSales = adsTotHist > 0 ? adsTotHist * (Math.random() * 5 + 1.5) : 0; const adsOrders = Math.floor(adsSales / 40000);
-                  return { month: mon, basket_size: baseBs, net_sales: baseBs * 0.8, total_orders: ord, completed_orders: ord, orders_with_promo: Math.floor(ord*0.5), promo_order_pct: 50, aov: 40000, mfc: 0, mfp: 0, cpo: 0, gms: 0, basic_commission: 0, ads_total_hist: adsTotHist, mi_percentage: 12, total_investment: 0, ads_orders: adsOrders, ads_sales: adsSales, operational_hours: Math.floor(Math.random() * 150) + 100 };
+                  return { month: mon, basket_size: baseBs, net_sales: baseBs * 0.8, total_orders: ord, completed_orders: ord, orders_with_promo: Math.floor(ord*0.5), promo_order_pct: 50, aov: 40000, mfc: 0, mfp: 0, cpo: 0, gms: 0, basic_commission: 0, ads_total_hist: adsTotHist, mi_percentage: 12, total_investment: 0, ads_orders: adsOrders, ads_sales: adsSales, operational_hours: Math.floor(Math.random() * 150) + 100, penetration: Math.random() };
               });
               const randomDay = Math.floor(Math.random() * 28) + 1;
               const randomDayOut = Math.floor(Math.random() * 28) + 1;
               return {
                   id: `6-C${Math.random().toString(36).substr(2, 9).toUpperCase()}`, name: `Merchant ${String.fromCharCode(65 + (i % 26))} - Kota`, amName: amNames[i % 4], ownerName: `Ona`, lmBs: lm, mtdBs: rr * 0.7, rrBs: rr, rrVsLm: ((rr - lm) / lm) * 100, lmMi: 0, mtdMi: 0, rrMi: 0, adsLM: 0, adsTotal: 0, adsMob: 0, adsWeb: 0, adsDir: 0, adsRR: 0, mcaAmount: mca, mcaWlLimit: mca > 0 ? mca * 1.5 : 0, mcaWlClass: mca > 0 ? 'Repeat' : '-Not in WL', mcaPriority: mca > 0 ? 'P1' : '-', mcaDropOff: '-', mcaDisburseStatus: mca > 0 ? 'Disbursed' : '', disbursedDate: mca > 0 ? `15-Feb-26` : '', zeusStatus: Math.random() > 0.15 ? 'ACTIVE' : 'INACTIVE', joinDate: `12-Jan-22`, campaigns: Math.random() < 0.2 ? 'No Campaign' : camps[Math.floor(Math.random()*5)], commission: '20%', city: 'Kota', address: 'Jalan', phone: '+628123456789', email: 'test@mail.com', latitude: '', longitude: '', lastUpdate: '22 Feb', campaignPoint: 100, history: hist, notes: [],
-                  gmsOptIn: Math.random() > 0.85 ? camps[Math.floor(Math.random()*3)] : '', gmsOptOut: Math.random() > 0.9 ? camps[Math.floor(Math.random()*3)] : '', gmsOptInDate: `2026-02-${randomDay.toString().padStart(2, '0')}`, gmsOptOutDate: `2026-02-${randomDayOut.toString().padStart(2, '0')}`, rowNum: i 
+                  gmsOptIn: Math.random() > 0.85 ? camps[Math.floor(Math.random()*3)] : '', gmsOptOut: Math.random() > 0.9 ? camps[Math.floor(Math.random()*3)] : '', gmsOptInDate: `2026-02-${randomDay.toString().padStart(2, '0')}`, gmsOptOutDate: `2026-02-${randomDayOut.toString().padStart(2, '0')}`, rowNum: i, latest_penetration: hist[hist.length-1].penetration 
               };
           });
           saveToLocal(genData, "17 Mar 2026"); 
@@ -2002,37 +2013,51 @@ export default function App() {
                         <div className="relative z-10 pr-2">
                             <h2 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-900 leading-tight tracking-tight">{selectedMex.name}</h2>
                             
-                            {/* NEW: SINGLE BOX FOR ALL BADGES */}
-                            <div className="panel-badge mt-5 inline-flex flex-wrap items-center gap-x-4 gap-y-2.5 px-4 md:px-5 py-3 bg-white/60 backdrop-blur-sm border border-emerald-100/50 rounded-2xl shadow-sm">
-                                {/* City */}
-                                <div className="flex items-center gap-1.5">
-                                    <MapPin size={14} className="panel-icon-primary text-[#00B14F]"/> 
-                                    <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-slate-600">{selectedMex.city || 'Tidak diketahui'}</span>
-                                </div>
+                            {/* NEW: TWO BOXES FOR BADGES */}
+                            <div className="flex flex-col xl:flex-row gap-3 mt-5">
                                 
-                                <div className="w-1 h-1 rounded-full bg-emerald-200 panel-divider hidden sm:block"></div>
-                                
-                                {/* Status & ID */}
-                                <div className="flex items-center gap-1.5" title={String(selectedMex.zeusStatus).toUpperCase() === 'ACTIVE' ? 'Status: Aktif' : 'Status: Inactive'}>
-                                   {String(selectedMex.zeusStatus).toUpperCase() === 'ACTIVE' ? <CheckCircle className="panel-icon-primary w-4 h-4 text-[#00B14F]" /> : <AlertCircle className="w-4 h-4 text-slate-400" />}
-                                   <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest font-mono text-slate-600">{selectedMex.id}</span>
+                                {/* KOTAK KIRI: Kota, Status/ID, Owner */}
+                                <div className="panel-badge flex-1 inline-flex flex-wrap items-center gap-x-4 gap-y-2.5 px-4 md:px-5 py-3 bg-white/60 backdrop-blur-sm border border-emerald-100/50 rounded-2xl shadow-sm">
+                                    {/* City */}
+                                    <div className="flex items-center gap-1.5">
+                                        <MapPin size={14} className="panel-icon-primary text-[#00B14F]"/> 
+                                        <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-slate-600">{selectedMex.city || 'Tidak diketahui'}</span>
+                                    </div>
+                                    
+                                    <div className="w-1 h-1 rounded-full bg-emerald-200 panel-divider hidden sm:block"></div>
+                                    
+                                    {/* Status & ID */}
+                                    <div className="flex items-center gap-1.5" title={String(selectedMex.zeusStatus).toUpperCase() === 'ACTIVE' ? 'Status: Aktif' : 'Status: Inactive'}>
+                                       {String(selectedMex.zeusStatus).toUpperCase() === 'ACTIVE' ? <CheckCircle className="panel-icon-primary w-4 h-4 text-[#00B14F]" /> : <AlertCircle className="w-4 h-4 text-slate-400" />}
+                                       <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest font-mono text-slate-600">{selectedMex.id}</span>
+                                    </div>
+
+                                    <div className="w-1 h-1 rounded-full bg-emerald-200 panel-divider hidden sm:block"></div>
+
+                                    {/* Owner */}
+                                    <div className="flex items-center gap-1.5">
+                                       <Users className="panel-icon-primary w-4 h-4 text-[#00B14F]" />
+                                       <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-slate-600 truncate max-w-[150px] sm:max-w-[200px]">{selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Unknown Owner'}</span>
+                                    </div>
                                 </div>
 
-                                <div className="w-1 h-1 rounded-full bg-emerald-200 panel-divider hidden lg:block"></div>
+                                {/* KOTAK KANAN: Komisi & Photo Penetration */}
+                                <div className="panel-badge inline-flex flex-wrap items-center gap-x-4 gap-y-2.5 px-4 md:px-5 py-3 bg-white/60 backdrop-blur-sm border border-emerald-100/50 rounded-2xl shadow-sm shrink-0">
+                                    {/* Komisi */}
+                                    <div className="flex items-center gap-1.5">
+                                       <Percent size={14} className="panel-icon-primary text-[#00B14F]"/> 
+                                       <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-slate-600">Komisi: {selectedMex.commission || '-'}</span>
+                                    </div>
 
-                                {/* Komisi */}
-                                <div className="flex items-center gap-1.5">
-                                   <Percent size={14} className="panel-icon-primary text-[#00B14F]"/> 
-                                   <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-slate-600">Komisi: {selectedMex.commission || '-'}</span>
+                                    <div className="w-1 h-1 rounded-full bg-emerald-200 panel-divider hidden sm:block"></div>
+                                    
+                                    {/* Photo Penetration */}
+                                    <div className="flex items-center gap-1.5" title="Menu Photo Penetration">
+                                       <Camera size={14} className={`panel-icon-primary ${selectedMex.latest_penetration >= 0.8 ? 'text-[#00B14F]' : selectedMex.latest_penetration >= 0.5 ? 'text-amber-500' : 'text-rose-500'}`}/> 
+                                       <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-slate-600">Foto: {(selectedMex.latest_penetration * 100).toFixed(0)}%</span>
+                                    </div>
                                 </div>
 
-                                <div className="w-1 h-1 rounded-full bg-emerald-200 panel-divider hidden sm:block"></div>
-
-                                {/* Owner */}
-                                <div className="flex items-center gap-1.5">
-                                   <Users className="panel-icon-primary w-4 h-4 text-[#00B14F]" />
-                                   <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-slate-600 truncate max-w-[150px] sm:max-w-[200px]">{selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Unknown Owner'}</span>
-                                </div>
                             </div>
                         </div>
                      </div>
@@ -2296,6 +2321,10 @@ export default function App() {
                                </button>
                            </Fragment>
                        )}
+                       <div className="w-px h-6 bg-slate-700/80 shrink-0"></div>
+                       <a href="https://mex-calculator.vercel.app/" target="_blank" rel="noopener noreferrer" className="w-12 h-12 flex items-center justify-center text-white hover:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition-all duration-300 active:scale-90" title="Buka MEX Calculator">
+                           <Calculator className="w-5 h-5" />
+                       </a>
                        <div className="w-px h-6 bg-slate-700/80 shrink-0"></div>
                        <button onClick={() => { if (selectedMex.phone && selectedMex.phone !== '-') setShowWaModal(true); }} className={`w-12 h-12 flex items-center justify-center rounded-full transition-all duration-300 active:scale-90 ${selectedMex.phone && selectedMex.phone !== '-' ? 'bg-[#00B14F] text-white hover:bg-emerald-600 shadow-[0_0_20px_-5px_rgba(0,177,79,0.5)]' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`} title="Hubungi via WhatsApp">
                            <MessageCircle className="w-5 h-5" />
