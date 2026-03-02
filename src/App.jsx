@@ -208,16 +208,16 @@ const MetricCard = ({ title, value, icon: Icon, colorClass, gradientClass, subTe
   </div>
 );
 
-const DashboardCard = ({ title, value, subLabel, subValue, icon: Icon, color, onClick, trend, borderClass }) => {
+const DashboardCard = ({ title, value, subLabel, subValue, midLabel, midValue, icon: Icon, color, onClick, trend, borderClass }) => {
     const isUp = trend >= 0;
     return (
-        <div onClick={onClick} className={`bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group h-full ${onClick ? 'cursor-pointer hover:border-'+borderClass : ''}`}>
+        <div onClick={onClick} className={`bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group h-full dashboard-card ${onClick ? 'cursor-pointer hover:border-'+borderClass : ''}`}>
            <div className={`absolute left-0 top-0 bottom-0 w-1.5 bg-${color}-500`}></div>
            <Icon className={`absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110`} />
            <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-4 lg:mb-5 pl-2 relative z-10 shrink-0 min-h-[44px]">
                <div className="flex items-center gap-2 lg:gap-3">
-                   <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-${color}-50 text-${color}-600 flex items-center justify-center shrink-0`}><Icon size={18} strokeWidth={2.5}/></div>
-                   <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">{title} {onClick && <MousePointer size={10} className={`text-slate-300 group-hover:text-${color}-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-0.5 shrink-0 hidden lg:block`}/>}</p>
+                   <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-${color}-50 text-${color}-600 flex items-center justify-center shrink-0 shadow-inner`}><Icon size={18} strokeWidth={2.5}/></div>
+                   <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate card-title">{title}</p>
                </div>
                {trend !== undefined && !isNaN(trend) && (
                    <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap transition-colors ${isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
@@ -226,13 +226,27 @@ const DashboardCard = ({ title, value, subLabel, subValue, icon: Icon, color, on
                )}
            </div>
            <div className="pl-2 relative z-10 flex-1 flex flex-col justify-start">
-               <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">MTD {title}</p>
-               <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{value}</p>
+               <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 card-mtd-label">MTD {title}</p>
+               <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4 card-main-value">{value}</p>
            </div>
-           <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10 shrink-0 min-h-[40px] lg:min-h-[44px]">
-               <span className="text-[10px] lg:text-[11px] font-bold text-slate-400 uppercase truncate pr-2">{subLabel}</span>
-               <span className="text-sm lg:text-base font-black text-slate-700">{subValue}</span>
-           </div>
+           
+           {midLabel ? (
+               <div className="mt-auto flex flex-col gap-1.5 pl-2 relative z-10 shrink-0 min-h-[40px] lg:min-h-[44px]">
+                   <div className="pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center">
+                       <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">{midLabel}</span>
+                       <span className="text-[10px] lg:text-xs font-black text-slate-700 card-sub-value">{midValue}</span>
+                   </div>
+                   <div className="flex justify-between items-center">
+                       <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">{subLabel}</span>
+                       <span className="text-[10px] lg:text-xs font-black text-slate-700 card-sub-value">{subValue}</span>
+                   </div>
+               </div>
+           ) : (
+               <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center pl-2 relative z-10 shrink-0 min-h-[40px] lg:min-h-[44px]">
+                   <span className="text-[10px] lg:text-[11px] font-bold text-slate-400 uppercase truncate pr-2">{subLabel}</span>
+                   <span className="text-sm lg:text-base font-black text-slate-700 card-sub-value">{subValue}</span>
+               </div>
+           )}
         </div>
     );
 };
@@ -508,13 +522,9 @@ export default function App() {
             const lmBsVal = cleanNumber(vals[lmBIdx]); const mtdBsVal = cleanNumber(obj['MTD (BS)'] || obj['MTD\n(BS)']); const rrBsVal = cleanNumber(obj['RR (BS)'] || obj['RR\n(BS)']);
             const calcRrVsLm = lmBsVal > 0 ? ((rrBsVal - lmBsVal) / lmBsVal) * 100 : (rrBsVal > 0 ? 100 : 0);
             
-            // Mengambil GMS Package dari kolom AV (index 47)
             const optInVal = (gmsPackageHeader && obj[gmsPackageHeader]) ? String(obj[gmsPackageHeader]).trim() : (vals[47] !== undefined ? String(vals[47]).trim() : '');
-            // Mengambil Opt Out dari kolom BA (index 52)
             const optOutVal = vals[52] !== undefined ? String(vals[52]).trim() : '';
-            // Mengambil Tanggal Join dari kolom AW (index 48)
             const optInDateVal = vals[48] !== undefined ? String(vals[48]).trim() : '';
-            // Mengambil Tanggal Opt Out dari kolom BB (index 53)
             const optOutDateVal = vals[53] !== undefined ? String(vals[53]).trim() : '';
 
             pMap.set(mexId, {
@@ -985,7 +995,7 @@ export default function App() {
   // --- END PRESENTATION MODE ---
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark-theme dark' : ''} bg-[#f8fafc] text-slate-900 flex flex-col font-sans overflow-hidden relative transition-colors duration-300`}>
+    <div className={`min-h-screen ${isDarkMode ? 'dark-theme' : ''} bg-[#f8fafc] text-slate-900 flex flex-col font-sans overflow-hidden relative transition-colors duration-300`}>
       <div className="fixed inset-0 z-0 pointer-events-none flex justify-center overflow-hidden">
          <div className="absolute inset-0 bg-grid-pattern"></div>
          <div className="absolute left-0 right-0 top-[-10%] md:top-[-20%] -z-10 m-auto h-[300px] w-[300px] md:h-[600px] md:w-[600px] rounded-full blur-[100px] glow-effect"></div>
@@ -1420,7 +1430,8 @@ export default function App() {
           </div>
       </Modal>
 
-      <header className="flex-none relative z-50 w-full bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+      {/* HEADER SECTION - DIPERBAIKI UNTUK MENCEGAH AUTO DARK MODE */}
+      <header className="header-main flex-none relative z-50 w-full bg-white border-b border-slate-200 transition-colors duration-300">
         <div className="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 h-16 md:h-20 flex items-center justify-between gap-4 md:gap-8">
           <div className="flex items-center gap-4 md:gap-6 flex-1 min-w-0">
              <div className="flex items-center gap-2.5 cursor-pointer group shrink-0" onClick={() => { setSelectedMex(null); setActiveTab('overview'); setSearchTerm(''); }}>
@@ -1428,68 +1439,68 @@ export default function App() {
                  <Activity className="w-4 h-4 md:w-5 md:h-5 text-white" />
                </div>
                <div className="flex flex-col">
-                 <h1 className={`text-sm md:text-base lg:text-lg font-black text-slate-900 dark:text-white tracking-tight leading-none group-hover:text-[#00B14F] transition-colors ${globalLastUpdate && !selectedMex ? 'hidden md:block' : ''}`}>
-                   AM DASHBOARD <span className="text-[#00B14F] dark:text-emerald-400">PRO</span>
+                 <h1 className={`text-sm md:text-base lg:text-lg font-black text-slate-900 tracking-tight leading-none group-hover:text-[#00B14F] transition-colors header-title ${globalLastUpdate && !selectedMex ? 'hidden md:block' : ''}`}>
+                   AM DASHBOARD <span className="text-[#00B14F] header-pro-text">PRO</span>
                  </h1>
                  {globalLastUpdate && !selectedMex && (
                    <div className="flex flex-col md:hidden animate-in fade-in zoom-in-95 duration-300">
-                      <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">Last Sync</span>
-                      <span className="text-[11px] font-bold text-[#00B14F] dark:text-emerald-400 leading-none flex items-center gap-1"><Clock size={10} /> {globalLastUpdate}</span>
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 header-lastsync-label">Last Sync</span>
+                      <span className="text-[11px] font-bold text-[#00B14F] leading-none flex items-center gap-1 header-pro-text"><Clock size={10} /> {globalLastUpdate}</span>
                    </div>
                  )}
                </div>
              </div>
-             <div className="hidden md:block w-px h-6 bg-slate-200 dark:bg-slate-700 shrink-0"></div>
+             <div className="hidden md:block w-px h-6 bg-slate-200 shrink-0 header-divider"></div>
              <div className="hidden md:flex items-center flex-1 min-w-0 relative">
                  {!selectedMex ? (
-                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
-                        <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'overview' ? 'bg-white dark:bg-slate-950 text-[#00B14F] dark:text-emerald-400 shadow-sm border border-slate-200/50 dark:border-slate-800/80' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'}`}>
+                    <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner header-nav-bg">
+                        <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'overview' ? 'bg-white text-[#00B14F] shadow-sm border border-slate-200/50 header-nav-active' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 header-nav-inactive'}`}>
                             <LayoutDashboard className="w-4 h-4" /> Overview
                         </button>
-                        <button onClick={() => setActiveTab('data')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'data' ? 'bg-white dark:bg-slate-950 text-[#00B14F] dark:text-emerald-400 shadow-sm border border-slate-200/50 dark:border-slate-800/80' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'}`}>
+                        <button onClick={() => setActiveTab('data')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'data' ? 'bg-white text-[#00B14F] shadow-sm border border-slate-200/50 header-nav-active' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 header-nav-inactive'}`}>
                             <Table className="w-4 h-4" /> Directory
                         </button>
                     </div>
                  ) : (
                     <div className="flex items-center gap-2 text-xs font-bold text-slate-400 truncate animate-in slide-in-from-left-4 fade-in duration-300">
-                        <button onClick={() => setSelectedMex(null)} className="hover:text-[#00B14F] transition-colors flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm active:scale-95"><ArrowLeft className="w-3.5 h-3.5" /> Beranda</button>
-                        <span className="text-slate-300 dark:text-slate-600">/</span>
-                        <span className="text-slate-800 dark:text-slate-200 truncate">{selectedMex.name}</span>
+                        <button onClick={() => setSelectedMex(null)} className="hover:text-[#00B14F] transition-colors flex items-center gap-1 bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200 shadow-sm active:scale-95 header-nav-bg header-nav-btn"><ArrowLeft className="w-3.5 h-3.5" /> Beranda</button>
+                        <span className="text-slate-300 header-breadcrumb-sep">/</span>
+                        <span className="text-slate-800 truncate header-breadcrumb-text">{selectedMex.name}</span>
                     </div>
                  )}
              </div>
           </div>
           <div className="flex items-center gap-3 md:gap-4 shrink-0">
              {!selectedMex && (
-                 <div className="flex items-center bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg lg:rounded-xl px-2.5 lg:px-3 h-9 sm:h-10 hover:border-[#00B14F] transition-colors">
+                 <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg lg:rounded-xl px-2.5 lg:px-3 h-9 sm:h-10 hover:border-[#00B14F] transition-colors header-filter">
                      <Filter className="w-3.5 h-3.5 text-emerald-500 mr-1.5 hidden sm:block" />
-                     <select value={selectedAM} onChange={(e) => { setSelectedAM(e.target.value); setSelectedMex(null); setCurrentPage(1); }} className="bg-transparent text-slate-700 dark:text-slate-200 text-[10px] lg:text-xs font-bold focus:outline-none w-[70px] sm:w-[90px] lg:w-28 cursor-pointer appearance-none truncate">
-                        {amOptions.map(am => <option key={am} value={am} className="text-slate-900">{am}</option>)}
+                     <select value={selectedAM} onChange={(e) => { setSelectedAM(e.target.value); setSelectedMex(null); setCurrentPage(1); }} className="bg-transparent text-slate-700 text-[10px] lg:text-xs font-bold focus:outline-none w-[70px] sm:w-[90px] lg:w-28 cursor-pointer appearance-none truncate header-select">
+                        {amOptions.map(am => <option key={am} value={am}>{am}</option>)}
                      </select>
-                     <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
+                     <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1 header-select-icon" />
                  </div>
              )}
 
              {selectedMex && (
-                 <div className="hidden sm:flex items-center gap-1.5 lg:gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg lg:rounded-xl px-2.5 lg:px-3 py-1.5 lg:py-2 shadow-sm animate-in fade-in zoom-in-95 duration-300">
+                 <div className="hidden sm:flex items-center gap-1.5 lg:gap-2 bg-slate-50 border border-slate-200 rounded-lg lg:rounded-xl px-2.5 lg:px-3 py-1.5 lg:py-2 shadow-sm animate-in fade-in zoom-in-95 duration-300 header-am-badge">
                     <Users className="w-3.5 h-3.5 text-[#00B14F]" />
-                    <span className="text-slate-500 dark:text-slate-400 text-[9px] lg:text-[10px] font-bold tracking-widest uppercase">AM <span className="text-slate-800 dark:text-white ml-1 font-black">{selectedMex.amName}</span></span>
+                    <span className="text-slate-500 text-[9px] lg:text-[10px] font-bold tracking-widest uppercase header-am-label">AM <span className="text-slate-800 ml-1 font-black header-am-val">{selectedMex.amName}</span></span>
                  </div>
              )}
 
-             <div className="flex items-center gap-1 border-l border-slate-200 dark:border-slate-700 pl-3 md:pl-4">
+             <div className="flex items-center gap-1 border-l border-slate-200 pl-3 md:pl-4 header-divider-left">
                  {globalLastUpdate && !selectedMex && (
                      <div className="flex flex-col justify-center px-2 lg:px-3 text-right hidden md:flex">
-                         <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">Last Sync</span>
-                         <span className="text-[10px] font-bold text-[#00B14F] dark:text-emerald-400 leading-none flex items-center gap-1 justify-end"><Clock size={10} /> {globalLastUpdate}</span>
+                         <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5 header-lastsync-label">Last Sync</span>
+                         <span className="text-[10px] font-bold text-[#00B14F] leading-none flex items-center gap-1 justify-end header-pro-text"><Clock size={10} /> {globalLastUpdate}</span>
                      </div>
                  )}
-                 {!selectedMex && <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1 hidden md:block"></div>}
-                 <button onClick={() => setIsForceUpload(true)} className="flex items-center justify-center text-slate-500 hover:text-[#00B14F] dark:text-slate-400 dark:hover:text-emerald-400 w-8 h-8 md:w-9 md:h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group shadow-sm border border-slate-200/50 dark:border-slate-700 active:scale-95" title="Update Data">
+                 {!selectedMex && <div className="w-px h-6 bg-slate-200 mx-1 hidden md:block header-divider"></div>}
+                 <button onClick={() => setIsForceUpload(true)} className="flex items-center justify-center text-slate-500 hover:text-[#00B14F] w-8 h-8 md:w-9 md:h-9 rounded-lg hover:bg-slate-100 transition-colors group shadow-sm border border-slate-200/50 active:scale-95 header-icon-btn" title="Update Data">
                      <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
                  </button>
-                 <button onClick={() => setIsDarkMode(!isDarkMode)} className="flex items-center justify-center text-slate-500 hover:text-indigo-500 dark:text-slate-400 dark:hover:text-indigo-400 w-8 h-8 md:w-9 md:h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group shadow-sm border border-slate-200/50 dark:border-slate-700 active:scale-95" title={isDarkMode ? "Beralih ke Light Mode" : "Beralih ke Dark Mode"}>
-                     {isDarkMode ? <Sun className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" /> : <Moon className="w-4 h-4 group-hover:-rotate-12 transition-transform duration-500" />}
+                 <button onClick={() => setIsDarkMode(!isDarkMode)} className="flex items-center justify-center text-slate-500 hover:text-indigo-500 w-8 h-8 md:w-9 md:h-9 rounded-lg hover:bg-slate-100 transition-colors group shadow-sm border border-slate-200/50 active:scale-95 header-icon-btn" title={isDarkMode ? "Beralih ke Light Mode" : "Beralih ke Dark Mode"}>
+                     {isDarkMode ? <Sun className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500 text-amber-500" /> : <Moon className="w-4 h-4 group-hover:-rotate-12 transition-transform duration-500" />}
                  </button>
              </div>
           </div>
@@ -1497,13 +1508,13 @@ export default function App() {
 
         {/* MOBILE SUB-NAV */}
         {!selectedMex && (
-            <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+            <div className="md:hidden border-t border-slate-200 bg-slate-50 header-mobile-sub">
                 <div className="flex flex-col px-4 py-2.5 gap-2">
                     <div className="flex w-full gap-2">
-                        <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 ${activeTab === 'overview' ? 'bg-white dark:bg-slate-800 text-[#00B14F] dark:text-emerald-400 shadow-sm border border-slate-200 dark:border-slate-700' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                        <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 ${activeTab === 'overview' ? 'bg-white text-[#00B14F] shadow-sm border border-slate-200 header-nav-active' : 'text-slate-500 hover:bg-slate-100 header-nav-inactive'}`}>
                             <LayoutDashboard className="w-3.5 h-3.5" /> Overview
                         </button>
-                        <button onClick={() => setActiveTab('data')} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 ${activeTab === 'data' ? 'bg-white dark:bg-slate-800 text-[#00B14F] dark:text-emerald-400 shadow-sm border border-slate-200 dark:border-slate-700' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                        <button onClick={() => setActiveTab('data')} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 ${activeTab === 'data' ? 'bg-white text-[#00B14F] shadow-sm border border-slate-200 header-nav-active' : 'text-slate-500 hover:bg-slate-100 header-nav-inactive'}`}>
                             <Table className="w-3.5 h-3.5" /> Data
                         </button>
                     </div>
@@ -1986,7 +1997,7 @@ export default function App() {
                       </div>
                   </div>
                   
-                  <DashboardCard title="Ads Spend" value={formatCurrency(selectedMex.adsTotal)} subLabel="Last Month" subValue={formatCurrency(selectedMex.adsLM)} icon={Megaphone} color="rose" onClick={() => setShowAdsModal(true)} borderClass="rose-300" trend={selectedMex.adsLM > 0 ? ((selectedMex.adsRR - selectedMex.adsLM) / selectedMex.adsLM) * 100 : (selectedMex.adsRR > 0 ? 100 : 0)} />
+                  <DashboardCard title="Ads Spend" value={formatCurrency(selectedMex.adsTotal)} midLabel="Total Invest (MI)" midValue={formatCurrency(selectedMex.mtdMi)} subLabel="Ads Last Month" subValue={formatCurrency(selectedMex.adsLM)} icon={Megaphone} color="rose" onClick={() => setShowAdsModal(true)} borderClass="rose-300" trend={selectedMex.adsLM > 0 ? ((selectedMex.adsRR - selectedMex.adsLM) / selectedMex.adsLM) * 100 : (selectedMex.adsRR > 0 ? 100 : 0)} />
                   
                   <div className="bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group h-full animate-fade-in-up stagger-5">
                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
@@ -2252,6 +2263,39 @@ export default function App() {
         .dark-theme .hover\\:border-slate-300:hover { border-color: #475569 !important; }
         .dark-theme .hover\\:border-slate-400:hover { border-color: #64748b !important; }
 
+        /* --- EXPLICIT HEADER DARK MODE RULES --- */
+        .dark-theme .header-main { background-color: #0f172a !important; border-color: #1e293b !important; }
+        .dark-theme .header-title { color: #f8fafc !important; }
+        .dark-theme .header-pro-text { color: #34d399 !important; }
+        .dark-theme .header-lastsync-label { color: #64748b !important; }
+        .dark-theme .header-divider { background-color: #334155 !important; }
+        .dark-theme .header-divider-left { border-color: #334155 !important; }
+        
+        .dark-theme .header-nav-bg { background-color: #1e293b !important; border-color: #334155 !important; }
+        .dark-theme .header-nav-active { background-color: #020617 !important; color: #34d399 !important; border-color: #334155 !important; }
+        .dark-theme .header-nav-inactive { color: #94a3b8 !important; }
+        .dark-theme .header-nav-inactive:hover { color: #e2e8f0 !important; background-color: rgba(30, 41, 59, 0.5) !important; }
+        
+        .dark-theme .header-breadcrumb-sep { color: #475569 !important; }
+        .dark-theme .header-breadcrumb-text { color: #e2e8f0 !important; }
+        .dark-theme .header-nav-btn { color: #94a3b8 !important; }
+        .dark-theme .header-nav-btn:hover { color: #34d399 !important; }
+
+        .dark-theme .header-filter { background-color: #1e293b !important; border-color: #334155 !important; }
+        .dark-theme .header-select { color: #f8fafc !important; }
+        .dark-theme .header-select option { background-color: #0f172a !important; color: #f8fafc !important; }
+        .dark-theme .header-select-icon { color: #64748b !important; }
+        
+        .dark-theme .header-am-badge { background-color: #1e293b !important; border-color: #334155 !important; }
+        .dark-theme .header-am-label { color: #94a3b8 !important; }
+        .dark-theme .header-am-val { color: #f8fafc !important; }
+
+        .dark-theme .header-icon-btn { color: #94a3b8 !important; border-color: #334155 !important; }
+        .dark-theme .header-icon-btn:hover { background-color: #1e293b !important; }
+        .dark-theme .header-icon-btn:hover svg.text-amber-500 { color: #fbbf24 !important; }
+
+        .dark-theme .header-mobile-sub { background-color: #0f172a !important; border-color: #1e293b !important; }
+
         /* Panel Info Merchant Specific Dark Mode */
         .dark-theme .panel-info-backdrop { background-color: rgba(30, 41, 59, 0.6) !important; border-color: rgba(51, 65, 85, 0.5) !important; box-shadow: none !important; }
         .dark-theme .panel-info-blob { background-image: linear-gradient(to bottom left, rgba(51, 65, 85, 0.3), transparent) !important; }
@@ -2277,6 +2321,14 @@ export default function App() {
         .dark-theme .panel-note-text { color: #cbd5e1 !important; }
         .dark-theme .panel-note-more { color: #94a3b8 !important; }
         .dark-theme .panel-note-more:hover { color: #fbbf24 !important; }
+
+        /* LIST CARDS DARK MODE */
+        .dark-theme .card-campaign-seg, .dark-theme .card-quick-search, .dark-theme .card-gms-tracker { background-color: #0f172a !important; border-color: #1e293b !important; }
+        .dark-theme .card-section-title { color: #f8fafc !important; }
+        .dark-theme .card-search-input { background-color: #020617 !important; border-color: #1e293b !important; color: #f8fafc !important; }
+        .dark-theme .card-search-item, .dark-theme .card-list-item { background-color: #1e293b !important; border-color: #334155 !important; }
+        .dark-theme .card-item-name { color: #f8fafc !important; }
+        .dark-theme .badge-date, .dark-theme .badge-package { border: none !important; }
       `}} />
     </div>
   );
