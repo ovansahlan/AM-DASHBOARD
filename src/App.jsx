@@ -461,13 +461,24 @@ export default function App() {
                         
                         if (Array.isArray(cloudNotes) && cloudNotes.length > 0) {
                             const notesMap = {};
-                            cloudNotes.forEach(row => {
-                                const mId = String(row.merchantId).trim();
+                            cloudNotes.forEach((row, i) => {
+                                // Fungsi helper untuk mencari nama kolom mengabaikan huruf besar/kecil & spasi
+                                const getVal = (keys) => {
+                                    const foundKey = Object.keys(row).find(k => keys.includes(String(k).toLowerCase().replace(/[\s_]/g, '')));
+                                    return foundKey ? row[foundKey] : undefined;
+                                };
+
+                                const mId = String(getVal(['merchantid', 'id']) || '').trim();
+                                const tStamp = getVal(['timestamp', 'waktu', 'tanggal', 'date']) || new Date().toISOString();
+                                const nText = getVal(['note', 'notes', 'catatan']) || '';
+
+                                if (!mId || !nText) return;
+
                                 if (!notesMap[mId]) notesMap[mId] = [];
                                 notesMap[mId].push({
-                                    id: String(row.timestamp), 
-                                    date: parseSafeDate(row.timestamp), 
-                                    text: row.note
+                                    id: String(tStamp), 
+                                    date: parseSafeDate(tStamp), 
+                                    text: String(nText)
                                 });
                             });
 
@@ -481,12 +492,16 @@ export default function App() {
                                 cNotes.forEach(n => merged.set(n.id, n));
                                 
                                 const finalNotes = Array.from(merged.values());
-                                finalNotes.sort((a, b) => new Date(b.date) - new Date(a.date));
+                                finalNotes.sort((a, b) => {
+                                    const tA = new Date(a.date).getTime();
+                                    const tB = new Date(b.date).getTime();
+                                    return (isNaN(tB) ? 0 : tB) - (isNaN(tA) ? 0 : tA);
+                                });
                                 
                                 return { ...mex, notes: finalNotes };
                             });
                             
-                            await saveToIndexedDB('am_dashboard_data', saved);
+                            await saveToIndexedDB('am_dashboard_data_v3', saved);
                         }
                     } catch (err) {
                         console.error("Gagal sinkronisasi data dari Google Sheets (akan menggunakan lokal):", err);
@@ -702,14 +717,15 @@ export default function App() {
 
   const handleSaveNote = async () => {
       if (!noteText.trim() || !selectedMex) return;
-      const newNote = { id: Date.now().toString(), date: new Date().toISOString(), text: noteText.trim() };
+      const timestamp = new Date().toISOString();
+      const newNote = { id: timestamp, date: timestamp, text: noteText.trim() };
       const updatedMex = { ...selectedMex, notes: [newNote, ...(selectedMex.notes || [])] };
       const updatedData = data.map(m => m.id === updatedMex.id ? updatedMex : m);
-      setSelectedMex(updatedMex); setData(updatedData); setNoteText(''); await saveToIndexedDB('am_dashboard_data', updatedData);
+      setSelectedMex(updatedMex); setData(updatedData); setNoteText(''); await saveToIndexedDB('am_dashboard_data_v3', updatedData);
 
       if (GOOGLE_SHEETS_API_URL) {
           try {
-              const payload = { timestamp: new Date().toISOString(), merchantId: selectedMex.id, merchantName: selectedMex.name, amName: selectedMex.amName || 'Unassigned', note: newNote.text };
+              const payload = { timestamp: timestamp, merchantId: selectedMex.id, merchantName: selectedMex.name, amName: selectedMex.amName || 'Unassigned', note: newNote.text };
               await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
           } catch (err) { console.error("Gagal mengirim ke Google Sheets:", err); }
       }
