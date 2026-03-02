@@ -11,6 +11,231 @@ import {
 } from 'lucide-react';
 
 // ============================================================================
+// GLOBAL STYLES (DARK MODE CSS)
+// ============================================================================
+const ThemeStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+
+    html, body, .font-sans, p, h1, h2, h3, h4, h5, h6, span, div, button, input, select, textarea {
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+    }
+    .font-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+    }
+
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .pb-safe { padding-bottom: max(2rem, env(safe-area-inset-bottom)); }
+    * { font-feature-settings: "tnum" on, "lnum" on; }
+    
+    @keyframes fadeInUpCustom {
+        from { opacity: 0; transform: translate3d(0, 20px, 0); }
+        to { opacity: 1; transform: translate3d(0, 0, 0); }
+    }
+    
+    .animate-fade-in-up {
+        opacity: 0;
+        animation: fadeInUpCustom 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        will-change: opacity, transform;
+    }
+    
+    .stagger-1 { animation-delay: 50ms; }
+    .stagger-2 { animation-delay: 100ms; }
+    .stagger-3 { animation-delay: 150ms; }
+    .stagger-4 { animation-delay: 200ms; }
+    .stagger-5 { animation-delay: 250ms; }
+    .stagger-6 { animation-delay: 300ms; }
+    .stagger-7 { animation-delay: 350ms; }
+    .stagger-8 { animation-delay: 400ms; }
+    .stagger-9 { animation-delay: 450ms; }
+    .stagger-10 { animation-delay: 500ms; }
+
+    @keyframes float-down { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(2.5px); } }
+    .animate-float-down { animation: float-down 1.5s ease-in-out infinite; }
+    
+    @keyframes float-up { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
+    .animate-float-up { animation: float-up 1.5s ease-in-out infinite; }
+
+    .bg-grid-pattern { background-image: linear-gradient(to right, rgba(148, 163, 184, 0.15) 1px, transparent 1px), linear-gradient(to bottom, rgba(148, 163, 184, 0.15) 1px, transparent 1px); background-size: 24px 24px; }
+    .dark-theme .bg-grid-pattern { background-image: linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px); }
+    .glow-effect { background-color: #00B14F; opacity: 0.12; }
+    .dark-theme .glow-effect { opacity: 0.05; }
+    .fade-bottom { background-image: linear-gradient(to top, #f8fafc 10%, transparent); }
+    .dark-theme .fade-bottom { background-image: linear-gradient(to top, #000000 10%, transparent); }
+
+    .dark-theme { background-color: #000000 !important; color: #ffffff !important; }
+    .dark-theme .bg-white { background-color: #121212 !important; border-color: #262626 !important; }
+    .dark-theme .bg-white\\/80 { background-color: #121212 !important; border-color: #262626 !important; }
+    .dark-theme .bg-white\\/95 { background-color: #121212 !important; border-color: #262626 !important; }
+    .dark-theme .from-emerald-50\\/80 { --tw-gradient-from: #064e3b !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+    .dark-theme .from-slate-100\\/50 { --tw-gradient-from: #1e1e1e !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+    .dark-theme .to-white { --tw-gradient-to: #121212 !important; }
+    .dark-theme .bg-\\[\\#f8fafc\\] { background-color: #000000 !important; }
+    
+    .dark-theme .text-slate-900, .dark-theme .text-slate-800 { color: #ffffff !important; }
+    .dark-theme .text-slate-700 { color: #e5e5e5 !important; }
+    .dark-theme .text-slate-600 { color: #d4d4d4 !important; }
+    .dark-theme .text-slate-500 { color: #a3a3a3 !important; }
+    .dark-theme .text-slate-400 { color: #737373 !important; }
+    .dark-theme .border-slate-100, .dark-theme .border-slate-200 { border-color: #2d2d2d !important; }
+    .dark-theme .border-slate-50 { border-color: #1e1e1e !important; }
+    .dark-theme .bg-slate-50 { background-color: #1e1e1e !important; border-color: #2d2d2d !important; color: #f8fafc !important; }
+    .dark-theme .bg-slate-100 { background-color: #262626 !important; border-color: #333333 !important; color: #f8fafc !important; }
+    .dark-theme .bg-slate-50\\/50 { background-color: #1a1a1a !important; border-color: #2d2d2d !important; }
+    .dark-theme .divide-slate-50 > :not([hidden]) ~ :not([hidden]) { border-color: #1e1e1e !important; }
+    .dark-theme .shadow-xl, .dark-theme .shadow-2xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.9) !important; }
+    .dark-theme input, .dark-theme select, .dark-theme textarea { background-color: #121212 !important; color: #ffffff !important; border-color: #2d2d2d !important; }
+
+    /* TEXT ADJUSTMENTS FOR READABILITY (GLOBAL) */
+    .dark-theme .text-emerald-900, .dark-theme .text-emerald-800, .dark-theme .text-emerald-700, .dark-theme .text-emerald-600, .dark-theme .text-emerald-500 { color: #34d399 !important; }
+    .dark-theme .text-teal-900, .dark-theme .text-teal-800, .dark-theme .text-teal-700, .dark-theme .text-teal-600, .dark-theme .text-teal-500 { color: #2dd4bf !important; }
+    .dark-theme .text-rose-900, .dark-theme .text-rose-800, .dark-theme .text-rose-700, .dark-theme .text-rose-600, .dark-theme .text-rose-500 { color: #fb7185 !important; }
+    .dark-theme .text-blue-900, .dark-theme .text-blue-800, .dark-theme .text-blue-700, .dark-theme .text-blue-600, .dark-theme .text-blue-500 { color: #60a5fa !important; }
+    .dark-theme .text-amber-900, .dark-theme .text-amber-800, .dark-theme .text-amber-700, .dark-theme .text-amber-600, .dark-theme .text-amber-500 { color: #fbbf24 !important; }
+    .dark-theme .text-indigo-900, .dark-theme .text-indigo-800, .dark-theme .text-indigo-700, .dark-theme .text-indigo-600, .dark-theme .text-indigo-500 { color: #818cf8 !important; }
+    .dark-theme .text-orange-900, .dark-theme .text-orange-800, .dark-theme .text-orange-700, .dark-theme .text-orange-600, .dark-theme .text-orange-500 { color: #fdba74 !important; }
+    .dark-theme .text-cyan-900, .dark-theme .text-cyan-800, .dark-theme .text-cyan-700, .dark-theme .text-cyan-600, .dark-theme .text-cyan-500 { color: #22d3ee !important; }
+    .dark-theme .text-purple-900, .dark-theme .text-purple-800, .dark-theme .text-purple-700, .dark-theme .text-purple-600, .dark-theme .text-purple-500 { color: #c084fc !important; }
+    
+    /* * SOLID COLORS FOR ALL BADGES & TAGS 
+     * (We force text inside these badges to be WHITE so it doesn't blend/saru)
+     */
+    
+    /* Emerald */
+    .dark-theme .bg-emerald-50, .dark-theme .bg-emerald-50\\/80, .dark-theme .bg-emerald-100 { background-color: #10b981 !important; border-color: #059669 !important; color: #ffffff !important; }
+    .dark-theme .bg-emerald-50 [class*="text-emerald-"], .dark-theme .bg-emerald-50\\/80 [class*="text-emerald-"], .dark-theme .bg-emerald-100 [class*="text-emerald-"] { color: #ffffff !important; }
+    
+    /* Teal */
+    .dark-theme .bg-teal-50, .dark-theme .bg-teal-50\\/80, .dark-theme .bg-teal-100 { background-color: #14b8a6 !important; border-color: #0d9488 !important; color: #ffffff !important; }
+    .dark-theme .bg-teal-50 [class*="text-teal-"], .dark-theme .bg-teal-50\\/80 [class*="text-teal-"], .dark-theme .bg-teal-100 [class*="text-teal-"] { color: #ffffff !important; }
+    
+    /* Rose */
+    .dark-theme .bg-rose-50, .dark-theme .bg-rose-50\\/80, .dark-theme .bg-rose-100 { background-color: #f43f5e !important; border-color: #e11d48 !important; color: #ffffff !important; }
+    .dark-theme .bg-rose-50 [class*="text-rose-"], .dark-theme .bg-rose-50\\/80 [class*="text-rose-"], .dark-theme .bg-rose-100 [class*="text-rose-"] { color: #ffffff !important; }
+    
+    /* Blue */
+    .dark-theme .bg-blue-50, .dark-theme .bg-blue-50\\/80, .dark-theme .bg-blue-100 { background-color: #3b82f6 !important; border-color: #2563eb !important; color: #ffffff !important; }
+    .dark-theme .bg-blue-50 [class*="text-blue-"], .dark-theme .bg-blue-50\\/80 [class*="text-blue-"], .dark-theme .bg-blue-100 [class*="text-blue-"] { color: #ffffff !important; }
+    
+    /* Amber */
+    .dark-theme .bg-amber-50, .dark-theme .bg-amber-50\\/80, .dark-theme .bg-amber-100 { background-color: #f59e0b !important; border-color: #d97706 !important; color: #ffffff !important; }
+    .dark-theme .bg-amber-50 [class*="text-amber-"], .dark-theme .bg-amber-50\\/80 [class*="text-amber-"], .dark-theme .bg-amber-100 [class*="text-amber-"] { color: #ffffff !important; }
+    
+    /* Indigo */
+    .dark-theme .bg-indigo-50, .dark-theme .bg-indigo-50\\/80, .dark-theme .bg-indigo-100 { background-color: #6366f1 !important; border-color: #4f46e5 !important; color: #ffffff !important; }
+    .dark-theme .bg-indigo-50 [class*="text-indigo-"], .dark-theme .bg-indigo-50\\/80 [class*="text-indigo-"], .dark-theme .bg-indigo-100 [class*="text-indigo-"] { color: #ffffff !important; }
+    
+    /* Purple */
+    .dark-theme .bg-purple-50, .dark-theme .bg-purple-50\\/80, .dark-theme .bg-purple-100 { background-color: #a855f7 !important; border-color: #9333ea !important; color: #ffffff !important; }
+    .dark-theme .bg-purple-50 [class*="text-purple-"], .dark-theme .bg-purple-50\\/80 [class*="text-purple-"], .dark-theme .bg-purple-100 [class*="text-purple-"] { color: #ffffff !important; }
+    
+    /* Cyan */
+    .dark-theme .bg-cyan-50, .dark-theme .bg-cyan-50\\/80, .dark-theme .bg-cyan-100 { background-color: #06b6d4 !important; border-color: #0891b2 !important; color: #ffffff !important; }
+    .dark-theme .bg-cyan-50 [class*="text-cyan-"], .dark-theme .bg-cyan-50\\/80 [class*="text-cyan-"], .dark-theme .bg-cyan-100 [class*="text-cyan-"] { color: #ffffff !important; }
+    
+    /* Orange */
+    .dark-theme .bg-orange-50, .dark-theme .bg-orange-50\\/80, .dark-theme .bg-orange-100 { background-color: #f97316 !important; border-color: #ea580c !important; color: #ffffff !important; }
+    .dark-theme .bg-orange-50 [class*="text-orange-"], .dark-theme .bg-orange-50\\/80 [class*="text-orange-"], .dark-theme .bg-orange-100 [class*="text-orange-"] { color: #ffffff !important; }
+
+    /* SOLID COLORS FOR PRIORITY BADGES */
+    .dark-theme .bg-slate-500\\/\\[0\\.65\\] { background-color: #475569 !important; border-color: #334155 !important; color: #ffffff !important; }
+    .dark-theme .bg-rose-600\\/\\[0\\.65\\] { background-color: #e11d48 !important; border-color: #be123c !important; color: #ffffff !important; }
+    .dark-theme .bg-amber-600\\/\\[0\\.65\\] { background-color: #d97706 !important; border-color: #b45309 !important; color: #ffffff !important; }
+    .dark-theme .bg-blue-600\\/\\[0\\.65\\] { background-color: #2563eb !important; border-color: #1d4ed8 !important; color: #ffffff !important; }
+    .dark-theme .bg-emerald-600\\/\\[0\\.65\\] { background-color: #059669 !important; border-color: #047857 !important; color: #ffffff !important; }
+    .dark-theme .bg-indigo-600\\/\\[0\\.65\\] { background-color: #4f46e5 !important; border-color: #4338ca !important; color: #ffffff !important; }
+
+    /* RECHARTS & OTHERS */
+    .dark-theme .recharts-cartesian-grid-horizontal line, .dark-theme .recharts-cartesian-grid-vertical line { stroke: #1e1e1e !important; }
+    .dark-theme .recharts-text { fill: #a3a3a3 !important; }
+    .dark-theme .recharts-default-tooltip { background-color: #121212 !important; border-color: #2d2d2d !important; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.9) !important; }
+    .dark-theme .recharts-tooltip-item { color: #ffffff !important; }
+    .dark-theme .recharts-tooltip-cursor { fill: #1e1e1e !important; }
+    
+    .dark-theme .hover\\:bg-slate-50:hover { background-color: #1e1e1e !important; }
+    .dark-theme .hover\\:bg-slate-50\\/80:hover { background-color: #1e1e1e !important; }
+    .dark-theme .hover\\:border-slate-300:hover { border-color: #404040 !important; }
+    .dark-theme .hover\\:border-slate-400:hover { border-color: #737373 !important; }
+
+    /* --- EXPLICIT HEADER DARK MODE RULES --- */
+    .dark-theme .header-main { background-color: #0a0a0a !important; border-color: #2d2d2d !important; }
+    .dark-theme .header-title { color: #ffffff !important; }
+    .dark-theme .header-pro-text { color: #34d399 !important; }
+    .dark-theme .header-lastsync-label { color: #737373 !important; }
+    .dark-theme .header-divider { background-color: #2d2d2d !important; }
+    .dark-theme .header-divider-left { border-color: #2d2d2d !important; }
+    
+    .dark-theme .header-nav-bg { background-color: #1e1e1e !important; border-color: #2d2d2d !important; }
+    .dark-theme .header-nav-active { background-color: #000000 !important; color: #34d399 !important; border-color: #2d2d2d !important; }
+    .dark-theme .header-nav-inactive { color: #a3a3a3 !important; }
+    .dark-theme .header-nav-inactive:hover { color: #e5e5e5 !important; background-color: rgba(30, 30, 30, 0.5) !important; }
+    
+    .dark-theme .header-breadcrumb-sep { color: #404040 !important; }
+    .dark-theme .header-breadcrumb-text { color: #e5e5e5 !important; }
+    .dark-theme .header-nav-btn { color: #a3a3a3 !important; }
+    .dark-theme .header-nav-btn:hover { color: #34d399 !important; }
+
+    .dark-theme .header-filter { background-color: #1e1e1e !important; border-color: #2d2d2d !important; }
+    .dark-theme .header-select { color: #ffffff !important; }
+    .dark-theme .header-select option { background-color: #121212 !important; color: #ffffff !important; }
+    .dark-theme .header-select-icon { color: #737373 !important; }
+    
+    .dark-theme .header-am-badge { background-color: #1e1e1e !important; border-color: #2d2d2d !important; }
+    .dark-theme .header-am-label { color: #a3a3a3 !important; }
+    .dark-theme .header-am-val { color: #ffffff !important; }
+
+    .dark-theme .header-icon-btn { color: #a3a3a3 !important; border-color: #2d2d2d !important; }
+    .dark-theme .header-icon-btn:hover { background-color: #1e1e1e !important; }
+    .dark-theme .header-icon-btn:hover svg.text-amber-500 { color: #fbbf24 !important; }
+
+    .dark-theme .header-mobile-sub { background-color: #0a0a0a !important; border-color: #1e1e1e !important; }
+
+    /* Panel Info Merchant Specific Dark Mode */
+    .dark-theme .panel-info-backdrop { background-color: #121212 !important; border-color: #262626 !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.7) !important; }
+    .dark-theme .panel-info-blob { display: none !important; }
+    .dark-theme .panel-profile-card { background-image: none !important; background-color: #1a1a1a !important; border-color: #2d2d2d !important; }
+    .dark-theme .panel-profile-blob { display: none !important; }
+    .dark-theme .panel-text-muted { color: #a3a3a3 !important; }
+    .dark-theme .panel-icon-primary { color: #34d399 !important; }
+    .dark-theme .panel-divider { background-color: #404040 !important; }
+    
+    /* SOLID MERCHANT BADGES */
+    .dark-theme .panel-badge { background-color: #262626 !important; border-color: #404040 !important; box-shadow: 0 2px 5px rgba(0,0,0,0.5) !important; }
+    .dark-theme .panel-badge-text { color: #f8fafc !important; font-weight: 800 !important; }
+    
+    .dark-theme .panel-notes-card { background-color: #1a1a1a !important; border-color: #2d2d2d !important; }
+    .dark-theme .panel-notes-title { color: #ffffff !important; }
+    .dark-theme .panel-notes-btn { background-color: #451a03 !important; border-color: #78350f !important; color: #fbbf24 !important; }
+    .dark-theme .panel-notes-btn:hover { background-color: #78350f !important; }
+    
+    .dark-theme .panel-notes-empty { background-color: #121212 !important; border-color: #333333 !important; color: #a3a3a3 !important; }
+    .dark-theme .panel-note-item { background-color: #262626 !important; border-color: #333333 !important; }
+    .dark-theme .panel-note-icon { background-color: #451a03 !important; border-color: #78350f !important; }
+    .dark-theme .panel-note-icon svg { color: #fbbf24 !important; }
+    .dark-theme .panel-note-date { color: #a3a3a3 !important; }
+    .dark-theme .panel-note-text { color: #f8fafc !important; }
+    .dark-theme .panel-note-more { color: #a3a3a3 !important; }
+    .dark-theme .panel-note-more:hover { color: #fbbf24 !important; }
+
+    /* LIST CARDS DARK Mode */
+    .dark-theme .card-campaign-seg, .dark-theme .card-quick-search, .dark-theme .card-gms-tracker { background-color: #121212 !important; border-color: #1e1e1e !important; }
+    .dark-theme .card-section-title { color: #ffffff !important; }
+    .dark-theme .card-search-input { background-color: #000000 !important; border-color: #1e1e1e !important; color: #ffffff !important; }
+    .dark-theme .card-search-item, .dark-theme .card-list-item { background-color: #1e1e1e !important; border-color: #2d2d2d !important; }
+    .dark-theme .card-item-name { color: #ffffff !important; }
+    .dark-theme .badge-date, .dark-theme .badge-package { border: none !important; }
+    .dark-theme .dashboard-card { background-color: #121212 !important; border-color: #1e1e1e !important; }
+    .dark-theme .card-main-value { color: #ffffff !important; }
+    .dark-theme .card-sub-value { color: #d4d4d4 !important; }
+  `}} />
+);
+
+// ============================================================================
 // GOOGLE SHEETS API CONFIGURATION
 // ============================================================================
 const GOOGLE_SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbyiPgQX12g9f2csxcxNF7NTN3vtEFKOlnBjceBz3dzHh8DfoSLI8K8ccx3KKXdPvawR/exec'; 
@@ -141,7 +366,7 @@ const parseSafeDate = (dateStr) => {
 // ============================================================================
 // INDEXEDDB BROWSER STORAGE
 // ============================================================================
-const DB_NAME = 'AmDashboardDB';
+const DB_NAME = 'AmDashboardDB_v3';
 const STORE_NAME = 'merchantsStore';
 const initDB = () => new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1);
@@ -318,7 +543,6 @@ export default function App() {
 
       let templates = [];
       
-      // Ambil data untuk kisi-kisi performa general
       const lastHistGen = selectedMex.history && selectedMex.history.length > 0 ? selectedMex.history[selectedMex.history.length-1] : null;
       const trendBulanLalu = selectedMex.lmBs > 0 ? (((selectedMex.rrBs - selectedMex.lmBs) / selectedMex.lmBs) * 100).toFixed(0) : 0;
       const aovText = lastHistGen ? formatCurrencyFull(lastHistGen.aov) : 'Rp -';
@@ -449,7 +673,7 @@ export default function App() {
     const loadLocalData = async () => {
         setIsInitializing(true);
         try {
-            let saved = await loadFromIndexedDB('am_dashboard_data');
+            let saved = await loadFromIndexedDB('am_dashboard_data_v3');
             
             if (saved && saved.length > 0) {
                 saved.sort((a, b) => a.name.localeCompare(b.name));
@@ -462,7 +686,6 @@ export default function App() {
                         if (Array.isArray(cloudNotes) && cloudNotes.length > 0) {
                             const notesMap = {};
                             cloudNotes.forEach((row, i) => {
-                                // Fungsi helper untuk mencari nama kolom mengabaikan huruf besar/kecil & spasi
                                 const getVal = (keys) => {
                                     const foundKey = Object.keys(row).find(k => keys.includes(String(k).toLowerCase().replace(/[\s_]/g, '')));
                                     return foundKey ? row[foundKey] : undefined;
@@ -510,7 +733,7 @@ export default function App() {
 
                 setData(saved); 
                 setIsForceUpload(false);
-                const savedUpdate = localStorage.getItem('am_dashboard_last_update');
+                const savedUpdate = localStorage.getItem('am_dashboard_last_update_v3');
                 if (savedUpdate) setGlobalLastUpdate(savedUpdate);
             }
         } catch (e) {
@@ -558,12 +781,10 @@ export default function App() {
           const masterLines = parseCSVString(masterText);
           const firstRow = masterLines[0] || [];
           
-          // Mengambil tanggal MTD dari kolom AS1 (Index ke-44)
           let updateStr = '';
           if (firstRow.length > 44 && firstRow[44]) {
               updateStr = String(firstRow[44]).trim();
           } else {
-              // Fallback: Jika meleset, cari tulisan 'MTD' dan ambil sel sebelahnya
               const fbIdx = firstRow.findIndex(val => val && String(val).trim().toUpperCase() === 'MTD');
               if (fbIdx !== -1 && firstRow[fbIdx + 1]) updateStr = String(firstRow[fbIdx + 1]).trim();
           }
@@ -589,7 +810,6 @@ export default function App() {
           const mtdMiIdx = headers.findIndex(h => h.includes('MTD (MI)') || h.includes('MTD\n(MI)')); const lmMiIdx = mtdMiIdx > 0 ? mtdMiIdx - 1 : -1;
           const prioHeader = headers.find(h => h.toLowerCase().includes('priority') || h.toLowerCase().includes('prio') || h.toLowerCase().includes('framework'));
           const pointHeader = headers.find(h => h.toLowerCase().includes('total point') || h.toLowerCase().includes('point'));
-
           const gmsPackageHeader = headers.find(h => h && (h.toLowerCase().includes('gms package') || h.toLowerCase().includes('package')));
 
           let pMap = new Map();
@@ -624,7 +844,6 @@ export default function App() {
               const histLines = parseCSVString(histText); const hHeaders = (histLines[0] || []).map(h => h ? String(h).trim() : '');
               const hMexIdx = hHeaders.indexOf('merchant_id'); const hMonthIdx = hHeaders.indexOf('first_day_of_month'); const hBsIdx = hHeaders.indexOf('basket_size'); const hTotOrdIdx = hHeaders.indexOf('total_orders'); const hCompOrdIdx = hHeaders.indexOf('completed_orders'); const hPromoOrdIdx = hHeaders.indexOf('orders_with_promo_mfp_gms'); const hAovIdx = hHeaders.indexOf('aov'); const hMfcIdx = hHeaders.indexOf('mfc_mex_spend'); const hMfpIdx = hHeaders.indexOf('mfp_mex_spend'); const hCpoIdx = hHeaders.indexOf('cpo'); const hGmsIdx = hHeaders.indexOf('gms'); const hCommIdx = hHeaders.indexOf('basic_commission'); const hAdsWebIdx = hHeaders.indexOf('ads_web'); const hAdsMobIdx = hHeaders.indexOf('ads_mobile'); const hAdsDirIdx = hHeaders.indexOf('ads_direct');
               
-              // Temukan index kolom Z (merchant_id ke-2), AD (penetration), dan AE (hours_from_month)
               const hMexIdxRight = hHeaders.lastIndexOf('merchant_id');
               const hMonthIdxRight = hHeaders.indexOf('month_id');
               const hPenetrationIdx = hHeaders.indexOf('penetration');
@@ -633,7 +852,6 @@ export default function App() {
               for (let i = 1; i < histLines.length; i++) {
                   const vals = histLines[i]; if (!vals) continue; 
                   
-                  // 1. Proses Data Kiri (Sales, Ads, dsb)
                   if (hMexIdx !== -1 && hMonthIdx !== -1 && vals[hMexIdx]) {
                       const mexId = String(vals[hMexIdx]).trim();
                       if (pMap.has(mexId)) {
@@ -655,7 +873,6 @@ export default function App() {
                       }
                   }
 
-                  // 2. Proses Data Kanan (Jam Operasional & Penetration)
                   if (hMexIdxRight !== -1 && hMexIdxRight !== hMexIdx && hMonthIdxRight !== -1 && vals[hMexIdxRight]) {
                       const mexIdRight = String(vals[hMexIdxRight]).trim();
                       if (pMap.has(mexIdRight)) {
@@ -674,7 +891,6 @@ export default function App() {
           const finalData = Array.from(pMap.values()).map(m => { 
               if (m.history.length > 0) {
                   m.history.sort((a, b) => new Date(a.month) - new Date(b.month));
-                  // Ambil penetration terbaru untuk ditaruh di info merchant level atas
                   m.latest_penetration = m.history[m.history.length - 1].penetration || 0;
               } else {
                   m.latest_penetration = 0;
@@ -735,7 +951,7 @@ export default function App() {
       if (!selectedMex) return;
       const updatedMex = { ...selectedMex, notes: selectedMex.notes.filter(n => n.id !== noteId) };
       const updatedData = data.map(m => m.id === updatedMex.id ? updatedMex : m);
-      setSelectedMex(updatedMex); setData(updatedData); await saveToIndexedDB('am_dashboard_data', updatedData);
+      setSelectedMex(updatedMex); setData(updatedData); await saveToIndexedDB('am_dashboard_data_v3', updatedData);
   };
 
   const amOptions = useMemo(() => ['All', ...Array.from(new Set(data.map(d => d.amName).filter(Boolean))).sort()], [data]);
@@ -850,10 +1066,20 @@ export default function App() {
   };
 
   // 3. EARLY RETURNS
-  if (isInitializing) return <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4"><div className="animate-pulse flex flex-col items-center"><Activity className="w-12 h-12 text-[#00B14F] mb-4" /><h2 className="font-bold text-slate-500 uppercase tracking-widest">Menyiapkan Dashboard...</h2></div></div>;
+  if (isInitializing) return (
+      <div className={`min-h-screen flex items-center justify-center p-4 ${isDarkMode ? 'dark-theme' : 'bg-[#f8fafc]'}`}>
+          <ThemeStyles />
+          <div className="animate-pulse flex flex-col items-center">
+              <Activity className="w-12 h-12 text-[#00B14F] mb-4" />
+              <h2 className="font-bold text-slate-500 uppercase tracking-widest">Menyiapkan Dashboard...</h2>
+          </div>
+      </div>
+  );
+
   if (data.length === 0 || isForceUpload) {
       return (
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden font-sans text-slate-800">
+        <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans ${isDarkMode ? 'dark-theme' : 'bg-slate-900 text-slate-800'}`}>
+          <ThemeStyles />
           <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[100%] bg-emerald-900/40 rounded-full blur-[120px] pointer-events-none"></div>
           <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[100%] bg-blue-900/30 rounded-full blur-[120px] pointer-events-none"></div>
           <div className="text-center max-w-xl z-10 bg-white/95 backdrop-blur-xl p-8 md:p-10 rounded-[32px] shadow-2xl w-full mx-auto border border-white/20 animate-in fade-in zoom-in-95 relative">
@@ -895,7 +1121,8 @@ export default function App() {
       const lastHist = selectedMex.history && selectedMex.history.length > 0 ? selectedMex.history[selectedMex.history.length-1] : null;
 
       return (
-          <div className="fixed inset-0 z-[9999] bg-slate-50 overflow-y-auto font-sans flex flex-col hide-scrollbar animate-in slide-in-from-bottom-full duration-500 ease-out">
+          <div className={`fixed inset-0 z-[9999] overflow-y-auto font-sans flex flex-col hide-scrollbar animate-in slide-in-from-bottom-full duration-500 ease-out ${isDarkMode ? 'dark-theme' : 'bg-slate-50'}`}>
+              <ThemeStyles />
               <div className="bg-white border-b border-slate-200 px-4 md:px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
                  <div className="flex items-center gap-3">
                     <div className="w-8 h-8 md:w-10 md:h-10 bg-[#00B14F] rounded-lg md:rounded-xl flex items-center justify-center shadow-md shrink-0">
@@ -1125,6 +1352,7 @@ export default function App() {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark-theme' : ''} bg-[#f8fafc] text-slate-900 flex flex-col font-sans overflow-hidden relative transition-colors duration-300`}>
+      <ThemeStyles />
       <div className="fixed inset-0 z-0 pointer-events-none flex justify-center overflow-hidden">
          <div className="absolute inset-0 bg-grid-pattern"></div>
          <div className="absolute left-0 right-0 top-[-10%] md:top-[-20%] -z-10 m-auto h-[300px] w-[300px] md:h-[600px] md:w-[600px] rounded-full blur-[100px] glow-effect"></div>
@@ -1145,7 +1373,7 @@ export default function App() {
              {selectedMex?.mcaWlLimit > 0 && !String(selectedMex?.mcaWlClass).includes('Not') && (
                  <button onClick={() => handleSendWA('mca')} className="w-full text-left p-4 bg-blue-50 border border-blue-200 hover:border-blue-500 hover:shadow-md rounded-2xl transition-all group">
                      <p className="font-bold text-sm text-blue-800 group-hover:text-blue-600 mb-1 flex items-center gap-1.5"><Database size={14} className="text-blue-500"/> Info Limit MCA</p>
-                     <p className="text-xs text-blue-600/80 line-clamp-2">Ada 5 variasi pesan untuk menginfokan fasilitas pinjaman senilai {formatCurrency(selectedMex.mcaWlLimit)}...</p>
+                     <p className="text-xs text-blue-600/80 line-clamp-2">Ada 5 variasi pesan untuk menginfokan fasilitas pinjaman senilai {formatCurrency(selectedMex?.mcaWlLimit || 0)}...</p>
                  </button>
              )}
              {selectedMex?.zeusStatus !== 'ACTIVE' && (
@@ -1814,15 +2042,15 @@ export default function App() {
                         </div>
 
                         <div className="grid grid-cols-3 gap-2 md:gap-3 relative z-10 mt-4 shrink-0 pt-4 border-t border-slate-50">
-                            <div className="bg-blue-10/50 border border-blue-100 p-2 md:p-3 rounded-xl flex flex-col items-center justify-center text-center shadow-sm">
+                            <div className="bg-blue-50/80 border border-blue-100 p-2 md:p-3 rounded-xl flex flex-col items-center justify-center text-center shadow-sm">
                                 <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-0.5">GMS</span>
                                 <span className="text-base font-black text-blue-700">{campaignStats.list.filter(c => String(c.name).toLowerCase().includes('gms')).reduce((a, b) => a + b.count, 0)}</span>
                             </div>
-                            <div className="bg-amber-10/50 border border-amber-100 p-2 md:p-3 rounded-xl flex flex-col items-center justify-center text-center shadow-sm">
+                            <div className="bg-amber-50/80 border border-amber-100 p-2 md:p-3 rounded-xl flex flex-col items-center justify-center text-center shadow-sm">
                                 <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-0.5">Booster</span>
                                 <span className="text-base font-black text-amber-700">{campaignStats.list.filter(c => String(c.name).toLowerCase().includes('booster') && !String(c.name).toLowerCase().includes('booster+')).reduce((a, b) => a + b.count, 0)}</span>
                             </div>
-                            <div className="bg-emerald-10/50 border border-emerald-100 p-2 md:p-3 rounded-xl flex flex-col items-center justify-center text-center shadow-sm">
+                            <div className="bg-emerald-50/80 border border-emerald-100 p-2 md:p-3 rounded-xl flex flex-col items-center justify-center text-center shadow-sm">
                                 <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-0.5">Cuan</span>
                                 <span className="text-base font-black text-emerald-700">{campaignStats.list.filter(c => String(c.name).toLowerCase().includes('cuan')).reduce((a, b) => a + b.count, 0)}</span>
                             </div>
@@ -2029,9 +2257,7 @@ export default function App() {
                         <div className="relative z-10 pr-2">
                             <h2 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-900 leading-tight tracking-tight">{selectedMex.name}</h2>
                             
-                            {/* NEW: TWO BOXES FOR BADGES */}
                             <div className="flex flex-col xl:flex-row gap-3 mt-5">
-                                
                                 {/* KOTAK KIRI: Kota, Status/ID, Owner */}
                                 <div className="panel-badge flex-1 inline-flex flex-wrap items-center gap-x-4 gap-y-2.5 px-4 md:px-5 py-3 bg-white/60 backdrop-blur-sm border border-emerald-100/50 rounded-2xl shadow-sm">
                                     {/* City */}
@@ -2073,7 +2299,6 @@ export default function App() {
                                        <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-slate-600">Foto: {(selectedMex.latest_penetration * 100).toFixed(0)}%</span>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                      </div>
@@ -2131,65 +2356,72 @@ export default function App() {
                       <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-4 lg:mb-5 pl-2 relative z-10 shrink-0 min-h-[44px]">
                           <div className="flex items-center gap-2 lg:gap-3">
                               <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0"><Zap size={18} strokeWidth={2.5} /></div>
-                              <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">Campaigns <MousePointer size={10} className="text-slate-300 group-hover:text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-0.5 shrink-0 hidden lg:block"/></p>
-                          </div>
-                          <div className="self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap opacity-0 pointer-events-none select-none">
-                              <ArrowUpRight size={12}/> 0.0%
+                              <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">Campaigns <MousePointer size={10} className="text-slate-300 group-hover:text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-1"/></p>
                           </div>
                       </div>
                       <div className="pl-2 relative z-10 flex-1 flex flex-col justify-start">
                           <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Points</p>
                           <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{selectedMex.campaignPoint || 0}</p>
                       </div>
-                      <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex items-center justify-between pl-2 relative z-10 shrink-0 min-h-[40px] lg:min-h-[44px]">
-                          <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2 shrink-0">Active List</span>
-                          <div className="flex overflow-x-auto hide-scrollbar gap-1.5 w-full justify-end" style={{ WebkitOverflowScrolling: 'touch' }}>
-                              {(!selectedMex.campaigns || selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || String(selectedMex.campaigns).toLowerCase().includes('no campaign')) ? (
-                                  <span className="text-slate-400 text-[10px] font-semibold italic">Tidak ada</span>
-                              ) : (
-                                  String(selectedMex.campaigns).split(/[|,]/).map(c => c.trim()).filter(Boolean).map((camp, idx) => (
-                                      <span key={idx} className="shrink-0 bg-amber-50 text-amber-600 border border-amber-100 px-1.5 py-0.5 rounded text-[9px] lg:text-[10px] font-black uppercase tracking-wider transition-colors">{camp}</span>
-                                  ))
-                              )}
+                      <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 pl-2 relative z-10 shrink-0 min-h-[40px] lg:min-h-[44px]">
+                          <div className="flex flex-wrap gap-1">{renderMerchantCampaigns(selectedMex.campaigns)}</div>
+                      </div>
+                  </div>
+
+                  <div onClick={() => setShowAdsModal(true)} className="bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-rose-500/10 hover:border-rose-300 hover:-translate-y-1 group animate-fade-in-up stagger-4 h-full cursor-pointer">
+                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500"></div>
+                      <Megaphone className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
+                      <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-4 lg:mb-5 pl-2 relative z-10 shrink-0 min-h-[44px]">
+                          <div className="flex items-center gap-2 lg:gap-3">
+                              <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0"><Megaphone size={18} strokeWidth={2.5}/></div>
+                              <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">Ads Spend <MousePointer size={10} className="text-slate-300 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-1"/></p>
+                          </div>
+                      </div>
+                      <div className="pl-2 relative z-10 flex-1 flex flex-col justify-start">
+                          <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">MTD Total Ads</p>
+                          <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(selectedMex.adsTotal)}</p>
+                      </div>
+                      <div className="mt-auto flex flex-col gap-1.5 pl-2 relative z-10 shrink-0 min-h-[40px] lg:min-h-[44px]">
+                          <div className="pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center">
+                              <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Last Month</span>
+                              <span className="text-[10px] lg:text-xs font-black text-slate-700">{formatCurrency(selectedMex.adsLM)}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                              <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Runrate</span>
+                              <span className="text-[10px] lg:text-xs font-black text-slate-700">{formatCurrency(selectedMex.adsRR)}</span>
                           </div>
                       </div>
                   </div>
-                  
-                  <DashboardCard title="Ads Spend" value={formatCurrency(selectedMex.adsTotal)} midLabel="Total Invest (MI)" midValue={formatCurrency(selectedMex.mtdMi)} subLabel="Ads Last Month" subValue={formatCurrency(selectedMex.adsLM)} icon={Megaphone} color="rose" onClick={() => setShowAdsModal(true)} borderClass="rose-300" trend={selectedMex.adsLM > 0 ? ((selectedMex.adsRR - selectedMex.adsLM) / selectedMex.adsLM) * 100 : (selectedMex.adsRR > 0 ? 100 : 0)} />
-                  
-                  <div className="bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group h-full animate-fade-in-up stagger-5">
-                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
-                     <Database className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                     <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-4 lg:mb-5 pl-2 relative z-10 shrink-0 min-h-[44px]">
-                         <div className="flex items-center gap-2 lg:gap-3">
-                             <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0"><Database size={18} strokeWidth={2.5}/></div>
-                             <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">MCA Config</p>
-                         </div>
-                         <div className="self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap opacity-0 pointer-events-none select-none">
-                              <ArrowUpRight size={12}/> 0.0%
-                         </div>
-                     </div>
-                     <div className="pl-2 relative z-10 flex-1 flex flex-col justify-start">
-                         <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Disbursed Amount</p>
-                         <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(selectedMex.mcaAmount)}</p>
-                     </div>
-                     <div className="mt-auto flex flex-col gap-1.5 pl-2 relative z-10 shrink-0 min-h-[40px] lg:min-h-[44px]">
-                         <div className="pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center">
-                             <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Limit Tersedia</span>
-                             <span className="text-[10px] lg:text-xs font-black text-slate-700">{formatCurrency(selectedMex.mcaWlLimit)}</span>
-                         </div>
-                         <div className="flex justify-between items-center">
-                             <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Drop Off</span>
-                             <span className={`text-[9px] lg:text-[10px] font-black px-2 py-0.5 rounded-md ${(!selectedMex.mcaDropOff || selectedMex.mcaDropOff === '-' || String(selectedMex.mcaDropOff).trim() === '0') ? 'bg-slate-100 text-slate-500' : 'bg-rose-100 text-rose-700'}`}>{(!selectedMex.mcaDropOff || selectedMex.mcaDropOff === '-' || String(selectedMex.mcaDropOff).trim() === '0') ? '-Not Yet-' : selectedMex.mcaDropOff}</span>
-                         </div>
-                     </div>
+
+                  <div className="bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group animate-fade-in-up stagger-5 h-full">
+                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
+                      <Database className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
+                      <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-4 lg:mb-5 pl-2 relative z-10 shrink-0 min-h-[44px]">
+                          <div className="flex items-center gap-2 lg:gap-3">
+                              <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0"><Database size={18} strokeWidth={2.5}/></div>
+                              <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">MCA Config</p>
+                          </div>
+                      </div>
+                      <div className="pl-2 relative z-10 flex-1 flex flex-col justify-start">
+                          <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Disbursed Amount</p>
+                          <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(selectedMex.mcaAmount)}</p>
+                      </div>
+                      <div className="mt-auto flex flex-col gap-1.5 pl-2 relative z-10 shrink-0 min-h-[40px] lg:min-h-[44px]">
+                          <div className="pt-3 lg:pt-4 border-t border-slate-100 flex justify-between items-center">
+                              <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Limit Tersedia</span>
+                              <span className="text-[10px] lg:text-xs font-black text-slate-700">{formatCurrency(selectedMex.mcaWlLimit)}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                              <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2">Drop Off</span>
+                              <span className={`text-[9px] lg:text-[10px] font-black px-2 py-0.5 rounded-md ${(!selectedMex.mcaDropOff || selectedMex.mcaDropOff === '-' || String(selectedMex.mcaDropOff).trim() === '0') ? 'bg-slate-100 text-slate-500' : 'bg-rose-100 text-rose-700'}`}>{(!selectedMex.mcaDropOff || selectedMex.mcaDropOff === '-' || String(selectedMex.mcaDropOff).trim() === '0') ? '-Not Yet-' : selectedMex.mcaDropOff}</span>
+                          </div>
+                      </div>
                   </div>
                </div>
 
                {selectedMex.history && selectedMex.history.length > 0 && (
                    <div className="space-y-5 md:space-y-6 mt-2 md:mt-4">
                        
-                       {/* BARIS 1: FULL GRID - 12 MONTH REVIEW */}
                        <div className="animate-fade-in-up stagger-6 w-full bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col hover:shadow-2xl transition-shadow duration-500">
                            <div className="flex justify-between items-start md:items-center mb-8 gap-2 shrink-0 min-h-[44px]">
                               <div><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="text-blue-500 w-5 h-5"/> 12-Month Review</h3></div>
@@ -2218,7 +2450,6 @@ export default function App() {
                             </div>
                        </div>
 
-                       {/* BARIS 2: INVEST & COMPLETED ORDERS */}
                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
                            <div className="animate-fade-in-up stagger-7 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
                                 <div className="flex items-center mb-8 shrink-0 min-h-[44px]"><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><DollarSign className="text-rose-500 w-5 h-5"/> Investment (MI) Breakdown</h3></div>
@@ -2257,7 +2488,6 @@ export default function App() {
                             </div>
                        </div>
 
-                       {/* BARIS 3: AOV & OPHOURS */}
                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
                             <div className="animate-fade-in-up stagger-9 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
                                 <div className="flex items-start gap-2 mb-8 shrink-0 min-h-[44px]"><Target className="w-5 h-5 text-teal-500 shrink-0"/><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-tight">AOV & Promo Usage</h3></div>
@@ -2305,29 +2535,38 @@ export default function App() {
 
                <div className="animate-fade-in-up stagger-10 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 mt-6 hover:shadow-2xl transition-shadow duration-500">
                   <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100"><Info className="w-5 h-5 text-indigo-500"/><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Informasi Kontak & Lokasi</h3></div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-                      <div className="bg-slate-50 p-4 md:p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center gap-4 transition-colors hover:bg-slate-100/50">
-                         <div className="flex items-start gap-3"><Phone className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/><div className="flex flex-col"><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Phone Number</span>{selectedMex.phone && selectedMex.phone !== '-' ? (<button onClick={() => setShowWaModal(true)} className="text-sm md:text-base font-black text-slate-800 hover:text-[#00B14F] transition-colors flex items-center gap-1.5 group cursor-pointer text-left">{selectedMex.phone}<MessageCircle className="w-3.5 h-3.5 text-[#00B14F] opacity-0 group-hover:opacity-100 transition-opacity" /></button>) : (<span className="text-sm md:text-base font-black text-slate-800">-</span>)}</div></div>
-                         <div className="flex items-start gap-3"><Mail className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/><div className="flex flex-col"><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Email Address</span><span className="text-sm font-bold text-indigo-600 break-all">{selectedMex.email || '-'}</span></div></div>
-                      </div>
-                      <div className="bg-slate-50 p-4 md:p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center gap-4 lg:col-span-2 transition-colors hover:bg-slate-100/50">
-                         <div className="flex items-start gap-3"><MapPin className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/><div className="flex flex-col"><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Address</span><span className="text-sm font-semibold text-slate-700 leading-relaxed">{selectedMex.city ? `${selectedMex.address}, ${selectedMex.city}` : '-'}</span></div></div>
-                         {(selectedMex.latitude || selectedMex.longitude) && (
-                            <div className="flex items-start gap-3"><ExternalLink className="w-5 h-5 text-slate-400 shrink-0 mt-0.5"/><div className="flex flex-col"><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Maps Coords</span><a href={`https://maps.google.com/?q=${selectedMex.latitude},${selectedMex.longitude}`} target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-blue-500 hover:text-blue-700 transition-colors font-bold break-all">{selectedMex.latitude}, {selectedMex.longitude}</a></div></div>
-                         )}
-                      </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                     <div className="flex gap-4 items-start p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-indigo-200 transition-colors">
+                        <div className="w-10 h-10 bg-white text-indigo-500 rounded-xl flex items-center justify-center shadow-sm shrink-0"><Phone size={18}/></div>
+                        <div className="min-w-0">
+                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Telepon (Zeus)</p>
+                           <p className="text-sm font-bold text-slate-800 truncate select-all">{selectedMex.phone || '-'}</p>
+                        </div>
+                     </div>
+                     <div className="flex gap-4 items-start p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-indigo-200 transition-colors">
+                        <div className="w-10 h-10 bg-white text-indigo-500 rounded-xl flex items-center justify-center shadow-sm shrink-0"><Mail size={18}/></div>
+                        <div className="min-w-0">
+                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Email</p>
+                           <p className="text-sm font-bold text-slate-800 truncate select-all">{selectedMex.email || '-'}</p>
+                        </div>
+                     </div>
+                     <div className="flex gap-4 items-start p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-indigo-200 transition-colors sm:col-span-2 lg:col-span-1">
+                        <div className="w-10 h-10 bg-white text-indigo-500 rounded-xl flex items-center justify-center shadow-sm shrink-0"><MapPin size={18}/></div>
+                        <div className="min-w-0">
+                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Alamat</p>
+                           <p className="text-xs font-bold text-slate-800 leading-snug line-clamp-3">{selectedMex.address || '-'}</p>
+                           {selectedMex.latitude && selectedMex.longitude && (
+                               <a href={`https://www.google.com/maps?q=${selectedMex.latitude},${selectedMex.longitude}`} target="_blank" rel="noreferrer" className="text-[10px] font-black text-indigo-500 hover:text-indigo-700 mt-2 inline-flex items-center gap-1">Buka di Maps <ExternalLink size={10}/></a>
+                           )}
+                        </div>
+                     </div>
                   </div>
                </div>
-
-               {/* UNIVERSAL FLOATING ACTION BAR */}
-               <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[55] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${showFloatingBar ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-24 opacity-0 scale-90 pointer-events-none'}`}>
-                   <div className="bg-slate-900/90 dark:bg-slate-800/90 backdrop-blur-xl p-1.5 rounded-full shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] border border-slate-700/50 flex items-center justify-center gap-1.5">
-                       <button onClick={() => setSelectedMex(null)} className="w-12 h-12 flex items-center justify-center text-white hover:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition-all duration-300 active:scale-90" title="Kembali ke Dashboard">
-                           <ArrowLeft className="w-5 h-5" />
-                       </button>
-                       <div className="w-px h-6 bg-slate-700/80 shrink-0"></div>
-                       <button onClick={() => setShowPresentation(true)} className="w-12 h-12 flex items-center justify-center text-slate-900 bg-white hover:bg-slate-100 rounded-full transition-all duration-300 active:scale-90 shadow-lg" title="Mulai Presentasi">
-                           <MonitorPlay className="w-5 h-5" />
+               
+               <div className={`fixed bottom-6 lg:bottom-10 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 ease-out flex items-center shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] bg-slate-900/95 backdrop-blur-xl border border-slate-700 p-2 md:p-3 rounded-[32px] ${showFloatingBar ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-32 opacity-0 scale-95 pointer-events-none'}`}>
+                   <div className="flex items-center gap-2 md:gap-3 px-2 md:px-4">
+                       <button onClick={() => setShowPresentation(true)} className="w-12 h-12 flex items-center justify-center text-white hover:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition-all duration-300 active:scale-90" title="Mode Presentasi">
+                           <MonitorPlay className="w-5 h-5 text-emerald-400" />
                        </button>
                        {selectedMex.history && selectedMex.history.length > 0 && (
                            <Fragment>
@@ -2350,187 +2589,9 @@ export default function App() {
 
             </div>
           )}
-          </div>
-          
         </div>
-      </main>
-
-      <style dangerouslySetInnerHTML={{__html: `
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .pb-safe { padding-bottom: max(2rem, env(safe-area-inset-bottom)); }
-        * { font-feature-settings: "tnum" on, "lnum" on; }
-        
-        @keyframes fadeInUpCustom {
-            from { opacity: 0; transform: translate3d(0, 20px, 0); }
-            to { opacity: 1; transform: translate3d(0, 0, 0); }
-        }
-        
-        .animate-fade-in-up {
-            opacity: 0;
-            animation: fadeInUpCustom 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            will-change: opacity, transform;
-        }
-        
-        .stagger-1 { animation-delay: 50ms; }
-        .stagger-2 { animation-delay: 100ms; }
-        .stagger-3 { animation-delay: 150ms; }
-        .stagger-4 { animation-delay: 200ms; }
-        .stagger-5 { animation-delay: 250ms; }
-        .stagger-6 { animation-delay: 300ms; }
-        .stagger-7 { animation-delay: 350ms; }
-        .stagger-8 { animation-delay: 400ms; }
-        .stagger-9 { animation-delay: 450ms; }
-        .stagger-10 { animation-delay: 500ms; }
-
-        @keyframes float-down { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(2.5px); } }
-        .animate-float-down { animation: float-down 1.5s ease-in-out infinite; }
-        
-        @keyframes float-up { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
-        .animate-float-up { animation: float-up 1.5s ease-in-out infinite; }
-
-        .bg-grid-pattern { background-image: linear-gradient(to right, rgba(148, 163, 184, 0.15) 1px, transparent 1px), linear-gradient(to bottom, rgba(148, 163, 184, 0.15) 1px, transparent 1px); background-size: 24px 24px; }
-        .dark-theme .bg-grid-pattern { background-image: linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px); }
-        .glow-effect { background-color: #00B14F; opacity: 0.12; }
-        .dark-theme .glow-effect { opacity: 0.05; }
-        .fade-bottom { background-image: linear-gradient(to top, #f8fafc 10%, transparent); }
-        .dark-theme .fade-bottom { background-image: linear-gradient(to top, #000000 10%, transparent); }
-
-        .dark-theme { background-color: #000000 !important; color: #ffffff !important; }
-        .dark-theme .bg-white { background-color: #121212 !important; border-color: #262626 !important; }
-        .dark-theme .bg-white\\/80 { background-color: #121212 !important; border-color: #262626 !important; }
-        .dark-theme .bg-white\\/95 { background-color: #121212 !important; border-color: #262626 !important; }
-        .dark-theme .from-emerald-50\\/80 { --tw-gradient-from: #064e3b !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
-        .dark-theme .from-slate-100\\/50 { --tw-gradient-from: #1e1e1e !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
-        .dark-theme .to-white { --tw-gradient-to: #121212 !important; }
-        .dark-theme .bg-\\[\\#f8fafc\\] { background-color: #000000 !important; }
-        
-        .dark-theme .text-slate-900, .dark-theme .text-slate-800 { color: #ffffff !important; }
-        .dark-theme .text-slate-700 { color: #e5e5e5 !important; }
-        .dark-theme .text-slate-600 { color: #d4d4d4 !important; }
-        .dark-theme .text-slate-500 { color: #a3a3a3 !important; }
-        .dark-theme .text-slate-400 { color: #737373 !important; }
-        .dark-theme .border-slate-100, .dark-theme .border-slate-200 { border-color: #2d2d2d !important; }
-        .dark-theme .border-slate-50 { border-color: #1e1e1e !important; }
-        .dark-theme .bg-slate-50 { background-color: #1e1e1e !important; border-color: #2d2d2d !important; color: #f8fafc !important; }
-        .dark-theme .bg-slate-100 { background-color: #262626 !important; border-color: #333333 !important; color: #f8fafc !important; }
-        .dark-theme .bg-slate-50\\/50 { background-color: #1a1a1a !important; border-color: #2d2d2d !important; }
-        .dark-theme .divide-slate-50 > :not([hidden]) ~ :not([hidden]) { border-color: #1e1e1e !important; }
-        .dark-theme .shadow-xl, .dark-theme .shadow-2xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.9) !important; }
-        .dark-theme input, .dark-theme select, .dark-theme textarea { background-color: #121212 !important; color: #ffffff !important; border-color: #2d2d2d !important; }
-        
-        /* SOLID COLORS FOR ALL BADGES & TAGS */
-        .dark-theme .bg-emerald-50\\/60, .dark-theme .bg-emerald-50, .dark-theme .bg-emerald-100 { background-color: #064e3b !important; border-color: #065f46 !important; color: #34d399 !important; }
-        .dark-theme .bg-teal-50\\/60, .dark-theme .bg-teal-50, .dark-theme .bg-teal-100 { background-color: #134e4a !important; border-color: #115e59 !important; color: #2dd4bf !important; }
-        .dark-theme .bg-rose-50\\/60, .dark-theme .bg-rose-50, .dark-theme .bg-rose-50\\/50, .dark-theme .bg-rose-100 { background-color: #4c0519 !important; border-color: #881337 !important; color: #fb7185 !important; }
-        .dark-theme .bg-blue-50\\/60, .dark-theme .bg-blue-50, .dark-theme .bg-blue-50\\/50, .dark-theme .bg-blue-100 { background-color: #1e3a8a !important; border-color: #1e40af !important; color: #60a5fa !important; }
-        .dark-theme .bg-amber-50\\/60, .dark-theme .bg-amber-50, .dark-theme .bg-amber-100 { background-color: #451a03 !important; border-color: #78350f !important; color: #fbbf24 !important; }
-        .dark-theme .bg-indigo-50\\/60, .dark-theme .bg-indigo-50, .dark-theme .bg-indigo-100 { background-color: #312e81 !important; border-color: #3730a3 !important; color: #818cf8 !important; }
-        .dark-theme .bg-purple-50, .dark-theme .bg-purple-100 { background-color: #3b0764 !important; border-color: #581c87 !important; color: #c084fc !important; }
-        .dark-theme .bg-cyan-50, .dark-theme .bg-cyan-100 { background-color: #164e63 !important; border-color: #155e75 !important; color: #22d3ee !important; }
-
-        /* SOLID COLORS FOR PRIORITY BADGES */
-        .dark-theme .bg-slate-500\\/\\[0\\.65\\] { background-color: #334155 !important; border-color: #475569 !important; color: #f8fafc !important; }
-        .dark-theme .bg-rose-600\\/\\[0\\.65\\] { background-color: #9f1239 !important; border-color: #be123c !important; color: #ffffff !important; }
-        .dark-theme .bg-amber-600\\/\\[0\\.65\\] { background-color: #b45309 !important; border-color: #d97706 !important; color: #ffffff !important; }
-        .dark-theme .bg-blue-600\\/\\[0\\.65\\] { background-color: #1d4ed8 !important; border-color: #2563eb !important; color: #ffffff !important; }
-        .dark-theme .bg-emerald-600\\/\\[0\\.65\\] { background-color: #047857 !important; border-color: #059669 !important; color: #ffffff !important; }
-        .dark-theme .bg-indigo-600\\/\\[0\\.65\\] { background-color: #4338ca !important; border-color: #4f46e5 !important; color: #ffffff !important; }
-
-        /* TEXT ADJUSTMENTS FOR READABILITY */
-        .dark-theme .text-emerald-900, .dark-theme .text-emerald-800, .dark-theme .text-emerald-700, .dark-theme .text-emerald-600, .dark-theme .text-emerald-500 { color: #34d399 !important; }
-        .dark-theme .text-teal-900, .dark-theme .text-teal-800, .dark-theme .text-teal-700, .dark-theme .text-teal-600, .dark-theme .text-teal-500 { color: #2dd4bf !important; }
-        .dark-theme .text-rose-900, .dark-theme .text-rose-800, .dark-theme .text-rose-700, .dark-theme .text-rose-600, .dark-theme .text-rose-500 { color: #fb7185 !important; }
-        .dark-theme .text-blue-900, .dark-theme .text-blue-800, .dark-theme .text-blue-700, .dark-theme .text-blue-600, .dark-theme .text-blue-500 { color: #60a5fa !important; }
-        .dark-theme .text-amber-900, .dark-theme .text-amber-800, .dark-theme .text-amber-700, .dark-theme .text-amber-600, .dark-theme .text-amber-500 { color: #fbbf24 !important; }
-        .dark-theme .text-indigo-900, .dark-theme .text-indigo-800, .dark-theme .text-indigo-700, .dark-theme .text-indigo-600, .dark-theme .text-indigo-500 { color: #818cf8 !important; }
-        
-        .dark-theme .recharts-cartesian-grid-horizontal line, .dark-theme .recharts-cartesian-grid-vertical line { stroke: #1e1e1e !important; }
-        .dark-theme .recharts-text { fill: #a3a3a3 !important; }
-        .dark-theme .recharts-default-tooltip { background-color: #121212 !important; border-color: #2d2d2d !important; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.9) !important; }
-        .dark-theme .recharts-tooltip-item { color: #ffffff !important; }
-        .dark-theme .recharts-tooltip-cursor { fill: #1e1e1e !important; }
-        
-        .dark-theme .hover\\:bg-slate-50:hover { background-color: #1e1e1e !important; }
-        .dark-theme .hover\\:bg-slate-50\\/80:hover { background-color: #1e1e1e !important; }
-        .dark-theme .hover\\:border-slate-300:hover { border-color: #404040 !important; }
-        .dark-theme .hover\\:border-slate-400:hover { border-color: #737373 !important; }
-
-        /* --- EXPLICIT HEADER DARK MODE RULES --- */
-        .dark-theme .header-main { background-color: #0a0a0a !important; border-color: #2d2d2d !important; }
-        .dark-theme .header-title { color: #ffffff !important; }
-        .dark-theme .header-pro-text { color: #34d399 !important; }
-        .dark-theme .header-lastsync-label { color: #737373 !important; }
-        .dark-theme .header-divider { background-color: #2d2d2d !important; }
-        .dark-theme .header-divider-left { border-color: #2d2d2d !important; }
-        
-        .dark-theme .header-nav-bg { background-color: #1e1e1e !important; border-color: #2d2d2d !important; }
-        .dark-theme .header-nav-active { background-color: #000000 !important; color: #34d399 !important; border-color: #2d2d2d !important; }
-        .dark-theme .header-nav-inactive { color: #a3a3a3 !important; }
-        .dark-theme .header-nav-inactive:hover { color: #e5e5e5 !important; background-color: rgba(30, 30, 30, 0.5) !important; }
-        
-        .dark-theme .header-breadcrumb-sep { color: #404040 !important; }
-        .dark-theme .header-breadcrumb-text { color: #e5e5e5 !important; }
-        .dark-theme .header-nav-btn { color: #a3a3a3 !important; }
-        .dark-theme .header-nav-btn:hover { color: #34d399 !important; }
-
-        .dark-theme .header-filter { background-color: #1e1e1e !important; border-color: #2d2d2d !important; }
-        .dark-theme .header-select { color: #ffffff !important; }
-        .dark-theme .header-select option { background-color: #121212 !important; color: #ffffff !important; }
-        .dark-theme .header-select-icon { color: #737373 !important; }
-        
-        .dark-theme .header-am-badge { background-color: #1e1e1e !important; border-color: #2d2d2d !important; }
-        .dark-theme .header-am-label { color: #a3a3a3 !important; }
-        .dark-theme .header-am-val { color: #ffffff !important; }
-
-        .dark-theme .header-icon-btn { color: #a3a3a3 !important; border-color: #2d2d2d !important; }
-        .dark-theme .header-icon-btn:hover { background-color: #1e1e1e !important; }
-        .dark-theme .header-icon-btn:hover svg.text-amber-500 { color: #fbbf24 !important; }
-
-        .dark-theme .header-mobile-sub { background-color: #0a0a0a !important; border-color: #1e1e1e !important; }
-
-        /* Panel Info Merchant Specific Dark Mode */
-        .dark-theme .panel-info-backdrop { background-color: #121212 !important; border-color: #262626 !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.7) !important; }
-        .dark-theme .panel-info-blob { display: none !important; /* Disembunyikan agar tampilan lebih bersih di Dark Mode */ }
-        .dark-theme .panel-profile-card { background-image: none !important; background-color: #1a1a1a !important; border-color: #2d2d2d !important; }
-        .dark-theme .panel-profile-blob { display: none !important; }
-        .dark-theme .panel-text-muted { color: #a3a3a3 !important; }
-        .dark-theme .panel-icon-primary { color: #34d399 !important; }
-        .dark-theme .panel-divider { background-color: #404040 !important; }
-        
-        /* SOLID MERCHANT BADGES */
-        .dark-theme .panel-badge { background-color: #262626 !important; border-color: #404040 !important; box-shadow: 0 2px 5px rgba(0,0,0,0.5) !important; }
-        .dark-theme .panel-badge-text { color: #f8fafc !important; font-weight: 800 !important; }
-        
-        .dark-theme .panel-notes-card { background-color: #1a1a1a !important; border-color: #2d2d2d !important; }
-        .dark-theme .panel-notes-title { color: #ffffff !important; }
-        .dark-theme .panel-notes-btn { background-color: #451a03 !important; border-color: #78350f !important; color: #fbbf24 !important; }
-        .dark-theme .panel-notes-btn:hover { background-color: #78350f !important; }
-        
-        .dark-theme .panel-notes-empty { background-color: #121212 !important; border-color: #333333 !important; color: #a3a3a3 !important; }
-        .dark-theme .panel-note-item { background-color: #262626 !important; border-color: #333333 !important; }
-        .dark-theme .panel-note-icon { background-color: #451a03 !important; border-color: #78350f !important; }
-        .dark-theme .panel-note-icon svg { color: #fbbf24 !important; }
-        .dark-theme .panel-note-date { color: #a3a3a3 !important; }
-        .dark-theme .panel-note-text { color: #f8fafc !important; }
-        .dark-theme .panel-note-more { color: #a3a3a3 !important; }
-        .dark-theme .panel-note-more:hover { color: #fbbf24 !important; }
-
-        /* LIST CARDS DARK Mode */
-        .dark-theme .card-campaign-seg, .dark-theme .card-quick-search, .dark-theme .card-gms-tracker { background-color: #121212 !important; border-color: #1e1e1e !important; }
-        .dark-theme .card-section-title { color: #ffffff !important; }
-        .dark-theme .card-search-input { background-color: #000000 !important; border-color: #1e1e1e !important; color: #ffffff !important; }
-        .dark-theme .card-search-item, .dark-theme .card-list-item { background-color: #1e1e1e !important; border-color: #2d2d2d !important; }
-        .dark-theme .card-item-name { color: #ffffff !important; }
-        .dark-theme .badge-date, .dark-theme .badge-package { border: none !important; }
-        .dark-theme .dashboard-card { background-color: #121212 !important; border-color: #1e1e1e !important; }
-        .dark-theme .card-main-value { color: #ffffff !important; }
-        .dark-theme .card-sub-value { color: #d4d4d4 !important; }
-      `}} />
-    </div>
+      </div>
+    </main>
+  </div>
   );
 }
