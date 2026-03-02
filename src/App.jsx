@@ -255,12 +255,10 @@ const DashboardCard = ({ title, value, subLabel, subValue, midLabel, midValue, i
 // MAIN APP COMPONENT
 // ============================================================================
 export default function App() {
-  // 1. ALL HOOKS DECLARATIONS
   const [data, setData] = useState([]);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isForceUpload, setIsForceUpload] = useState(false);
   const [globalLastUpdate, setGlobalLastUpdate] = useState('');
-  
   const [fileMaster, setFileMaster] = useState(null);
   const [fileHistory, setFileHistory] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -316,11 +314,54 @@ export default function App() {
       const amShort = getShortAMName(selectedMex.amName);
       const mexName = selectedMex.name;
       let mcaLimit = selectedMex.mcaWlLimit >= 1000000 ? `Rp ${Number.isInteger(selectedMex.mcaWlLimit/1000000) ? selectedMex.mcaWlLimit/1000000 : (selectedMex.mcaWlLimit/1000000).toFixed(1).replace('.', ',')} Juta` : `Rp ${fNum(selectedMex.mcaWlLimit)}`;
+      const expDate = "17 Maret 2026";
 
       let templates = [];
+      
+      // Ambil data untuk kisi-kisi performa general
+      const lastHistGen = selectedMex.history && selectedMex.history.length > 0 ? selectedMex.history[selectedMex.history.length-1] : null;
+      const trendBulanLalu = selectedMex.lmBs > 0 ? (((selectedMex.rrBs - selectedMex.lmBs) / selectedMex.lmBs) * 100).toFixed(0) : 0;
+      const aovText = lastHistGen ? formatCurrencyFull(lastHistGen.aov) : 'Rp -';
+      const promoPctText = lastHistGen ? `${lastHistGen.promo_order_pct}%` : '-';
+
       switch(templateType) {
+          case 'general': 
+              templates = [
+                  `Halo kak ${owner} 👋, aku ${amShort} (AM Grab).\n\nAku abis ngecek data *${mexName}* nih. Rata-rata pesanan kakak sekarang dapet di angka *${aovText}*.\n\nKayaknya ada 1-2 trik simpel yang bisa kita cobain bareng biar omset bulan ini bisa naik lebih ngebut lagi dibanding kemaren 📈.\n\nKira-kira kakak free kapan ya? Ngobrol via telpon 5-10 menitan aja yuk!`,
+                  
+                  `Siang kak ${owner} 🙌. Sama ${amShort} dari Grab di sini.\n\nAku lagi pantau pergerakan *${mexName}*, tren proyeksi omsetnya sekarang ada di *${trendBulanLalu}%* vs bulan lalu nih. \n\nSebenernya ada strategi seru dari beberapa resto jagoan di area kakak yang belum dipake di toko ini, sayang banget lho potensinya 🤔.\n\nBoleh kita *call* bentar besok kak buat bahas idenya?`,
+                  
+                  `Halo kak ${owner}! Semoga usahanya makin rame ya 🙏.\n\nAku ${amShort} (AM Grab). Dari sistem, kulihat ketertarikan pelanggan sama promo *${mexName}* ada di *${promoPctText}*. \n\nAku nemu satu setelan (config) asik di app yang bisa bikin angkanya makin greget tanpa perlu nambah modal gede 💡.\n\nMau kubantu pandu cara setelnya kak? Kabari ya kapan pasnya kita telponan!`,
+                  
+                  `Pagi/siang kak ${owner} ☀️. Aku ${amShort} dari Grab.\n\nCuma mau *update kilat* nih: Aku baru liat report *${mexName}* bulan ini. Secara umum udah oke, tapi *traffic* kunjungan ke profil resto kakak sebenernya bisa didorong lebih pol lagi 🔥.\n\nAku udah siapin *action plan* khusus nih buat *${mexName}*. Kalau kakak lagi nyantai, boleh info kapan kita bisa ngobrol bentar via telpon?`,
+                  
+                  `Halo kak ${owner} 👋. Kenalin aku ${amShort} dari Grab yang bantu pantau *${mexName}*.\n\nLagi iseng cek laporan bulanan, lumayan asik liat rata-rata transaksi kakak nyentuh *${aovText}*.\n\nTapi aku liat ada peluang cuan di jam-jam tertentu yang sering kelewat nih kak 📉. Aku punya ide jitu yang cocok banget buat *cover* itu.\n\nBoleh kita telponan sebentar kak hari ini atau besok?`
+              ];
+              break;
           case 'promo': templates = [`Halo kak ${owner}! Saya ${amShort} (Grab). Ada program Promo spesial buat ${mexName}. Boleh bahas via telpon?`, `Selamat pagi kak ${owner}, saya ${amShort}. Khusus ${mexName} ada kuota promo. Mau dibantu?`]; break;
-          case 'mca': templates = [`Halo kak ${owner}! Ada program Grab Modal Mantul s/d ${mcaLimit} untuk ${mexName}. Cek aplikasi ya!`, `Siang kak ${owner}! Yuk kembangin ${mexName} dengan Modal Mantul s/d ${mcaLimit}. Cek GrabMerchant!`]; break;
+          case 'mca': 
+              templates = [
+                  `Halo kak ${owner} 👋\n\nMenjelang puncak Ramadan dan Lebaran, kesiapan usaha menjadi hal penting agar pelayanan *${mexName}* tetap optimal 🚀.\n\nSaat ini tersedia program Grab Modal Mantul dengan estimasi pendanaan hingga *${mcaLimit}* 💰.\n\nPeriode penawaran ini dijadwalkan berakhir pada *${expDate}* ⏳.\n\nUntuk memastikan usaha tetap siap di momen hari raya, silakan cek ketersediaan penawaran di aplikasi GrabMerchant sebelum sistem menutup periode Ramadan.`,
+                  
+                  `Halo kak ${owner} 🙌\n\nRamadan adalah momen yang hanya datang setahun sekali dan sering menjadi periode dengan aktivitas penjualan yang meningkat 📈.\n\nKhusus untuk *${mexName}*, program Grab Modal Mantul tersedia dengan limit hingga *${mcaLimit}* 💸.\n\nPenawaran ini akan berakhir pada *${expDate}* ⚠️.\n\nSebelum periode Ramadan ditutup, Anda dapat melihat detail penawaran di aplikasi GrabMerchant agar tidak melewatkan kesempatan yang tersedia.`,
+                  
+                  `Selamat siang kak ${owner} 👋\n\nUntuk membantu menjaga kelancaran arus kas *${mexName}* selama Ramadan 🌙, tersedia program Grab Modal Mantul dengan estimasi pendanaan hingga *${mcaLimit}* 💵.\n\nPeriode khusus Ramadan ini akan berakhir pada *${expDate}* ⏰.\n\nAgar usaha tetap optimal menjelang Lebaran, silakan cek penawaran Anda melalui aplikasi GrabMerchant sebelum batas waktu tersebut.`,
+                  
+                  `Halo kak ${owner} 👋\n\nDalam menyambut hari raya, banyak usaha mempersiapkan tambahan stok dan operasional 📦.\n\nProgram Grab Modal Mantul menyediakan opsi pendanaan hingga *${mcaLimit}* khusus untuk *${mexName}* 🌟.\n\nPenawaran periode ini dijadwalkan berakhir pada *${expDate}* 🗓️.\n\nUntuk memastikan momentum Ramadan dapat dimanfaatkan dengan baik, silakan cek detailnya sebelum periode resmi ditutup.`,
+                  
+                  `Halo kak ${owner} 🙌\n\nMenjelang Lebaran, kesiapan usaha sangat berpengaruh pada kelancaran pelayanan pelanggan *${mexName}* 🍽️.\n\nSaat ini tersedia program Grab Modal Mantul dengan estimasi hingga *${mcaLimit}* 💳.\n\nPeriode penawaran akan berakhir pada *${expDate}* ⌛.\n\nSebelum sistem menutup akses periode Ramadan, Anda dapat melihat ketersediaan penawaran melalui aplikasi GrabMerchant.`,
+                  
+                  `Halo kak ${owner} 👋\n\nRamadan sering menjadi periode dengan peningkatan kebutuhan operasional 🛒.\n\nUntuk mendukung *${mexName}*, tersedia program Grab Modal Mantul dengan kisaran hingga *${mcaLimit}* 💰.\n\nPenawaran ini berlaku hingga *${expDate}* 📅.\n\nAgar tidak melewatkan kesempatan di momen tahunan ini, silakan cek detail penawaran di aplikasi GrabMerchant sebelum periode berakhir.`,
+                  
+                  `Selamat sore kak ${owner} 🙌\n\nDalam persiapan menghadapi puncak penjualan Lebaran, tambahan modal dapat membantu menjaga stabilitas *${mexName}* 📈.\n\nProgram Grab Modal Mantul menyediakan estimasi pendanaan hingga *${mcaLimit}* 💸.\n\nPeriode Ramadan ini akan ditutup pada *${expDate}* ⏳.\n\nSilakan cek informasi lengkapnya melalui aplikasi GrabMerchant sebelum periode resmi berakhir.`,
+                  
+                  `Halo kak ${owner} 👋\n\nMomentum Ramadan merupakan waktu yang tepat untuk memaksimalkan potensi usaha *${mexName}* ✨.\n\nProgram Grab Modal Mantul tersedia dengan limit hingga *${mcaLimit}* (sesuai hasil evaluasi) 💵.\n\nPenawaran periode ini dijadwalkan berakhir pada *${expDate}* ⚠️.\n\nUntuk memastikan usaha tetap siap hingga hari raya, silakan cek penawaran Anda sebelum sistem menutup periode tersebut.`,
+                  
+                  `Halo kak ${owner} 🙌\n\nMenjelang akhir Ramadan, banyak usaha mempersiapkan kebutuhan tambahan untuk menghadapi peningkatan pesanan 🛵.\n\nSaat ini tersedia program Grab Modal Mantul untuk *${mexName}* dengan estimasi hingga *${mcaLimit}* 💳.\n\nPenawaran berlaku hingga *${expDate}* ⏰.\n\nSebelum periode ini berakhir, Anda dapat mempertimbangkan dan melihat detailnya langsung di aplikasi GrabMerchant.`,
+                  
+                  `Yth. Kak ${owner} 🙏,\n\nProgram Grab Modal Mantul periode Ramadan masih tersedia untuk *${mexName}* dengan limit pendanaan hingga *${mcaLimit}* 💰.\n\nPeriode ini direncanakan berakhir pada *${expDate}* 🗓️.\n\nUntuk memastikan usaha tetap optimal di momen Lebaran, silakan cek ketersediaan penawaran melalui aplikasi GrabMerchant sebelum periode ditutup.`
+              ];
+              break;
           case 'inactive': templates = [`Halo kak ${owner}! Saya cek ${mexName} offline nih. Ada kendala kak?`, `Siang kak ${owner}, notis ${mexName} belum aktif. Kalau ada kendala kabari ya.`]; break;
           case 'report': 
               const rrBsFormatted = formatCurrencyFull(selectedMex.rrBs || 0);
@@ -338,7 +379,7 @@ export default function App() {
               }
               
               let ctaText = "";
-              if (selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not')) {
+              if (selectedMex.mcaWlLimit > 0 && !String(selectedMex.mcaWlClass).includes('Not')) {
                   ctaText = `Khusus bulan ini, *${mexName}* juga terpilih untuk penawaran *Grab Modal Mantul s/d ${formatCurrencyFull(selectedMex.mcaWlLimit)}* lho! 🚀`;
               } else {
                   ctaText = `Mari maksimalkan terus performanya dengan berbagai program menarik dari Grab! 🚀`;
@@ -459,6 +500,10 @@ export default function App() {
           await new Promise(resolve => setTimeout(resolve, 500));
           await saveToIndexedDB('am_dashboard_data', finalData);
           setData(finalData); setIsForceUpload(false);
+          const now = new Date();
+          const timeStr = `${now.getDate()} ${now.toLocaleString('id-ID', { month: 'short' })}, ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+          setGlobalLastUpdate(timeStr);
+          localStorage.setItem('am_dashboard_last_update_v3', timeStr);
       } catch (e) { setErrorMsg("Gagal menyimpan data: " + e.message); }
       setLoading(false);
   };
@@ -487,9 +532,9 @@ export default function App() {
           let extDate = ''; let extMonth = '';
           if (String(firstRow[45]).trim().toUpperCase() === 'MTD') { extDate = String(firstRow[46]).trim(); extMonth = String(firstRow[47]).trim(); } 
           else { const fbIdx = firstRow.lastIndexOf('MTD'); if (fbIdx !== -1) { extDate = String(firstRow[fbIdx + 1]).trim(); extMonth = String(firstRow[fbIdx + 2]).trim(); } }
-          if (extDate) { const updateStr = `${extDate} ${extMonth || 'Feb'}`.trim(); localStorage.setItem('am_dashboard_last_update', updateStr); setGlobalLastUpdate(updateStr); }
+          if (extDate) { const updateStr = `${extDate} ${extMonth || 'Feb'}`.trim(); localStorage.setItem('am_dashboard_last_update_v3', updateStr); setGlobalLastUpdate(updateStr); }
           
-          const existingData = await loadFromIndexedDB('am_dashboard_data');
+          const existingData = await loadFromIndexedDB('am_dashboard_data_v3');
           const notesMap = new Map();
           if (existingData && Array.isArray(existingData)) existingData.forEach(d => { if (d.notes && d.notes.length) notesMap.set(d.id, d.notes); });
 
@@ -515,7 +560,7 @@ export default function App() {
           let pMap = new Map();
           let rowIdx = 0;
           for (let i = headerIdx + 1; i < masterLines.length; i++) {
-            const vals = masterLines[i]; if (!vals || !vals[mIdx] || vals[mIdx].toLowerCase() === 'mex id') continue;
+            const vals = masterLines[i]; if (!vals || !vals[mIdx] || String(vals[mIdx]).toLowerCase() === 'mex id') continue;
             let obj = {}; headers.forEach((h, idx) => { if(h) obj[h] = vals[idx] !== undefined ? String(vals[idx]).trim() : ''; });
             
             const mexId = obj['Mex ID'];
@@ -577,7 +622,7 @@ export default function App() {
        setLoading(true); 
        setTimeout(() => { 
           const amNames = ['Novan', 'Aldo', 'Dadan', 'Hikam']; const camps = ['GMS', 'Cuan', 'Ongkir', 'WEEKENDFEST', 'Booster+']; const m = ['2025-01-01','2025-02-01','2025-03-01','2025-04-01','2025-05-01','2025-06-01','2025-07-01','2025-08-01','2025-09-01','2025-10-01','2025-11-01','2025-12-01','2026-01-01','2026-02-01'];
-          const genData = Array.from({ length: 150 }).map((_, i) => {
+          const genData = Array.from({ length: 40 }).map((_, i) => {
               const lm = Math.floor(Math.random() * 50000000) + 5000000; const rr = Math.random() > 0.4 ? lm * (1 + Math.random() * 0.5) : lm * (1 - Math.random() * 0.3); const mca = Math.random() > 0.8 ? Math.floor(Math.random() * 50000000) + 10000000 : 0; let baseBs = Math.floor(Math.random() * 15000000) + 5000000;
               const hist = m.map(mon => {
                   baseBs = Math.max(1000000, baseBs * (1 + (Math.random() * 0.4 - 0.2))); const ord = Math.floor(baseBs / 40000); const adsTotHist = Math.random() > 0.3 ? Math.floor(Math.random() * 500000) + 100000 : 0; const adsSales = adsTotHist > 0 ? adsTotHist * (Math.random() * 5 + 1.5) : 0; const adsOrders = Math.floor(adsSales / 40000);
@@ -625,7 +670,7 @@ export default function App() {
     activeData.forEach(d => {
       const seg = getMerchantSegment(d.campaigns);
       if (seg === '0 Invest') zeroInvest++;
-      else { joiners++; const camps = (d.campaigns || '').split(/[|,]/).map(x => x.trim()).filter(Boolean); camps.forEach(c => counts[c] = (counts[c] || 0) + 1); }
+      else { joiners++; const camps = String(d.campaigns || '').split(/[|,]/).map(x => x.trim()).filter(Boolean); camps.forEach(c => counts[c] = (counts[c] || 0) + 1); }
       if (seg === 'Booster+') boosterPlus++; else if (seg === 'GMS & Local') gmsLocal++; else if (seg === 'GMS Only') gmsOnly++; else if (seg === 'Local Only') localOnly++;
     });
     return { joiners, zeroInvest, classification: [ { name: 'GMS Only', count: gmsOnly, fill: '#0ea5e9' }, { name: 'GMS & Local', count: gmsLocal, fill: '#8b5cf6' }, { name: 'Booster+', count: boosterPlus, fill: '#f59e0b' }, { name: 'Local Only', count: localOnly, fill: '#10b981' }, { name: '0 Invest', count: zeroInvest, fill: '#cbd5e1' } ], list: Object.entries(counts).map(([name, count]) => ({ name, count })) };
@@ -633,7 +678,7 @@ export default function App() {
 
   const filteredSegmentMerchants = useMemo(() => activeSegmentModal ? activeData.filter(m => getMerchantSegment(m.campaigns) === activeSegmentModal).sort((a, b) => b.mtdBs - a.mtdBs) : [], [activeData, activeSegmentModal]);
   const disbursedMerchants = useMemo(() => activeData.filter(m => m.mcaAmount > 0 && ((m.disbursedDate && String(m.disbursedDate).trim() !== '-') || (m.mcaDisburseStatus && String(m.mcaDisburseStatus).toLowerCase().includes('pending')))).sort((a, b) => new Date(b.disbursedDate || 0) - new Date(a.disbursedDate || 0)), [activeData]);
-  const inactiveMerchants = useMemo(() => activeData.filter(m => !m.zeusStatus || m.zeusStatus.toUpperCase() !== 'ACTIVE').sort((a,b) => b.lmBs - a.lmBs), [activeData]);
+  const inactiveMerchants = useMemo(() => activeData.filter(m => !m.zeusStatus || String(m.zeusStatus).toUpperCase() !== 'ACTIVE').sort((a,b) => b.lmBs - a.lmBs), [activeData]);
   const zeroTrxMerchants = useMemo(() => activeData.filter(m => m.mtdBs <= 0).sort((a,b) => b.lmBs - a.lmBs), [activeData]);
 
   const optInList = useMemo(() => activeData.filter(m => m.gmsOptIn && m.gmsOptIn !== '-' && m.gmsOptIn !== '0' && m.gmsOptIn !== 'FALSE' && m.gmsOptIn !== '#N/A').sort((a,b) => {
@@ -643,9 +688,10 @@ export default function App() {
       };
       const dateA = getSortableDate(a.gmsOptInDate);
       const dateB = getSortableDate(b.gmsOptInDate);
-      if (dateA !== dateB) return dateB - dateA; // Z-A (terbaru di atas)
-      return b.rowNum - a.rowNum; // Fallback jika tanggal sama/kosong
+      if (dateA !== dateB) return dateB - dateA; 
+      return b.rowNum - a.rowNum; 
   }), [activeData]);
+  
   const optOutList = useMemo(() => activeData.filter(m => m.gmsOptOut && m.gmsOptOut !== '-' && m.gmsOptOut !== '0' && m.gmsOptOut !== 'FALSE' && m.gmsOptOut !== '#N/A').sort((a,b) => {
       const getSortableDate = (dateStr) => {
           if (!dateStr || dateStr === '-' || dateStr === '#N/A') return 0;
@@ -653,14 +699,14 @@ export default function App() {
       };
       const dateA = getSortableDate(a.gmsOptOutDate);
       const dateB = getSortableDate(b.gmsOptOutDate);
-      if (dateA !== dateB) return dateB - dateA; // Z-A (terbaru di atas)
-      return b.rowNum - a.rowNum; // Fallback jika tanggal sama/kosong
+      if (dateA !== dateB) return dateB - dateA; 
+      return b.rowNum - a.rowNum; 
   }), [activeData]);
 
   const kpi = useMemo(() => {
     if (!activeData.length) return null;
     let act = 0, inact = 0, zTrx = 0;
-    activeData.forEach(d => { if (d.zeusStatus === 'ACTIVE') act++; else inact++; if (d.mtdBs <= 0) zTrx++; });
+    activeData.forEach(d => { if (String(d.zeusStatus).toUpperCase() === 'ACTIVE') act++; else inact++; if (d.mtdBs <= 0) zTrx++; });
     const totPts = activeData.reduce((a, c) => a + (c.campaignPoint || 0), 0);
     const disbursedFeb = activeData.filter(c => c.mcaAmount > 0 && String(c.disbursedDate).toLowerCase().includes('feb'));
 
@@ -670,7 +716,7 @@ export default function App() {
       adsLm: activeData.reduce((a, c) => a + c.adsLM, 0), adsMtd: activeData.reduce((a, c) => a + c.adsTotal, 0), adsRr: activeData.reduce((a, c) => a + c.adsRR, 0),
       adsMobMtd: activeData.reduce((a, c) => a + (c.adsMob || 0), 0), adsWebMtd: activeData.reduce((a, c) => a + (c.adsWeb || 0), 0), adsDirMtd: activeData.reduce((a, c) => a + (c.adsDir || 0), 0),
       mcaDis: disbursedFeb.reduce((a, c) => a + c.mcaAmount, 0), mcaDisCount: disbursedFeb.length, 
-      mcaEli: activeData.reduce((a, c) => a + (c.mcaWlLimit > 0 && !c.mcaWlClass.includes('Not') ? c.mcaWlLimit : 0), 0),
+      mcaEli: activeData.reduce((a, c) => a + (c.mcaWlLimit > 0 && !String(c.mcaWlClass).includes('Not') ? c.mcaWlLimit : 0), 0),
       joiners: campaignStats.joiners, totalMex: activeData.length, activeMex: act, inactiveMex: inact, zeroTrxMex: zTrx, totalPoints: totPts, avgPtsPerJoiner: campaignStats.joiners > 0 ? Math.round(totPts / campaignStats.joiners) : 0
     };
   }, [activeData, campaignStats]);
@@ -687,12 +733,18 @@ export default function App() {
   }, [selectedMex, compareMonths]);
 
   const filtered = useMemo(() => {
-    let res = activeData.filter(d => (d.name.toLowerCase().includes(searchTerm.toLowerCase()) || d.id.toLowerCase().includes(searchTerm.toLowerCase())) && (selectedPriority === 'All' || d.mcaPriority === selectedPriority));
+    let res = activeData.filter(d => (String(d.name).toLowerCase().includes(searchTerm.toLowerCase()) || String(d.id).toLowerCase().includes(searchTerm.toLowerCase())) && (selectedPriority === 'All' || d.mcaPriority === selectedPriority));
     if (sortConfig) {
       res.sort((a, b) => {
         let aV = a[sortConfig.key], bV = b[sortConfig.key];
         if (typeof aV === 'string') { aV = aV.toLowerCase(); bV = bV.toLowerCase(); }
-        if (sortConfig.key === 'campaigns') { aV = a.campaigns && a.campaigns !== '-' && !a.campaigns.toLowerCase().includes('no') ? 1 : 0; bV = b.campaigns && b.campaigns !== '-' && !b.campaigns.toLowerCase().includes('no') ? 1 : 0; }
+        
+        if (sortConfig.key === 'campaigns') { 
+            const checkCamp = (c) => c && c !== '-' && c !== '0' && !String(c).toLowerCase().includes('no campaign') ? 1 : 0;
+            aV = checkCamp(a.campaigns); 
+            bV = checkCamp(b.campaigns); 
+        }
+        
         if (aV < bV) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aV > bV) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
@@ -709,10 +761,10 @@ export default function App() {
   const onChartClick = (state) => { if (state?.activePayload?.[0]?.payload?.id) { setSelectedMex(state.activePayload[0].payload); setActiveTab('overview'); } };
 
   const renderMerchantCampaigns = (campaignStr, hideEmpty = false) => {
-    if (!campaignStr || campaignStr === '-' || campaignStr === '0' || campaignStr.toLowerCase().includes('no campaign')) { 
+    if (!campaignStr || campaignStr === '-' || campaignStr === '0' || String(campaignStr).toLowerCase().includes('no campaign')) { 
       if (hideEmpty) return null; return <span className="text-slate-400 text-[10px] font-semibold italic block mt-1">Tidak ada partisipasi campaign.</span>; 
     }
-    const camps = campaignStr.split(/[|,]/).map(c => c.trim()).filter(Boolean);
+    const camps = String(campaignStr).split(/[|,]/).map(c => c.trim()).filter(Boolean);
     return (
         <div className="flex flex-wrap gap-1 mt-1.5">
             {camps.map((camp, idx) => (<span key={idx} className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded-md text-[9px] font-bold flex items-center gap-1 shadow-sm"><Zap className="w-2.5 h-2.5 text-emerald-500" />{camp}</span>))}
@@ -720,7 +772,7 @@ export default function App() {
     );
   };
 
-  // 3. EARLY RETURNS (Must be after ALL hooks & function declarations to prevent React Fiber crashes)
+  // 3. EARLY RETURNS
   if (isInitializing) return <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4"><div className="animate-pulse flex flex-col items-center"><Activity className="w-12 h-12 text-[#00B14F] mb-4" /><h2 className="font-bold text-slate-500 uppercase tracking-widest">Menyiapkan Dashboard...</h2></div></div>;
   if (data.length === 0 || isForceUpload) {
       return (
@@ -865,7 +917,7 @@ export default function App() {
 
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 mt-4">
                          {/* PENAWARAN 1: GRAB MODAL (Muncul jika punya limit) */}
-                         {selectedMex.mcaWlLimit > 0 && !selectedMex.mcaWlClass.includes('Not') && (
+                         {selectedMex.mcaWlLimit > 0 && !String(selectedMex.mcaWlClass).includes('Not') && (
                              <div className="bg-white rounded-[28px] p-6 border border-amber-200 shadow-[0_8px_30px_rgb(245,158,11,-0.15)] flex flex-col relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
                                  <div className="absolute top-0 right-0 w-40 h-40 bg-amber-50 rounded-bl-full opacity-60 -mr-10 -mt-10 pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
                                  
@@ -894,9 +946,9 @@ export default function App() {
 
                          {/* PENAWARAN 2: CAMPAIGN / ADS (Beradaptasi otomatis 4 Level Funneling) */}
                          {(() => {
-                             const campsRaw = (!selectedMex.campaigns || selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || selectedMex.campaigns.toLowerCase().includes('no'))
+                             const campsRaw = (!selectedMex.campaigns || selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || String(selectedMex.campaigns).toLowerCase().includes('no'))
                                  ? []
-                                 : selectedMex.campaigns.split(/[|,]/).map(c => c.trim().toLowerCase()).filter(Boolean);
+                                 : String(selectedMex.campaigns).split(/[|,]/).map(c => c.trim().toLowerCase()).filter(Boolean);
 
                              const isMainCamp = (c) => c.includes('booster') || c.includes('cuan') || c.includes('gms');
                              const hasMainCampaign = campsRaw.some(isMainCamp);
@@ -920,7 +972,7 @@ export default function App() {
                              }
 
                              return (
-                                 <div className={`bg-white rounded-[28px] p-6 border ${theme.border} ${theme.glow} flex flex-col relative overflow-hidden group hover:-translate-y-1 transition-all duration-300 ${(!selectedMex.mcaWlLimit || selectedMex.mcaWlClass.includes('Not')) ? 'md:col-span-2 md:w-2/3 md:mx-auto' : ''}`}>
+                                 <div className={`bg-white rounded-[28px] p-6 border ${theme.border} ${theme.glow} flex flex-col relative overflow-hidden group hover:-translate-y-1 transition-all duration-300 ${(!selectedMex.mcaWlLimit || String(selectedMex.mcaWlClass).includes('Not')) ? 'md:col-span-2 md:w-2/3 md:mx-auto' : ''}`}>
                                      <div className={`absolute top-0 right-0 w-40 h-40 ${theme.boxBg} rounded-bl-full opacity-60 -mr-10 -mt-10 pointer-events-none group-hover:scale-110 transition-transform duration-700`}></div>
                                      
                                      <div className="flex items-start gap-4 mb-6 relative z-10">
@@ -1013,7 +1065,7 @@ export default function App() {
                  <p className="font-bold text-sm text-slate-800 group-hover:text-[#00B14F] mb-1 flex items-center gap-1.5"><Zap size={14} className="text-amber-500"/> Penawaran Promo</p>
                  <p className="text-xs text-slate-500 line-clamp-2">Ada 5 variasi pesan untuk mengajak merchant mengikuti program promo/campaign...</p>
              </button>
-             {selectedMex?.mcaWlLimit > 0 && !selectedMex?.mcaWlClass.includes('Not') && (
+             {selectedMex?.mcaWlLimit > 0 && !String(selectedMex?.mcaWlClass).includes('Not') && (
                  <button onClick={() => handleSendWA('mca')} className="w-full text-left p-4 bg-blue-50 border border-blue-200 hover:border-blue-500 hover:shadow-md rounded-2xl transition-all group">
                      <p className="font-bold text-sm text-blue-800 group-hover:text-blue-600 mb-1 flex items-center gap-1.5"><Database size={14} className="text-blue-500"/> Info Limit MCA</p>
                      <p className="text-xs text-blue-600/80 line-clamp-2">Ada 5 variasi pesan untuk menginfokan fasilitas pinjaman senilai {formatCurrency(selectedMex.mcaWlLimit)}...</p>
@@ -1203,9 +1255,9 @@ export default function App() {
       <Modal isOpen={!!(showCampaignModal && selectedMex)} onClose={() => setShowCampaignModal(false)} title="Active Campaigns" icon={Award} iconColor="text-amber-500" subtitle={`Daftar program promo yang diikuti ${selectedMex?.name}`}>
           <div className="p-4 md:p-6 bg-[#f8fafc] custom-scrollbar overflow-y-auto max-h-[75vh]">
               {(() => {
-                  const campsRaw = (!selectedMex?.campaigns || selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || selectedMex.campaigns.toLowerCase().includes('no'))
+                  const campsRaw = (!selectedMex?.campaigns || selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || String(selectedMex.campaigns).toLowerCase().includes('no'))
                                ? []
-                               : selectedMex.campaigns.split(/[|,]/).map(c => c.trim()).filter(Boolean);
+                               : String(selectedMex.campaigns).split(/[|,]/).map(c => c.trim()).filter(Boolean);
 
                   if (campsRaw.length === 0) {
                       return (
@@ -1572,7 +1624,7 @@ export default function App() {
                           <ResponsiveContainer width="100%" height="100%">
                             <ComposedChart data={chartsData.mtd} onClick={onChartClick} margin={{ top: 20, right: 30, left: -15, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                              <XAxis dataKey="name" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => v.substring(0, 6)+'.'} height={20} dy={5} />
+                              <XAxis dataKey="name" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => String(v).substring(0, 6)+'.'} height={20} dy={5} />
                               <YAxis tick={{ fill: COLORS.slate400, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={45} />
                               <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, name) => [formatCurrency(v), name]} />
                               <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold', width: '100%', left: 0, display: 'flex', justifyContent: 'center' }} iconType="circle"/>
@@ -1602,7 +1654,7 @@ export default function App() {
                           <ResponsiveContainer width="100%" height="100%">
                             <ComposedChart data={chartsData.ads} onClick={onChartClick} margin={{ top: 20, right: 30, left: -15, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                              <XAxis dataKey="name" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => v.substring(0, 8)+'.'} height={20} dy={5} />
+                              <XAxis dataKey="name" tick={{ fill: COLORS.slate500, fontSize: 9, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => String(v).substring(0, 8)+'.'} height={20} dy={5} />
                               <YAxis tick={{ fill: COLORS.slate400, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={45} />
                               <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding:'12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v) => formatCurrency(v)} />
                               <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold', width: '100%', left: 0, display: 'flex', justifyContent: 'center' }} iconType="circle" />
@@ -1687,15 +1739,15 @@ export default function App() {
                         <div className="grid grid-cols-3 gap-2 md:gap-3 relative z-10 mt-4 shrink-0 pt-4 border-t border-slate-50">
                             <div className="bg-blue-50/80 border border-blue-100 p-2 md:p-3 rounded-xl flex flex-col items-center justify-center text-center shadow-sm">
                                 <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-0.5">GMS</span>
-                                <span className="text-base font-black text-blue-700">{campaignStats.list.filter(c => c.name.toLowerCase().includes('gms')).reduce((a, b) => a + b.count, 0)}</span>
+                                <span className="text-base font-black text-blue-700">{campaignStats.list.filter(c => String(c.name).toLowerCase().includes('gms')).reduce((a, b) => a + b.count, 0)}</span>
                             </div>
                             <div className="bg-amber-50/80 border border-amber-100 p-2 md:p-3 rounded-xl flex flex-col items-center justify-center text-center shadow-sm">
                                 <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-0.5">Booster</span>
-                                <span className="text-base font-black text-amber-700">{campaignStats.list.filter(c => c.name.toLowerCase().includes('booster') && !c.name.toLowerCase().includes('booster+')).reduce((a, b) => a + b.count, 0)}</span>
+                                <span className="text-base font-black text-amber-700">{campaignStats.list.filter(c => String(c.name).toLowerCase().includes('booster') && !String(c.name).toLowerCase().includes('booster+')).reduce((a, b) => a + b.count, 0)}</span>
                             </div>
                             <div className="bg-emerald-50/80 border border-emerald-100 p-2 md:p-3 rounded-xl flex flex-col items-center justify-center text-center shadow-sm">
                                 <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-0.5">Cuan</span>
-                                <span className="text-base font-black text-emerald-700">{campaignStats.list.filter(c => c.name.toLowerCase().includes('cuan')).reduce((a, b) => a + b.count, 0)}</span>
+                                <span className="text-base font-black text-emerald-700">{campaignStats.list.filter(c => String(c.name).toLowerCase().includes('cuan')).reduce((a, b) => a + b.count, 0)}</span>
                             </div>
                         </div>
                       </div>
@@ -1846,7 +1898,7 @@ export default function App() {
                                   <div className="flex items-center gap-2 mt-0.5"><p className="text-[10px] text-slate-400 font-mono bg-slate-100 px-1.5 py-0.5 rounded group-hover:bg-emerald-50 transition-colors">{r.id}</p></div>
                                 </td>
                                 <td className="px-4 py-3 text-center hidden md:table-cell">
-                                  {r.campaigns && r.campaigns !== '-' && !r.campaigns.toLowerCase().includes('no campaign') ? (<div className="inline-flex items-center justify-center bg-indigo-50 p-1 rounded-md border border-indigo-100 shadow-sm group-hover:scale-110 transition-transform"><Check className="w-4 h-4 text-indigo-600" strokeWidth={3} /></div>) : (<span className="text-slate-300 font-bold">-</span>)}
+                                  {r.campaigns && r.campaigns !== '-' && !String(r.campaigns).toLowerCase().includes('no campaign') ? (<div className="inline-flex items-center justify-center bg-indigo-50 p-1 rounded-md border border-indigo-100 shadow-sm group-hover:scale-110 transition-transform"><Check className="w-4 h-4 text-indigo-600" strokeWidth={3} /></div>) : (<span className="text-slate-300 font-bold">-</span>)}
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-black shadow-sm transition-transform group-hover:scale-105 ${r.rrBs > r.lmBs ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
@@ -1858,7 +1910,7 @@ export default function App() {
                                 </td>
                                 <td className="px-5 py-3 font-mono text-slate-800 font-black text-right text-xs md:text-sm">{formatCurrency(r.mtdBs)}</td>
                                 <td className="px-5 py-3 text-center">
-                                   <div className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-colors ${r.zeusStatus === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200' : 'bg-slate-100 text-slate-500'}`}>{r.zeusStatus}</div>
+                                   <div className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-colors ${String(r.zeusStatus).toUpperCase() === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200' : 'bg-slate-100 text-slate-500'}`}>{r.zeusStatus}</div>
                                 </td>
                               </tr>
                             ))}
@@ -1892,27 +1944,42 @@ export default function App() {
                   <div className="panel-info-blob absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-slate-100/50 to-transparent rounded-bl-full opacity-60 -mr-16 -mt-16 pointer-events-none transition-transform duration-700 hover:scale-110"></div>
                   
                   <div className="relative z-10 flex flex-col lg:flex-row gap-5 lg:gap-6">
-                     {/* KIRI: PROFIL & INFO */}
+                     {/* KIRI: PROFIL & INFO (GROUPED BADGES) */}
                      <div className="panel-profile-card flex-1 min-w-0 flex flex-col justify-center bg-gradient-to-br from-emerald-50/80 to-white border border-emerald-100 rounded-[24px] p-6 lg:p-8 relative overflow-hidden shadow-sm">
                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#00B14F]"></div>
                         <div className="panel-profile-blob absolute -bottom-8 -right-8 w-32 h-32 bg-emerald-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
                         
                         <div className="relative z-10 pr-2">
                             <h2 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-900 leading-tight tracking-tight">{selectedMex.name}</h2>
-                            <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-4">
-                                <div className="panel-badge flex items-center gap-1.5 px-3 py-1.5 bg-white/60 backdrop-blur-sm border border-emerald-100/50 rounded-xl shadow-sm">
+                            
+                            {/* NEW: SINGLE BOX FOR ALL BADGES */}
+                            <div className="panel-badge mt-5 inline-flex flex-wrap items-center gap-x-4 gap-y-2.5 px-4 md:px-5 py-3 bg-white/60 backdrop-blur-sm border border-emerald-100/50 rounded-2xl shadow-sm">
+                                {/* City */}
+                                <div className="flex items-center gap-1.5">
                                     <MapPin size={14} className="panel-icon-primary text-[#00B14F]"/> 
                                     <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-slate-600">{selectedMex.city || 'Tidak diketahui'}</span>
                                 </div>
-                                <div className="panel-badge flex items-center gap-1.5 px-3 py-1.5 bg-white/60 backdrop-blur-sm border border-emerald-100/50 rounded-xl shadow-sm" title={selectedMex.zeusStatus === 'ACTIVE' ? 'Status: Aktif' : 'Status: Inactive'}>
-                                   {selectedMex.zeusStatus === 'ACTIVE' ? <CheckCircle className="panel-icon-primary w-4 h-4 text-[#00B14F]" /> : <AlertCircle className="w-4 h-4 text-slate-400" />}
+                                
+                                <div className="w-1 h-1 rounded-full bg-emerald-200 panel-divider hidden sm:block"></div>
+                                
+                                {/* Status & ID */}
+                                <div className="flex items-center gap-1.5" title={String(selectedMex.zeusStatus).toUpperCase() === 'ACTIVE' ? 'Status: Aktif' : 'Status: Inactive'}>
+                                   {String(selectedMex.zeusStatus).toUpperCase() === 'ACTIVE' ? <CheckCircle className="panel-icon-primary w-4 h-4 text-[#00B14F]" /> : <AlertCircle className="w-4 h-4 text-slate-400" />}
                                    <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest font-mono text-slate-600">{selectedMex.id}</span>
                                 </div>
-                                <div className="panel-badge flex items-center gap-1.5 px-3 py-1.5 bg-white/60 backdrop-blur-sm border border-emerald-100/50 rounded-xl shadow-sm">
+
+                                <div className="w-1 h-1 rounded-full bg-emerald-200 panel-divider hidden lg:block"></div>
+
+                                {/* Komisi */}
+                                <div className="flex items-center gap-1.5">
                                    <Percent size={14} className="panel-icon-primary text-[#00B14F]"/> 
                                    <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-slate-600">Komisi: {selectedMex.commission || '-'}</span>
                                 </div>
-                                <div className="panel-badge flex items-center gap-1.5 px-3 py-1.5 bg-white/60 backdrop-blur-sm border border-emerald-100/50 rounded-xl shadow-sm">
+
+                                <div className="w-1 h-1 rounded-full bg-emerald-200 panel-divider hidden sm:block"></div>
+
+                                {/* Owner */}
+                                <div className="flex items-center gap-1.5">
                                    <Users className="panel-icon-primary w-4 h-4 text-[#00B14F]" />
                                    <span className="panel-badge-text text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-slate-600 truncate max-w-[150px] sm:max-w-[200px]">{selectedMex.ownerName !== '-' ? selectedMex.ownerName : 'Unknown Owner'}</span>
                                 </div>
@@ -1986,10 +2053,10 @@ export default function App() {
                       <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 flex items-center justify-between pl-2 relative z-10 shrink-0 min-h-[40px] lg:min-h-[44px]">
                           <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase truncate pr-2 shrink-0">Active List</span>
                           <div className="flex overflow-x-auto hide-scrollbar gap-1.5 w-full justify-end" style={{ WebkitOverflowScrolling: 'touch' }}>
-                              {(!selectedMex.campaigns || selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || selectedMex.campaigns.toLowerCase().includes('no campaign')) ? (
+                              {(!selectedMex.campaigns || selectedMex.campaigns === '-' || selectedMex.campaigns === '0' || String(selectedMex.campaigns).toLowerCase().includes('no campaign')) ? (
                                   <span className="text-slate-400 text-[10px] font-semibold italic">Tidak ada</span>
                               ) : (
-                                  selectedMex.campaigns.split(/[|,]/).map(c => c.trim()).filter(Boolean).map((camp, idx) => (
+                                  String(selectedMex.campaigns).split(/[|,]/).map(c => c.trim()).filter(Boolean).map((camp, idx) => (
                                       <span key={idx} className="shrink-0 bg-amber-50 text-amber-600 border border-amber-100 px-1.5 py-0.5 rounded text-[9px] lg:text-[10px] font-black uppercase tracking-wider transition-colors">{camp}</span>
                                   ))
                               )}
@@ -2048,7 +2115,7 @@ export default function App() {
                                         <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} height={20} dy={5} />
                                         <YAxis yAxisId="left" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={60} />
                                         <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fill: '#f97316', fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={40} />
-                                        <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [n.includes('%') ? `${v}%` : formatCurrency(v), n]} labelFormatter={formatMonth}/>
+                                        <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [String(n).includes('%') ? `${v}%` : formatCurrency(v), n]} labelFormatter={formatMonth}/>
                                         <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold' }} />
                                         <Bar yAxisId="left" dataKey="net_sales" stackId="a" name="Net Sales" fill={COLORS.netSales} maxBarSize={28} radius={[4,4,0,0]} />
                                         <Bar yAxisId="left" dataKey="total_investment" stackId="a" name="MI (Rp)" fill="#f43f5e" radius={[4,4,0,0]} maxBarSize={28} />
@@ -2107,7 +2174,7 @@ export default function App() {
                                           <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} height={20} dy={5} />
                                           <YAxis yAxisId="left" domain={['auto', 'auto']} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={45} />
                                           <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={40} />
-                                          <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [n.includes('%') ? `${v}%` : formatCurrency(v), n]} labelFormatter={formatMonth}/>
+                                          <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [String(n).includes('%') ? `${v}%` : formatCurrency(v), n]} labelFormatter={formatMonth}/>
                                           <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold' }} iconType="circle" />
                                           <Area yAxisId="left" type="monotone" dataKey="aov" name="AOV" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorAov)">
                                               <LabelList dataKey="aov" position="top" offset={10} fontSize={9} fontWeight={800} fill="#6366f1" formatter={(v) => `${(v/1000).toFixed(0)}K`} />
@@ -2303,7 +2370,7 @@ export default function App() {
         .dark-theme .panel-profile-blob { background-color: rgba(6, 78, 59, 0.4) !important; }
         .dark-theme .panel-text-muted { color: #94a3b8 !important; }
         .dark-theme .panel-icon-primary { color: #34d399 !important; }
-        .dark-theme .panel-divider { background-color: #475569 !important; }
+        .dark-theme .panel-divider { background-color: #334155 !important; }
         
         .dark-theme .panel-badge { background-color: rgba(15, 23, 42, 0.5) !important; border-color: rgba(51, 65, 85, 0.8) !important; box-shadow: none !important; }
         .dark-theme .panel-badge-text { color: #cbd5e1 !important; }
@@ -2322,13 +2389,16 @@ export default function App() {
         .dark-theme .panel-note-more { color: #94a3b8 !important; }
         .dark-theme .panel-note-more:hover { color: #fbbf24 !important; }
 
-        /* LIST CARDS DARK MODE */
+        /* LIST CARDS DARK Mode */
         .dark-theme .card-campaign-seg, .dark-theme .card-quick-search, .dark-theme .card-gms-tracker { background-color: #0f172a !important; border-color: #1e293b !important; }
         .dark-theme .card-section-title { color: #f8fafc !important; }
         .dark-theme .card-search-input { background-color: #020617 !important; border-color: #1e293b !important; color: #f8fafc !important; }
         .dark-theme .card-search-item, .dark-theme .card-list-item { background-color: #1e293b !important; border-color: #334155 !important; }
         .dark-theme .card-item-name { color: #f8fafc !important; }
         .dark-theme .badge-date, .dark-theme .badge-package { border: none !important; }
+        .dark-theme .dashboard-card { background-color: #0f172a !important; border-color: #1e293b !important; }
+        .dark-theme .card-main-value { color: #f8fafc !important; }
+        .dark-theme .card-sub-value { color: #cbd5e1 !important; }
       `}} />
     </div>
   );
