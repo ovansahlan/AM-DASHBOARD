@@ -506,16 +506,17 @@ export default function App() {
     loadLocalData();
   }, []);
 
-  const saveToLocal = async (finalData) => {
+  const saveToLocal = async (finalData, syncDateStr = null) => {
       setLoading(true);
       try {
           await new Promise(resolve => setTimeout(resolve, 500));
-          await saveToIndexedDB('am_dashboard_data', finalData);
+          await saveToIndexedDB('am_dashboard_data_v3', finalData);
           setData(finalData); setIsForceUpload(false);
-          const now = new Date();
-          const timeStr = `${now.getDate()} ${now.toLocaleString('id-ID', { month: 'short' })}, ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-          setGlobalLastUpdate(timeStr);
-          localStorage.setItem('am_dashboard_last_update_v3', timeStr);
+          
+          if (syncDateStr) {
+              setGlobalLastUpdate(syncDateStr);
+              localStorage.setItem('am_dashboard_last_update_v3', syncDateStr);
+          }
       } catch (e) { setErrorMsg("Gagal menyimpan data: " + e.message); }
       setLoading(false);
   };
@@ -541,10 +542,17 @@ export default function App() {
       try {
           const masterLines = parseCSVString(masterText);
           const firstRow = masterLines[0] || [];
-          let extDate = ''; let extMonth = '';
-          if (String(firstRow[45]).trim().toUpperCase() === 'MTD') { extDate = String(firstRow[46]).trim(); extMonth = String(firstRow[47]).trim(); } 
-          else { const fbIdx = firstRow.lastIndexOf('MTD'); if (fbIdx !== -1) { extDate = String(firstRow[fbIdx + 1]).trim(); extMonth = String(firstRow[fbIdx + 2]).trim(); } }
-          if (extDate) { const updateStr = `${extDate} ${extMonth || 'Feb'}`.trim(); localStorage.setItem('am_dashboard_last_update_v3', updateStr); setGlobalLastUpdate(updateStr); }
+          
+          // Mengambil tanggal MTD dari kolom AS1 (Index ke-44)
+          let updateStr = '';
+          if (firstRow.length > 44 && firstRow[44]) {
+              updateStr = String(firstRow[44]).trim();
+          } else {
+              // Fallback: Jika meleset, cari tulisan 'MTD' dan ambil sel sebelahnya
+              const fbIdx = firstRow.findIndex(val => val && String(val).trim().toUpperCase() === 'MTD');
+              if (fbIdx !== -1 && firstRow[fbIdx + 1]) updateStr = String(firstRow[fbIdx + 1]).trim();
+          }
+          if (!updateStr) updateStr = 'Terbaru';
           
           const existingData = await loadFromIndexedDB('am_dashboard_data_v3');
           const notesMap = new Map();
@@ -647,7 +655,7 @@ export default function App() {
               }
           }
           const finalData = Array.from(pMap.values()).map(m => { if (m.history.length > 0) m.history.sort((a, b) => new Date(a.month) - new Date(b.month)); return m; });
-          await saveToLocal(finalData);
+          await saveToLocal(finalData, updateStr);
       } catch (err) { setErrorMsg(err.message || "Gagal memproses data."); setLoading(false); }
   };
 
@@ -677,7 +685,7 @@ export default function App() {
                   gmsOptIn: Math.random() > 0.85 ? camps[Math.floor(Math.random()*3)] : '', gmsOptOut: Math.random() > 0.9 ? camps[Math.floor(Math.random()*3)] : '', gmsOptInDate: `2026-02-${randomDay.toString().padStart(2, '0')}`, gmsOptOutDate: `2026-02-${randomDayOut.toString().padStart(2, '0')}`, rowNum: i 
               };
           });
-          saveToLocal(genData); 
+          saveToLocal(genData, "17 Mar 2026"); 
        }, 600); 
   };
 
