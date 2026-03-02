@@ -327,18 +327,30 @@ export default function App() {
       switch(templateType) {
           case 'general': 
               templates = [
-                  `Halo kak ${owner} 👋, aku ${amShort} (AM Grab).\n\nAku abis ngecek data *${mexName}* nih. Rata-rata pesanan kakak sekarang dapet di angka *${aovText}*.\n\nKayaknya ada 1-2 trik simpel yang bisa kita cobain bareng biar omset bulan ini bisa naik lebih ngebut lagi dibanding kemaren 📈.\n\nKira-kira kakak free kapan ya? Ngobrol via telpon 5-10 menitan aja yuk!`,
+                  `Halo kak ${owner} 👋, aku ${amShort} (AM Grab).\n\nAku abis ngecek data *${mexName}* nih. Rata-rata pesanan kakak sekarang dapet di angka *${aovText}*.\n\nKayaknya ada 1-2 trik simpel yang bisa kita cobain bareng biar omset bulan ini bisa naik lebih ngebut lagi dibanding kemaren 📈.\n\nKira-kira kakak free kapan ya? Boleh kita jadwalkan ketemu sebentar buat ngobrolin ini?`,
                   
-                  `Siang kak ${owner} 🙌. Sama ${amShort} dari Grab di sini.\n\nAku lagi pantau pergerakan *${mexName}*, tren proyeksi omsetnya sekarang ada di *${trendBulanLalu}%* vs bulan lalu nih. \n\nSebenernya ada strategi seru dari beberapa resto jagoan di area kakak yang belum dipake di toko ini, sayang banget lho potensinya 🤔.\n\nBoleh kita *call* bentar besok kak buat bahas idenya?`,
+                  `Siang kak ${owner} 🙌. Sama ${amShort} dari Grab di sini.\n\nAku lagi pantau pergerakan *${mexName}*, tren proyeksi omsetnya sekarang ada di *${trendBulanLalu}%* vs bulan lalu nih. \n\nSebenernya ada strategi seru dari beberapa resto jagoan di area kakak yang belum dipake di toko ini, sayang banget lho potensinya 🤔.\n\nBoleh kita ketemuan besok atau lusa kak buat bahas idenya?`,
                   
-                  `Halo kak ${owner}! Semoga usahanya makin rame ya 🙏.\n\nAku ${amShort} (AM Grab). Dari sistem, kulihat ketertarikan pelanggan sama promo *${mexName}* ada di *${promoPctText}*. \n\nAku nemu satu setelan (config) asik di app yang bisa bikin angkanya makin greget tanpa perlu nambah modal gede 💡.\n\nMau kubantu pandu cara setelnya kak? Kabari ya kapan pasnya kita telponan!`,
+                  `Halo kak ${owner}! Semoga usahanya makin rame ya 🙏.\n\nAku ${amShort} (AM Grab). Dari sistem, kulihat ketertarikan pelanggan sama promo *${mexName}* ada di *${promoPctText}*. \n\nAku nemu satu setelan (config) asik di app yang bisa bikin angkanya makin greget tanpa perlu nambah modal gede 💡.\n\nMau kubantu pandu cara setelnya kak? Kabari ya kapan pasnya kita bisa ketemuan!`,
                   
-                  `Pagi/siang kak ${owner} ☀️. Aku ${amShort} dari Grab.\n\nCuma mau *update kilat* nih: Aku baru liat report *${mexName}* bulan ini. Secara umum udah oke, tapi *traffic* kunjungan ke profil resto kakak sebenernya bisa didorong lebih pol lagi 🔥.\n\nAku udah siapin *action plan* khusus nih buat *${mexName}*. Kalau kakak lagi nyantai, boleh info kapan kita bisa ngobrol bentar via telpon?`,
+                  `Pagi/siang kak ${owner} ☀️. Aku ${amShort} dari Grab.\n\nCuma mau *update kilat* nih: Aku baru liat report *${mexName}* bulan ini. Secara umum udah oke, tapi *traffic* kunjungan ke profil resto kakak sebenernya bisa didorong lebih pol lagi 🔥.\n\nAku udah siapin *action plan* khusus nih buat *${mexName}*. Kalau kakak lagi nyantai, boleh info kapan kita bisa ketemuan sebentar?`,
                   
-                  `Halo kak ${owner} 👋. Kenalin aku ${amShort} dari Grab yang bantu pantau *${mexName}*.\n\nLagi iseng cek laporan bulanan, lumayan asik liat rata-rata transaksi kakak nyentuh *${aovText}*.\n\nTapi aku liat ada peluang cuan di jam-jam tertentu yang sering kelewat nih kak 📉. Aku punya ide jitu yang cocok banget buat *cover* itu.\n\nBoleh kita telponan sebentar kak hari ini atau besok?`
+                  `Halo kak ${owner} 👋. Kenalin aku ${amShort} dari Grab yang bantu pantau *${mexName}*.\n\nLagi iseng cek laporan bulanan, lumayan asik liat rata-rata transaksi kakak nyentuh *${aovText}*.\n\nTapi aku liat ada peluang cuan di jam-jam tertentu yang sering kelewat nih kak 📉. Aku punya ide jitu yang cocok banget buat *cover* itu.\n\nBoleh kita atur waktu buat ketemu sebentar kak hari ini atau besok?`
               ];
               break;
-          case 'promo': templates = [`Halo kak ${owner}! Saya ${amShort} (Grab). Ada program Promo spesial buat ${mexName}. Boleh bahas via telpon?`, `Selamat pagi kak ${owner}, saya ${amShort}. Khusus ${mexName} ada kuota promo. Mau dibantu?`]; break;
+          case 'promo': 
+              templates = [
+                  `Halo kak ${owner} 👋, aku ${amShort} (AM Grab).\n\nLiat performa *${mexName}*, kayaknya kita butuh suntikan orderan biar makin rame nih. Kebetulan banget Grab lagi ada program *Diskon Puas Booster* (Customer dapet diskon s/d 35% + Diskon Kilat 50% di jam rame! 🔥).\n\nPromo ini ampuh banget buat narik pelanggan baru. Boleh ketemuan bentar besok kak buat bahas itung-itungannya?`,
+                  
+                  `Siang kak ${owner} 🙌! Aku ${amShort} dari Grab.\n\nMendekati momen rame, aku mau ngusulin *${mexName}* buat ikut promo *Booster+* nih kak. Promo ini khusus mancing customer yang ordernya gede (transaksi di atas 100rb dapet diskon s/d 40% 🛍️).\n\nCocok banget buat naikin rata-rata nilai pesanan per nota. Kira-kira kapan kita bisa ketemu buat ngobrolin ini kak?`,
+                  
+                  `Halo kak ${owner} ☀️. Aku ${amShort} (Grab).\n\nBiar orderan *${mexName}* makin kenceng tapi cuan tetep aman, aku ada rekomendasi program *Diskon Puas Cuan* nih kak (Customer dapet diskon s/d 30% 💸).\n\nProgram ini *sweet spot* banget buat ningkatin penjualan harian secara stabil. Kapan kira-kira kakak ada waktu kosong buat ketemu bentar ngebahas ini?`,
+                  
+                  `Halo kak ${owner} 👋. Sama ${amShort} dari Grab di sini.\n\nSayang banget lho *traffic* di app Grab lagi tinggi-tingginya nih kak 📈. Gimana kalau *${mexName}* kita daftarin *Diskon Puas Booster* (Diskon s/d 35% + Kilat 50%) biar toko kakak langsung mentereng di posisi atas?\n\nBiar enak jelasinnya, kapan kakak luang biar kita bisa ketemuan ngopi bahas mekanismenya?`,
+                  
+                  `Halo kak ${owner} 🙏, aku ${amShort} (AM Grab).\n\nBuat maksimalkan penjualan *${mexName}* minggu ini, Grab lagi buka 3 andalan promo seksi nih: *Diskon Puas Booster*, *Diskon Puas Cuan*, atau *Booster+* khusus order gede-gedean 🚀.\n\nBiar milihnya gampang dan pas sama kondisi budget toko kakak, mending kita ketemuan aja yuk bentar buat diskusiin. Besok kira-kira bisa kak?`
+              ];
+              break;
           case 'mca': 
               templates = [
                   `Halo kak ${owner} 👋\n\nMenjelang puncak Ramadan dan Lebaran, kesiapan usaha menjadi hal penting agar pelayanan *${mexName}* tetap optimal 🚀.\n\nSaat ini tersedia program Grab Modal Mantul dengan estimasi pendanaan hingga *${mcaLimit}* 💰.\n\nPeriode penawaran ini dijadwalkan berakhir pada *${expDate}* ⏳.\n\nUntuk memastikan usaha tetap siap di momen hari raya, silakan cek ketersediaan penawaran di aplikasi GrabMerchant sebelum sistem menutup periode Ramadan.`,
@@ -362,7 +374,7 @@ export default function App() {
                   `Yth. Kak ${owner} 🙏,\n\nProgram Grab Modal Mantul periode Ramadan masih tersedia untuk *${mexName}* dengan limit pendanaan hingga *${mcaLimit}* 💰.\n\nPeriode ini direncanakan berakhir pada *${expDate}* 🗓️.\n\nUntuk memastikan usaha tetap optimal di momen Lebaran, silakan cek ketersediaan penawaran melalui aplikasi GrabMerchant sebelum periode ditutup.`
               ];
               break;
-          case 'inactive': templates = [`Halo kak ${owner}! Saya cek ${mexName} offline nih. Ada kendala kak?`, `Siang kak ${owner}, notis ${mexName} belum aktif. Kalau ada kendala kabari ya.`]; break;
+          case 'inactive': templates = [`Halo kak ${owner}! Saya cek *${mexName}* offline nih. Ada kendala kak?`, `Siang kak ${owner}, notis *${mexName}* belum aktif. Kalau ada kendala kabari ya.`]; break;
           case 'report': 
               const rrBsFormatted = formatCurrencyFull(selectedMex.rrBs || 0);
               const lastHist = selectedMex.history && selectedMex.history.length > 0 ? selectedMex.history[selectedMex.history.length-1] : null;
@@ -386,10 +398,10 @@ export default function App() {
               }
               
               templates = [
-                  `Halo kak ${owner}! Saya ${amShort} (AM Grab).\n\nBerikut adalah ringkasan performa *${mexName}* bulan ini:\n${metricsText}\n\n${ctaText}\n\n_(Saya juga melampirkan gambar ringkasan visualnya di atas 👆)_\n\nKapan ada waktu luang untuk bahas ini kak?`
+                  `Halo kak ${owner}! Saya ${amShort} (AM Grab).\n\nBerikut adalah ringkasan performa *${mexName}* bulan ini:\n${metricsText}\n\n${ctaText}\n\n_(Saya juga melampirkan gambar ringkasan visualnya di atas 👆)_\n\nKapan ada waktu luang buat ketemuan bahas ini kak?`
               ];
               break;
-          default: templates = [`Halo kak ${owner}, saya ${amShort} (Grab). Boleh ngobrol bentar soal performa ${mexName}?`, `Siang kak ${owner}! Ingin diskusi penjualan ${mexName}. Kapan ada waktu luang?`];
+          default: templates = [`Halo kak ${owner}, saya ${amShort} (Grab). Boleh ngobrol bentar sambil ketemuan bahas performa *${mexName}*?`, `Siang kak ${owner}! Ingin diskusi penjualan *${mexName}*. Kapan ada waktu luang buat ketemu?`];
       }
       const randomText = templates[Math.floor(Math.random() * templates.length)];
       window.open(`https://wa.me/${phone}?text=${encodeURIComponent(randomText)}`, '_blank');
