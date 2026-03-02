@@ -600,18 +600,48 @@ export default function App() {
           if (histText) {
               const histLines = parseCSVString(histText); const hHeaders = (histLines[0] || []).map(h => h ? String(h).trim() : '');
               const hMexIdx = hHeaders.indexOf('merchant_id'); const hMonthIdx = hHeaders.indexOf('first_day_of_month'); const hBsIdx = hHeaders.indexOf('basket_size'); const hTotOrdIdx = hHeaders.indexOf('total_orders'); const hCompOrdIdx = hHeaders.indexOf('completed_orders'); const hPromoOrdIdx = hHeaders.indexOf('orders_with_promo_mfp_gms'); const hAovIdx = hHeaders.indexOf('aov'); const hMfcIdx = hHeaders.indexOf('mfc_mex_spend'); const hMfpIdx = hHeaders.indexOf('mfp_mex_spend'); const hCpoIdx = hHeaders.indexOf('cpo'); const hGmsIdx = hHeaders.indexOf('gms'); const hCommIdx = hHeaders.indexOf('basic_commission'); const hAdsWebIdx = hHeaders.indexOf('ads_web'); const hAdsMobIdx = hHeaders.indexOf('ads_mobile'); const hAdsDirIdx = hHeaders.indexOf('ads_direct');
-              if (hMexIdx !== -1 && hMonthIdx !== -1) {
-                  for (let i = 1; i < histLines.length; i++) {
-                      const vals = histLines[i]; if (!vals || !vals[hMexIdx]) continue; const mexId = String(vals[hMexIdx]).trim();
+              
+              // Temukan index kolom Z (merchant_id ke-2) dan AE (hours_from_month)
+              const hMexIdxRight = hHeaders.lastIndexOf('merchant_id');
+              const hMonthIdxRight = hHeaders.indexOf('month_id');
+              const hHoursIdx = hHeaders.indexOf('hours_from_month');
+
+              for (let i = 1; i < histLines.length; i++) {
+                  const vals = histLines[i]; if (!vals) continue; 
+                  
+                  // 1. Proses Data Kiri (Sales, Ads, dsb)
+                  if (hMexIdx !== -1 && hMonthIdx !== -1 && vals[hMexIdx]) {
+                      const mexId = String(vals[hMexIdx]).trim();
                       if (pMap.has(mexId)) {
                           if (vals[0] && String(vals[0]).trim() !== '') pMap.get(mexId).lastUpdate = String(vals[0]).trim();
+                          const monthStr = String(vals[hMonthIdx]).trim();
+                          let histEntry = pMap.get(mexId).history.find(h => h.month === monthStr);
+                          if (!histEntry) {
+                              histEntry = { month: monthStr, operational_hours: 0 };
+                              pMap.get(mexId).history.push(histEntry);
+                          }
                           const baseBs = cleanNumber(vals[hBsIdx]); const totOrd = cleanNumber(vals[hTotOrdIdx]); const promoOrd = cleanNumber(vals[hPromoOrdIdx]);
                           const adsTotHist = cleanNumber(vals[hAdsWebIdx]) + cleanNumber(vals[hAdsMobIdx]) + cleanNumber(vals[hAdsDirIdx]);
                           const totInv = cleanNumber(vals[hMfcIdx]) + cleanNumber(vals[hMfpIdx]) + cleanNumber(vals[hCpoIdx]) + cleanNumber(vals[hGmsIdx]) + cleanNumber(vals[hCommIdx]) + adsTotHist;
                           const adsOrdHist = vals.length > 21 ? cleanNumber(vals[21]) : 0; const adsSalesHist = vals.length > 22 ? cleanNumber(vals[22]) : 0;
-                          pMap.get(mexId).history.push({
-                              month: vals[hMonthIdx], basket_size: baseBs, net_sales: baseBs - totInv, total_orders: totOrd, completed_orders: hCompOrdIdx !== -1 ? cleanNumber(vals[hCompOrdIdx]) : totOrd, orders_with_promo: promoOrd, promo_order_pct: totOrd > 0 ? parseFloat(((promoOrd / totOrd) * 100).toFixed(1)) : 0, aov: cleanNumber(vals[hAovIdx]), mfc: cleanNumber(vals[hMfcIdx]), mfp: cleanNumber(vals[hMfpIdx]), cpo: cleanNumber(vals[hCpoIdx]), gms: cleanNumber(vals[hGmsIdx]), basic_commission: cleanNumber(vals[hCommIdx]), ads_total_hist: adsTotHist, mi_percentage: baseBs > 0 ? parseFloat(((totInv / baseBs) * 100).toFixed(1)) : 0, total_investment: totInv, ads_orders: adsOrdHist, ads_sales: adsSalesHist
+                          
+                          Object.assign(histEntry, {
+                              basket_size: baseBs, net_sales: baseBs - totInv, total_orders: totOrd, completed_orders: hCompOrdIdx !== -1 ? cleanNumber(vals[hCompOrdIdx]) : totOrd, orders_with_promo: promoOrd, promo_order_pct: totOrd > 0 ? parseFloat(((promoOrd / totOrd) * 100).toFixed(1)) : 0, aov: cleanNumber(vals[hAovIdx]), mfc: cleanNumber(vals[hMfcIdx]), mfp: cleanNumber(vals[hMfpIdx]), cpo: cleanNumber(vals[hCpoIdx]), gms: cleanNumber(vals[hGmsIdx]), basic_commission: cleanNumber(vals[hCommIdx]), ads_total_hist: adsTotHist, mi_percentage: baseBs > 0 ? parseFloat(((totInv / baseBs) * 100).toFixed(1)) : 0, total_investment: totInv, ads_orders: adsOrdHist, ads_sales: adsSalesHist
                           });
+                      }
+                  }
+
+                  // 2. Proses Data Kanan (Jam Operasional)
+                  if (hMexIdxRight !== -1 && hMexIdxRight !== hMexIdx && hMonthIdxRight !== -1 && vals[hMexIdxRight]) {
+                      const mexIdRight = String(vals[hMexIdxRight]).trim();
+                      if (pMap.has(mexIdRight)) {
+                          const monthStrRight = String(vals[hMonthIdxRight]).trim();
+                          let histEntryRight = pMap.get(mexIdRight).history.find(h => h.month === monthStrRight);
+                          if (!histEntryRight) {
+                              histEntryRight = { month: monthStrRight, basket_size: 0, net_sales: 0, total_orders: 0, completed_orders: 0, aov: 0, promo_order_pct: 0, mi_percentage: 0, total_investment: 0, ads_total_hist: 0, operational_hours: 0 };
+                              pMap.get(mexIdRight).history.push(histEntryRight);
+                          }
+                          histEntryRight.operational_hours = hHoursIdx !== -1 ? cleanNumber(vals[hHoursIdx]) : 0;
                       }
                   }
               }
@@ -638,7 +668,7 @@ export default function App() {
               const lm = Math.floor(Math.random() * 50000000) + 5000000; const rr = Math.random() > 0.4 ? lm * (1 + Math.random() * 0.5) : lm * (1 - Math.random() * 0.3); const mca = Math.random() > 0.8 ? Math.floor(Math.random() * 50000000) + 10000000 : 0; let baseBs = Math.floor(Math.random() * 15000000) + 5000000;
               const hist = m.map(mon => {
                   baseBs = Math.max(1000000, baseBs * (1 + (Math.random() * 0.4 - 0.2))); const ord = Math.floor(baseBs / 40000); const adsTotHist = Math.random() > 0.3 ? Math.floor(Math.random() * 500000) + 100000 : 0; const adsSales = adsTotHist > 0 ? adsTotHist * (Math.random() * 5 + 1.5) : 0; const adsOrders = Math.floor(adsSales / 40000);
-                  return { month: mon, basket_size: baseBs, net_sales: baseBs * 0.8, total_orders: ord, completed_orders: ord, orders_with_promo: Math.floor(ord*0.5), promo_order_pct: 50, aov: 40000, mfc: 0, mfp: 0, cpo: 0, gms: 0, basic_commission: 0, ads_total_hist: adsTotHist, mi_percentage: 12, total_investment: 0, ads_orders: adsOrders, ads_sales: adsSales };
+                  return { month: mon, basket_size: baseBs, net_sales: baseBs * 0.8, total_orders: ord, completed_orders: ord, orders_with_promo: Math.floor(ord*0.5), promo_order_pct: 50, aov: 40000, mfc: 0, mfp: 0, cpo: 0, gms: 0, basic_commission: 0, ads_total_hist: adsTotHist, mi_percentage: 12, total_investment: 0, ads_orders: adsOrders, ads_sales: adsSales, operational_hours: Math.floor(Math.random() * 150) + 100 };
               });
               const randomDay = Math.floor(Math.random() * 28) + 1;
               const randomDayOut = Math.floor(Math.random() * 28) + 1;
@@ -2108,36 +2138,39 @@ export default function App() {
                </div>
 
                {selectedMex.history && selectedMex.history.length > 0 && (
-                   <div className="space-y-5 md:space-y-6">
-                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6 mt-2">
-                           <div className="animate-fade-in-up stagger-6 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
-                                <div className="flex justify-between items-start md:items-center mb-8 gap-2 shrink-0 min-h-[44px]">
-                                   <div><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="text-blue-500 w-5 h-5"/> 12-Month Review</h3></div>
-                                   {selectedMex.lastUpdate && (
-                                       <div className="bg-slate-50 border border-slate-100 px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm" title="Data terakhir diperbarui">
-                                           <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                           <span className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest mt-0.5">{selectedMex.lastUpdate}</span>
-                                       </div>
-                                   )}
-                                </div>
-                                <div className="h-[280px] md:h-[360px] w-full mt-auto">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                      <ComposedChart data={selectedMex.history.slice(-12)} margin={{ top: 20, right: 10, left: 0, bottom: 5 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                        <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} height={20} dy={5} />
-                                        <YAxis yAxisId="left" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={60} />
-                                        <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fill: '#f97316', fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={40} />
-                                        <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [String(n).includes('%') ? `${v}%` : formatCurrency(v), n]} labelFormatter={formatMonth}/>
-                                        <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold' }} />
-                                        <Bar yAxisId="left" dataKey="net_sales" stackId="a" name="Net Sales" fill={COLORS.netSales} maxBarSize={28} radius={[4,4,0,0]} />
-                                        <Bar yAxisId="left" dataKey="total_investment" stackId="a" name="MI (Rp)" fill="#f43f5e" radius={[4,4,0,0]} maxBarSize={28} />
-                                        <Line yAxisId="right" type="monotone" dataKey="mi_percentage" name="MI %" stroke="#f97316" strokeWidth={2} strokeDasharray="4 4" dot={{r:3, fill: '#ffffff', strokeWidth: 2}} activeDot={{r: 5}} />
-                                        <Line yAxisId="left" type="monotone" dataKey="basket_size" name="Total Basket Size" stroke={COLORS.basketSize} strokeWidth={2} strokeDasharray="4 4" dot={{r:3, fill: '#ffffff', strokeWidth: 2}} activeDot={{r: 5}} />
-                                      </ComposedChart>
-                                    </ResponsiveContainer>
-                                 </div>
+                   <div className="space-y-5 md:space-y-6 mt-2 md:mt-4">
+                       
+                       {/* BARIS 1: FULL GRID - 12 MONTH REVIEW */}
+                       <div className="animate-fade-in-up stagger-6 w-full bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col hover:shadow-2xl transition-shadow duration-500">
+                           <div className="flex justify-between items-start md:items-center mb-8 gap-2 shrink-0 min-h-[44px]">
+                              <div><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="text-blue-500 w-5 h-5"/> 12-Month Review</h3></div>
+                              {selectedMex.lastUpdate && (
+                                  <div className="bg-slate-50 border border-slate-100 px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm" title="Data terakhir diperbarui">
+                                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                      <span className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest mt-0.5">{selectedMex.lastUpdate}</span>
+                                  </div>
+                              )}
                            </div>
+                           <div className="h-[280px] md:h-[360px] w-full mt-auto">
+                               <ResponsiveContainer width="100%" height="100%">
+                                 <ComposedChart data={selectedMex.history.slice(-12)} margin={{ top: 20, right: 10, left: 0, bottom: 5 }}>
+                                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                   <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} height={20} dy={5} />
+                                   <YAxis yAxisId="left" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} width={60} />
+                                   <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fill: '#f97316', fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={40} />
+                                   <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} formatter={(v, n) => [String(n).includes('%') ? `${v}%` : formatCurrency(v), n]} labelFormatter={formatMonth}/>
+                                   <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '24px', paddingBottom: '0', fontSize: '11px', fontWeight: 'bold' }} />
+                                   <Bar yAxisId="left" dataKey="net_sales" stackId="a" name="Net Sales" fill={COLORS.netSales} maxBarSize={40} radius={[4,4,0,0]} />
+                                   <Bar yAxisId="left" dataKey="total_investment" stackId="a" name="MI (Rp)" fill="#f43f5e" radius={[4,4,0,0]} maxBarSize={40} />
+                                   <Line yAxisId="right" type="monotone" dataKey="mi_percentage" name="MI %" stroke="#f97316" strokeWidth={2} strokeDasharray="4 4" dot={{r:3, fill: '#ffffff', strokeWidth: 2}} activeDot={{r: 5}} />
+                                   <Line yAxisId="left" type="monotone" dataKey="basket_size" name="Total Basket Size" stroke={COLORS.basketSize} strokeWidth={2} strokeDasharray="4 4" dot={{r:3, fill: '#ffffff', strokeWidth: 2}} activeDot={{r: 5}} />
+                                 </ComposedChart>
+                               </ResponsiveContainer>
+                            </div>
+                       </div>
 
+                       {/* BARIS 2: INVEST & COMPLETED ORDERS */}
+                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
                            <div className="animate-fade-in-up stagger-7 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
                                 <div className="flex items-center mb-8 shrink-0 min-h-[44px]"><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><DollarSign className="text-rose-500 w-5 h-5"/> Investment (MI) Breakdown</h3></div>
                                 <div className="h-[280px] md:h-[360px] w-full mt-auto">
@@ -2156,9 +2189,7 @@ export default function App() {
                                   </ResponsiveContainer>
                                 </div>
                            </div>
-                       </div>
 
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 mt-2">
                             <div className="animate-fade-in-up stagger-8 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
                                 <div className="flex items-start gap-2 mb-8 shrink-0 min-h-[44px]"><ShoppingBag className="w-5 h-5 text-indigo-500 shrink-0"/><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-tight">Completed Orders</h3></div>
                                 <div className="h-[280px] md:h-[360px] w-full mt-auto">
@@ -2175,7 +2206,10 @@ export default function App() {
                                   </ResponsiveContainer>
                                 </div>
                             </div>
+                       </div>
 
+                       {/* BARIS 3: AOV & OPHOURS */}
+                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
                             <div className="animate-fade-in-up stagger-9 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
                                 <div className="flex items-start gap-2 mb-8 shrink-0 min-h-[44px]"><Target className="w-5 h-5 text-teal-500 shrink-0"/><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-tight">AOV & Promo Usage</h3></div>
                                 <div className="h-[280px] md:h-[360px] w-full mt-auto">
@@ -2196,11 +2230,31 @@ export default function App() {
                                   </ResponsiveContainer>
                                 </div>
                             </div>
+                            
+                            <div className="animate-fade-in-up stagger-10 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 md:p-8 flex flex-col h-full hover:shadow-2xl transition-shadow duration-500">
+                               <div className="flex items-start gap-2 mb-8 shrink-0 min-h-[44px]">
+                                   <Clock className="w-5 h-5 text-amber-500 shrink-0"/>
+                                   <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-tight">Jam Operasional (Bulanan)</h3>
+                               </div>
+                               <div className="h-[280px] md:h-[360px] w-full mt-auto">
+                                 <ResponsiveContainer width="100%" height="100%">
+                                     <BarChart data={selectedMex.history.slice(-12)} margin={{ top: 30, right: 0, left: -5, bottom: 5 }}>
+                                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                         <XAxis dataKey="month" tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} tickFormatter={formatMonth} height={20} dy={5} />
+                                         <YAxis tick={{ fill: COLORS.slate500, fontSize: 10, fontWeight: 600 }} tickLine={false} axisLine={false} width={45} />
+                                         <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '16px', border:'none', padding: '12px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} labelFormatter={formatMonth}/>
+                                         <Bar dataKey="operational_hours" name="Total Jam Online" fill="#f59e0b" radius={[4,4,0,0]} maxBarSize={32}>
+                                             <LabelList dataKey="operational_hours" position="top" offset={10} fontSize={10} fontWeight={800} fill="#f59e0b" />
+                                         </Bar>
+                                     </BarChart>
+                                 </ResponsiveContainer>
+                               </div>
+                           </div>
                        </div>
                    </div>
                )}
 
-               <div className="animate-fade-in-up stagger-10 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 p-5 md:p-8 mt-6 hover:shadow-2xl transition-shadow duration-500">
+               <div className="animate-fade-in-up stagger-10 bg-white p-6 md:p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 mt-6 hover:shadow-2xl transition-shadow duration-500">
                   <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100"><Info className="w-5 h-5 text-indigo-500"/><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Informasi Kontak & Lokasi</h3></div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
                       <div className="bg-slate-50 p-4 md:p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center gap-4 transition-colors hover:bg-slate-100/50">
