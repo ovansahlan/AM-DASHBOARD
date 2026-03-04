@@ -111,11 +111,11 @@ const ThemeStyles = () => (
     .dark-theme .bg-emerald-50 [class*="text-emerald-"], .dark-theme .bg-emerald-50\\/80 [class*="text-emerald-"], .dark-theme .bg-emerald-100 [class*="text-emerald-"] { color: #ffffff !important; }
     
     /* Teal */
-    .dark-theme .bg-teal-50, .dark-theme .bg-teal-50\\/80, .dark-theme .bg-teal-100 { background-color: #14b8a6 !important; border-color: #0d9488 !important; color: #ffffff !important; }
-    .dark-theme .bg-teal-50 [class*="text-teal-"], .dark-theme .bg-teal-50\\/80 [class*="text-teal-"], .dark-theme .bg-teal-100 [class*="text-teal-"] { color: #ffffff !important; }
+    .dark-theme .bg-teal-50, .dark-theme .bg-teal-50\\/80, .dark-theme .bg-teal-50 { background-color: #14b8a6 !important; border-color: #0d9488 !important; color: #ffffff !important; }
+    .dark-theme .bg-teal-50 [class*="text-teal-"], .dark-theme .bg-teal-50\\/80 [class*="text-teal-"], .dark-theme .bg-teal-50 [class*="text-teal-"] { color: #ffffff !important; }
     
     /* Rose */
-    .dark-theme .bg-rose-50, .dark-theme .bg-rose-50\\/80, .dark-theme .bg-rose-100 { background-color: #f43f5e !important; border-color: #e11d48 !important; color: #ffffff !important; }
+    .dark-theme .bg-rose-50, .dark-theme .bg-rose-50\\/50, .dark-theme .bg-rose-100 { background-color: #f43f5e !important; border-color: #e11d48 !important; color: #ffffff !important; }
     .dark-theme .bg-rose-50 [class*="text-rose-"], .dark-theme .bg-rose-50\\/80 [class*="text-rose-"], .dark-theme .bg-rose-100 [class*="text-rose-"] { color: #ffffff !important; }
     
     /* Blue */
@@ -221,6 +221,12 @@ const ThemeStyles = () => (
     .dark-theme .panel-note-text { color: #f8fafc !important; }
     .dark-theme .panel-note-more { color: #a3a3a3 !important; }
     .dark-theme .panel-note-more:hover { color: #fbbf24 !important; }
+
+    /* FLOATING NAV DARK MODE */
+    .dark-theme .panel-floating-nav { background-color: rgba(10, 10, 10, 0.95) !important; border-color: #262626 !important; }
+    .dark-theme .panel-floating-nav-divider { background-color: #333333 !important; }
+    .dark-theme .panel-floating-btn:hover { background-color: #1a1a1a !important; }
+    .dark-theme .panel-floating-btn-disabled { background-color: #1a1a1a !important; color: #555555 !important; }
 
     /* LIST CARDS DARK Mode */
     .dark-theme .card-campaign-seg, .dark-theme .card-quick-search, .dark-theme .card-gms-tracker { background-color: #121212 !important; border-color: #1e1e1e !important; }
@@ -439,17 +445,20 @@ const DashboardCard = ({ title, value, subLabel, subValue, midLabel, midValue, i
         <div onClick={onClick} className={`bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group h-full dashboard-card ${onClick ? 'cursor-pointer hover:border-'+borderClass : ''}`}>
            <div className={`absolute left-0 top-0 bottom-0 w-1.5 bg-${color}-500`}></div>
            <Icon className={`absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110`} />
-           <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-4 lg:mb-5 pl-2 relative z-10 shrink-0 min-h-[44px]">
-               <div className="flex items-center gap-2 lg:gap-3">
+           
+           {/* DIPERBAIKI: Mengubah flex-col menjadi justify-between items-start dan mengunci tinggi (h-44px) */}
+           <div className="flex justify-between items-start gap-2 mb-4 lg:mb-5 pl-2 relative z-10 shrink-0 h-[44px] lg:h-[48px]">
+               <div className="flex items-center gap-2 lg:gap-3 min-w-0">
                    <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-${color}-50 text-${color}-600 flex items-center justify-center shrink-0 shadow-inner`}><Icon size={18} strokeWidth={2.5}/></div>
                    <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate card-title">{title}</p>
                </div>
                {trend !== undefined && !isNaN(trend) && (
-                   <div className={`self-start px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap transition-colors ${isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                   <div className={`shrink-0 px-2 py-1 rounded-md text-[9px] lg:text-[10px] font-black flex items-center gap-1 whitespace-nowrap transition-colors ${isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
                        {isUp ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {Math.abs(trend).toFixed(1)}%
                    </div>
                )}
            </div>
+           
            <div className="pl-2 relative z-10 flex-1 flex flex-col justify-start">
                <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 card-mtd-label">MTD {title}</p>
                <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4 card-main-value">{value}</p>
@@ -883,7 +892,11 @@ export default function App() {
                               pMap.get(mexIdRight).history.push(histEntryRight);
                           }
                           histEntryRight.operational_hours = hHoursIdx !== -1 ? cleanNumber(vals[hHoursIdx]) : 0;
-                          histEntryRight.penetration = hPenetrationIdx !== -1 ? cleanNumber(vals[hPenetrationIdx]) : 0;
+                          
+                          // PERBAIKAN LOGIKA PHOTO PENETRATION
+                          let rawPen = hPenetrationIdx !== -1 ? cleanNumber(vals[hPenetrationIdx]) : 0;
+                          if (rawPen > 1) rawPen = rawPen / 100; // Jika CSV menulis 85 atau 85%, ubah jadi 0.85
+                          histEntryRight.penetration = Math.min(1, Math.max(0, rawPen)); // Kunci di rentang 0.0 - 1.0 (0% - 100%)
                       }
                   }
               }
@@ -922,9 +935,16 @@ export default function App() {
               });
               const randomDay = Math.floor(Math.random() * 28) + 1;
               const randomDayOut = Math.floor(Math.random() * 28) + 1;
+              
+              // NEW: Adaptasikan tanggal dummy pencairan ke bulan berjalan secara otomatis
+              const dDateObj = new Date();
+              const dMonth = dDateObj.toLocaleString('en-US', { month: 'short' });
+              const dYear = String(dDateObj.getFullYear()).slice(-2);
+              const demoDisbursedDate = `15-${dMonth}-${dYear}`;
+
               return {
-                  id: `6-C${Math.random().toString(36).substr(2, 9).toUpperCase()}`, name: `Merchant ${String.fromCharCode(65 + (i % 26))} - Kota`, amName: amNames[i % 4], ownerName: `Ona`, lmBs: lm, mtdBs: rr * 0.7, rrBs: rr, rrVsLm: ((rr - lm) / lm) * 100, lmMi: 0, mtdMi: 0, rrMi: 0, adsLM: 0, adsTotal: 0, adsMob: 0, adsWeb: 0, adsDir: 0, adsRR: 0, mcaAmount: mca, mcaWlLimit: mca > 0 ? mca * 1.5 : 0, mcaWlClass: mca > 0 ? 'Repeat' : '-Not in WL', mcaPriority: mca > 0 ? 'P1' : '-', mcaDropOff: '-', mcaDisburseStatus: mca > 0 ? 'Disbursed' : '', disbursedDate: mca > 0 ? `15-Feb-26` : '', zeusStatus: Math.random() > 0.15 ? 'ACTIVE' : 'INACTIVE', joinDate: `12-Jan-22`, campaigns: Math.random() < 0.2 ? 'No Campaign' : camps[Math.floor(Math.random()*5)], commission: '20%', city: 'Kota', address: 'Jalan', phone: '+628123456789', email: 'test@mail.com', latitude: '', longitude: '', lastUpdate: '22 Feb', campaignPoint: 100, history: hist, notes: [],
-                  gmsOptIn: Math.random() > 0.85 ? camps[Math.floor(Math.random()*3)] : '', gmsOptOut: Math.random() > 0.9 ? camps[Math.floor(Math.random()*3)] : '', gmsOptInDate: `2026-02-${randomDay.toString().padStart(2, '0')}`, gmsOptOutDate: `2026-02-${randomDayOut.toString().padStart(2, '0')}`, rowNum: i, latest_penetration: hist[hist.length-1].penetration 
+                  id: `6-C${Math.random().toString(36).substr(2, 9).toUpperCase()}`, name: `Merchant ${String.fromCharCode(65 + (i % 26))} - Kota`, amName: amNames[i % 4], ownerName: `Ona`, lmBs: lm, mtdBs: rr * 0.7, rrBs: rr, rrVsLm: ((rr - lm) / lm) * 100, lmMi: 0, mtdMi: 0, rrMi: 0, adsLM: 0, adsTotal: 0, adsMob: 0, adsWeb: 0, adsDir: 0, adsRR: 0, mcaAmount: mca, mcaWlLimit: mca > 0 ? mca * 1.5 : 0, mcaWlClass: mca > 0 ? 'Repeat' : '-Not in WL', mcaPriority: mca > 0 ? 'P1' : '-', mcaDropOff: '-', mcaDisburseStatus: mca > 0 ? 'Disbursed' : '', disbursedDate: mca > 0 ? demoDisbursedDate : '', zeusStatus: Math.random() > 0.15 ? 'ACTIVE' : 'INACTIVE', joinDate: `12-Jan-22`, campaigns: Math.random() < 0.2 ? 'No Campaign' : camps[Math.floor(Math.random()*5)], commission: '20%', city: 'Kota', address: 'Jalan', phone: '+628123456789', email: 'test@mail.com', latitude: '', longitude: '', lastUpdate: '22 Feb', campaignPoint: 100, history: hist, notes: [],
+                  gmsOptIn: Math.random() > 0.85 ? camps[Math.floor(Math.random()*3)] : '', gmsOptOut: Math.random() > 0.9 ? camps[Math.floor(Math.random()*3)] : '', gmsOptInDate: `${dDateObj.getFullYear()}-${String(dDateObj.getMonth()+1).padStart(2, '0')}-${randomDay.toString().padStart(2, '0')}`, gmsOptOutDate: `${dDateObj.getFullYear()}-${String(dDateObj.getMonth()+1).padStart(2, '0')}-${randomDayOut.toString().padStart(2, '0')}`, rowNum: i, latest_penetration: hist[hist.length-1].penetration 
               };
           });
           saveToLocal(genData, "17 Mar 2026"); 
@@ -1001,14 +1021,27 @@ export default function App() {
     let act = 0, inact = 0, zTrx = 0;
     activeData.forEach(d => { if (String(d.zeusStatus).toUpperCase() === 'ACTIVE') act++; else inact++; if (d.mtdBs <= 0) zTrx++; });
     const totPts = activeData.reduce((a, c) => a + (c.campaignPoint || 0), 0);
-    const disbursedFeb = activeData.filter(c => c.mcaAmount > 0 && String(c.disbursedDate).toLowerCase().includes('feb'));
+    
+    // NEW: Hitung otomatis bulan berjalan untuk data MCA Disbursed
+    const today = new Date();
+    const curEn = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'][today.getMonth()];
+    const curId = ['jan','feb','mar','apr','mei','jun','jul','agu','sep','okt','nov','des'][today.getMonth()];
+    const curNum2 = String(today.getMonth() + 1).padStart(2, '0');
+
+    const disbursedCurrent = activeData.filter(c => {
+        if (!(c.mcaAmount > 0)) return false;
+        if (!c.disbursedDate || String(c.disbursedDate).trim() === '-') return false;
+        const dStr = String(c.disbursedDate).toLowerCase();
+        // Cek berbagai format: "Mar", "Maret", "-03-", "/03/", ".03."
+        return dStr.includes(curEn) || dStr.includes(curId) || dStr.includes(`-${curNum2}-`) || dStr.includes(`/${curNum2}/`) || dStr.includes(`.${curNum2}.`);
+    });
 
     return {
       lm: activeData.reduce((a, c) => a + c.lmBs, 0), rr: activeData.reduce((a, c) => a + c.rrBs, 0), mtd: activeData.reduce((a, c) => a + c.mtdBs, 0),
       miLm: activeData.reduce((a, c) => a + (c.lmMi || 0), 0), miRr: activeData.reduce((a, c) => a + (c.rrMi || 0), 0), miMtd: activeData.reduce((a, c) => a + (c.mtdMi || 0), 0),
       adsLm: activeData.reduce((a, c) => a + c.adsLM, 0), adsMtd: activeData.reduce((a, c) => a + c.adsTotal, 0), adsRr: activeData.reduce((a, c) => a + c.adsRR, 0),
       adsMobMtd: activeData.reduce((a, c) => a + (c.adsMob || 0), 0), adsWebMtd: activeData.reduce((a, c) => a + (c.adsWeb || 0), 0), adsDirMtd: activeData.reduce((a, c) => a + (c.adsDir || 0), 0),
-      mcaDis: disbursedFeb.reduce((a, c) => a + c.mcaAmount, 0), mcaDisCount: disbursedFeb.length, 
+      mcaDis: disbursedCurrent.reduce((a, c) => a + c.mcaAmount, 0), mcaDisCount: disbursedCurrent.length, 
       mcaEli: activeData.reduce((a, c) => a + (c.mcaWlLimit > 0 && !String(c.mcaWlClass).includes('Not') ? c.mcaWlLimit : 0), 0),
       joiners: campaignStats.joiners, totalMex: activeData.length, activeMex: act, inactiveMex: inact, zeroTrxMex: zTrx, totalPoints: totPts, avgPtsPerJoiner: campaignStats.joiners > 0 ? Math.round(totPts / campaignStats.joiners) : 0
     };
@@ -1060,7 +1093,12 @@ export default function App() {
     const camps = String(campaignStr).split(/[|,]/).map(c => c.trim()).filter(Boolean);
     return (
         <div className="flex flex-wrap gap-1 mt-1.5">
-            {camps.map((camp, idx) => (<span key={idx} className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded-md text-[9px] font-bold flex items-center gap-1 shadow-sm"><Zap className="w-2.5 h-2.5 text-emerald-500" />{camp}</span>))}
+            {camps.map((camp, idx) => (
+                <span key={idx} className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded-md text-[9px] font-bold flex items-center gap-1 shadow-sm max-w-full">
+                    <Zap className="w-2.5 h-2.5 text-emerald-500 shrink-0" />
+                    <span className="truncate">{camp}</span>
+                </span>
+            ))}
         </div>
     );
   };
@@ -1497,6 +1535,10 @@ export default function App() {
                  <div className="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-bl-full opacity-50 -mr-8 -mt-8 pointer-events-none"></div>
                  {(() => {
                      const adsData = selectedMex ? { total: selectedMex.adsTotal || 0, rr: selectedMex.adsRR || 0, lm: selectedMex.adsLM || 0, mob: selectedMex.adsMob || 0, web: selectedMex.adsWeb || 0, dir: selectedMex.adsDir || 0 } : { total: kpi?.adsMtd || 0, rr: kpi?.adsRr || 0, lm: kpi?.adsLm || 0, mob: kpi?.adsMobMtd || 0, web: kpi?.adsWebMtd || 0, dir: kpi?.adsDirMtd || 0 };
+                     
+                     // MENARIK DATA MI (MERCHANT INVESTMENT)
+                     const miData = selectedMex ? { lm: selectedMex.lmMi || 0, mtd: selectedMex.mtdMi || 0, rr: selectedMex.rrMi || 0 } : { lm: kpi?.miLm || 0, mtd: kpi?.miMtd || 0, rr: kpi?.miRr || 0 };
+                     
                      const totalAds = adsData.total || 1; 
                      const mobPct = ((adsData.mob / totalAds) * 100).toFixed(1); const webPct = ((adsData.web / totalAds) * 100).toFixed(1); const dirPct = ((adsData.dir / totalAds) * 100).toFixed(1);
 
@@ -1518,6 +1560,25 @@ export default function App() {
                                      <p className="text-2xl md:text-3xl font-black text-slate-400 tracking-tight">{formatCurrency(adsData.rr)}</p>
                                  </div>
                              </div>
+
+                             {/* BARIS BARU: RINGKASAN MERCHANT INVESTMENT (MI) */}
+                             <div className="flex-1 w-full relative z-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 bg-slate-50/50 p-3 rounded-2xl border border-slate-100/50 -mt-2">
+                                 <div className="flex-1 text-center">
+                                     <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 flex items-center justify-center gap-1"><Clock size={12}/> MI Last Month</p>
+                                     <p className="text-lg md:text-xl font-black text-slate-500 tracking-tight">{formatCurrency(miData.lm)}</p>
+                                 </div>
+                                 <div className="hidden sm:block w-px h-8 bg-slate-200"></div>
+                                 <div className="flex-1 text-center">
+                                     <p className="text-[10px] md:text-[11px] font-black text-teal-600 uppercase tracking-widest mb-0.5 flex items-center justify-center gap-1"><DollarSign size={14}/> Total MI (MTD)</p>
+                                     <p className="text-xl md:text-2xl font-black text-teal-600 tracking-tight">{formatCurrency(miData.mtd)}</p>
+                                 </div>
+                                 <div className="hidden sm:block w-px h-8 bg-slate-200"></div>
+                                 <div className="flex-1 text-center">
+                                     <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 flex items-center justify-center gap-1"><TrendingUp size={12}/> MI Runrate</p>
+                                     <p className="text-lg md:text-xl font-black text-slate-500 tracking-tight">{formatCurrency(miData.rr)}</p>
+                                 </div>
+                             </div>
+
                              <div className="space-y-4 relative z-10 w-full mt-2 border-t border-slate-100 pt-6">
                                  <div className="bg-white rounded-2xl p-4 md:p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center gap-4 group hover:border-blue-300 transition-colors">
                                      <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center shrink-0 shadow-inner group-hover:bg-blue-100 transition-colors"><Smartphone size={24} /></div>
@@ -2353,30 +2414,41 @@ export default function App() {
                   <div onClick={() => setShowCampaignModal(true)} className="bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10 hover:border-amber-300 hover:-translate-y-1 group animate-fade-in-up stagger-3 h-full cursor-pointer">
                       <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500"></div>
                       <Award className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                      <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-4 lg:mb-5 pl-2 relative z-10 shrink-0 min-h-[44px]">
-                          <div className="flex items-center gap-2 lg:gap-3">
+                      
+                      {/* DIPERBAIKI */}
+                      <div className="flex justify-between items-start gap-2 mb-4 lg:mb-5 pl-2 relative z-10 shrink-0 h-[44px] lg:h-[48px]">
+                          <div className="flex items-center gap-2 lg:gap-3 min-w-0">
                               <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0"><Zap size={18} strokeWidth={2.5} /></div>
                               <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">Campaigns <MousePointer size={10} className="text-slate-300 group-hover:text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-1"/></p>
                           </div>
                       </div>
+                      
                       <div className="pl-2 relative z-10 flex-1 flex flex-col justify-start">
                           <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Points</p>
                           <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{selectedMex.campaignPoint || 0}</p>
                       </div>
-                      <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 pl-2 relative z-10 shrink-0 min-h-[40px] lg:min-h-[44px]">
-                          <div className="flex flex-wrap gap-1">{renderMerchantCampaigns(selectedMex.campaigns)}</div>
+                      <div className="mt-auto pt-3 lg:pt-4 border-t border-slate-100 pl-2 relative z-10 shrink-0 min-w-0">
+                          <div className="max-h-[42px] overflow-hidden relative">
+                              {renderMerchantCampaigns(selectedMex.campaigns)}
+                              {selectedMex.campaigns && String(selectedMex.campaigns).split(/[|,]/).length > 2 && (
+                                  <div className="absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-t from-white to-transparent dark:from-[#121212] pointer-events-none"></div>
+                              )}
+                          </div>
                       </div>
                   </div>
 
                   <div onClick={() => setShowAdsModal(true)} className="bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-rose-500/10 hover:border-rose-300 hover:-translate-y-1 group animate-fade-in-up stagger-4 h-full cursor-pointer">
                       <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500"></div>
                       <Megaphone className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                      <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-4 lg:mb-5 pl-2 relative z-10 shrink-0 min-h-[44px]">
-                          <div className="flex items-center gap-2 lg:gap-3">
+                      
+                      {/* DIPERBAIKI */}
+                      <div className="flex justify-between items-start gap-2 mb-4 lg:mb-5 pl-2 relative z-10 shrink-0 h-[44px] lg:h-[48px]">
+                          <div className="flex items-center gap-2 lg:gap-3 min-w-0">
                               <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0"><Megaphone size={18} strokeWidth={2.5}/></div>
                               <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">Ads Spend <MousePointer size={10} className="text-slate-300 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-1"/></p>
                           </div>
                       </div>
+                      
                       <div className="pl-2 relative z-10 flex-1 flex flex-col justify-start">
                           <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">MTD Total Ads</p>
                           <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(selectedMex.adsTotal)}</p>
@@ -2396,12 +2468,15 @@ export default function App() {
                   <div className="bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group animate-fade-in-up stagger-5 h-full">
                       <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
                       <Database className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
-                      <div className="flex flex-col xl:flex-row justify-between xl:items-start gap-2 mb-4 lg:mb-5 pl-2 relative z-10 shrink-0 min-h-[44px]">
-                          <div className="flex items-center gap-2 lg:gap-3">
+                      
+                      {/* DIPERBAIKI */}
+                      <div className="flex justify-between items-start gap-2 mb-4 lg:mb-5 pl-2 relative z-10 shrink-0 h-[44px] lg:h-[48px]">
+                          <div className="flex items-center gap-2 lg:gap-3 min-w-0">
                               <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0"><Database size={18} strokeWidth={2.5}/></div>
                               <p className="text-[10px] lg:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 truncate">MCA Config</p>
                           </div>
                       </div>
+                      
                       <div className="pl-2 relative z-10 flex-1 flex flex-col justify-start">
                           <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Disbursed Amount</p>
                           <p className="text-2xl lg:text-4xl font-black text-slate-900 tracking-tight leading-none mb-3 lg:mb-4">{formatCurrency(selectedMex.mcaAmount)}</p>
@@ -2563,25 +2638,29 @@ export default function App() {
                   </div>
                </div>
                
-               <div className={`fixed bottom-6 lg:bottom-10 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 ease-out flex items-center shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] bg-slate-900/95 backdrop-blur-xl border border-slate-700 p-2 md:p-3 rounded-[32px] ${showFloatingBar ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-32 opacity-0 scale-95 pointer-events-none'}`}>
+               <div className={`fixed bottom-6 lg:bottom-10 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 ease-out flex items-center shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] bg-slate-900/95 backdrop-blur-xl border border-slate-700 p-2 md:p-3 rounded-[32px] panel-floating-nav ${showFloatingBar ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-32 opacity-0 scale-95 pointer-events-none'}`}>
                    <div className="flex items-center gap-2 md:gap-3 px-2 md:px-4">
-                       <button onClick={() => setShowPresentation(true)} className="w-12 h-12 flex items-center justify-center text-white hover:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition-all duration-300 active:scale-90" title="Mode Presentasi">
+                       <button onClick={() => setSelectedMex(null)} className="panel-floating-btn w-12 h-12 flex items-center justify-center text-white hover:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition-all duration-300 active:scale-90" title="Kembali">
+                           <ArrowLeft className="w-5 h-5" />
+                       </button>
+                       <div className="w-px h-6 bg-slate-700/80 shrink-0 panel-floating-nav-divider"></div>
+                       <button onClick={() => setShowPresentation(true)} className="panel-floating-btn w-12 h-12 flex items-center justify-center text-white hover:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition-all duration-300 active:scale-90" title="Mode Presentasi">
                            <MonitorPlay className="w-5 h-5 text-emerald-400" />
                        </button>
                        {selectedMex.history && selectedMex.history.length > 0 && (
                            <Fragment>
-                               <div className="w-px h-6 bg-slate-700/80 shrink-0"></div>
-                               <button onClick={() => { const hist = selectedMex.history || []; const defaultMonths = [ hist.length > 2 ? hist[hist.length - 3].month : '', hist.length > 1 ? hist[hist.length - 2].month : '', hist.length > 0 ? hist[hist.length - 1].month : '' ]; setCompareMonths(defaultMonths); setShowCompareModal(true); }} className="w-12 h-12 flex items-center justify-center text-white hover:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition-all duration-300 active:scale-90" title="Bandingkan Performa">
+                               <div className="w-px h-6 bg-slate-700/80 shrink-0 panel-floating-nav-divider"></div>
+                               <button onClick={() => { const hist = selectedMex.history || []; const defaultMonths = [ hist.length > 2 ? hist[hist.length - 3].month : '', hist.length > 1 ? hist[hist.length - 2].month : '', hist.length > 0 ? hist[hist.length - 1].month : '' ]; setCompareMonths(defaultMonths); setShowCompareModal(true); }} className="panel-floating-btn w-12 h-12 flex items-center justify-center text-white hover:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition-all duration-300 active:scale-90" title="Bandingkan Performa">
                                    <BarChart2 className="w-5 h-5" />
                                </button>
                            </Fragment>
                        )}
-                       <div className="w-px h-6 bg-slate-700/80 shrink-0"></div>
-                       <a href="https://mex-calculator.vercel.app/" target="_blank" rel="noopener noreferrer" className="w-12 h-12 flex items-center justify-center text-white hover:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition-all duration-300 active:scale-90" title="Buka MEX Calculator">
+                       <div className="w-px h-6 bg-slate-700/80 shrink-0 panel-floating-nav-divider"></div>
+                       <a href="https://mex-calculator.vercel.app/" target="_blank" rel="noopener noreferrer" className="panel-floating-btn w-12 h-12 flex items-center justify-center text-white hover:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition-all duration-300 active:scale-90" title="Buka MEX Calculator">
                            <Calculator className="w-5 h-5" />
                        </a>
-                       <div className="w-px h-6 bg-slate-700/80 shrink-0"></div>
-                       <button onClick={() => { if (selectedMex.phone && selectedMex.phone !== '-') setShowWaModal(true); }} className={`w-12 h-12 flex items-center justify-center rounded-full transition-all duration-300 active:scale-90 ${selectedMex.phone && selectedMex.phone !== '-' ? 'bg-[#00B14F] text-white hover:bg-emerald-600 shadow-[0_0_20px_-5px_rgba(0,177,79,0.5)]' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`} title="Hubungi via WhatsApp">
+                       <div className="w-px h-6 bg-slate-700/80 shrink-0 panel-floating-nav-divider"></div>
+                       <button onClick={() => { if (selectedMex.phone && selectedMex.phone !== '-') setShowWaModal(true); }} className={`w-12 h-12 flex items-center justify-center rounded-full transition-all duration-300 active:scale-90 ${selectedMex.phone && selectedMex.phone !== '-' ? 'bg-[#00B14F] text-white hover:bg-emerald-600 shadow-[0_0_20px_-5px_rgba(0,177,79,0.5)]' : 'bg-slate-800 text-slate-500 cursor-not-allowed panel-floating-btn-disabled'}`} title="Hubungi via WhatsApp">
                            <MessageCircle className="w-5 h-5" />
                        </button>
                    </div>
