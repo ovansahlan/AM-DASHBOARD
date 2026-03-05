@@ -11,9 +11,9 @@ import {
 } from 'lucide-react';
 
 // ============================================================================
-// GLOBAL STYLES (DARK MODE CSS)
+// GLOBAL STYLES (DARK MODE CSS & FONTS)
 // ============================================================================
-const ThemeStyles = () => (
+const ThemeStyles = React.memo(() => (
   <style dangerouslySetInnerHTML={{__html: `
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
 
@@ -107,7 +107,7 @@ const ThemeStyles = () => (
      */
     
     /* Emerald */
-    .dark-theme .bg-emerald-50, .dark-theme .bg-emerald-50\\/80, .dark-theme .bg-emerald-100 { background-color: #10b981 !important; border-color: #059669 !important; color: #ffffff !important; }
+    .dark-theme .bg-emerald-50, .dark-theme .bg-emerald-50\\/80, .dark-theme .bg-emerald-700 { background-color: #10b981 !important; border-color: #059669 !important; color: #ffffff !important; }
     .dark-theme .bg-emerald-50 [class*="text-emerald-"], .dark-theme .bg-emerald-50\\/80 [class*="text-emerald-"], .dark-theme .bg-emerald-100 [class*="text-emerald-"] { color: #ffffff !important; }
     
     /* Teal */
@@ -239,7 +239,7 @@ const ThemeStyles = () => (
     .dark-theme .card-main-value { color: #ffffff !important; }
     .dark-theme .card-sub-value { color: #d4d4d4 !important; }
   `}} />
-);
+));
 
 // ============================================================================
 // GOOGLE SHEETS API CONFIGURATION
@@ -489,56 +489,68 @@ const DashboardCard = ({ title, value, subLabel, subValue, midLabel, midValue, i
 // MAIN APP COMPONENT
 // ============================================================================
 export default function App() {
-  const [data, setData] = useState([]);
-  const [isInitializing, setIsInitializing] = useState(true);
-  const [isForceUpload, setIsForceUpload] = useState(false);
-  const [globalLastUpdate, setGlobalLastUpdate] = useState('');
-  const [fileMaster, setFileMaster] = useState(null);
-  const [fileHistory, setFileHistory] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [data, setData] = React.useState([]);
+  const [isInitializing, setIsInitializing] = React.useState(true);
+  const [isForceUpload, setIsForceUpload] = React.useState(false);
+  const [globalLastUpdate, setGlobalLastUpdate] = React.useState('');
+  const [fileMaster, setFileMaster] = React.useState(null);
+  const [fileHistory, setFileHistory] = React.useState(null);
+  const [loading, setLoading] = React.useState(false);
+  const [errorMsg, setErrorMsg] = React.useState('');
   
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMex, setSelectedMex] = useState(null);
-  const [selectedAM, setSelectedAM] = useState('All'); 
-  const [selectedPriority, setSelectedPriority] = useState('All');
-  const [activeTab, setActiveTab] = useState('overview'); 
+  const [searchInputValue, setSearchInputValue] = React.useState('');
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [selectedMex, setSelectedMex] = React.useState(null);
+  const [selectedAM, setSelectedAM] = React.useState('All'); 
+  const [selectedPriority, setSelectedPriority] = React.useState('All');
+  const [activeTab, setActiveTab] = React.useState('overview'); 
   
-  const [activeSegmentModal, setActiveSegmentModal] = useState(null);
-  const [showWaModal, setShowWaModal] = useState(false);
-  const [showMcaModal, setShowMcaModal] = useState(false);
-  const [showCompareModal, setShowCompareModal] = useState(false);
-  const [showMiModal, setShowMiModal] = useState(false);
-  const [showOutletsModal, setShowOutletsModal] = useState(false);
-  const [showAdsModal, setShowAdsModal] = useState(false);
-  const [showCampaignModal, setShowCampaignModal] = useState(false);
-  const [showNotesModal, setShowNotesModal] = useState(false);
-  const [outletModalTab, setOutletModalTab] = useState('inactive');
+  const [activeSegmentModal, setActiveSegmentModal] = React.useState(null);
+  const [showWaModal, setShowWaModal] = React.useState(false);
+  const [showMcaModal, setShowMcaModal] = React.useState(false);
+  const [showCompareModal, setShowCompareModal] = React.useState(false);
+  const [showMiModal, setShowMiModal] = React.useState(false);
+  const [showOutletsModal, setShowOutletsModal] = React.useState(false);
+  const [showAdsModal, setShowAdsModal] = React.useState(false);
+  const [showCampaignModal, setShowCampaignModal] = React.useState(false);
+  const [showNotesModal, setShowNotesModal] = React.useState(false);
+  const [outletModalTab, setOutletModalTab] = React.useState('inactive');
   
-  const [showFloatingBar, setShowFloatingBar] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const [showFloatingBar, setShowFloatingBar] = React.useState(true);
+  const lastScrollY = React.useRef(0);
 
-  const [compareMonths, setCompareMonths] = useState(['', '', '']);
-  const [sortConfig, setSortConfig] = useState({ key: 'mtdBs', direction: 'desc' });
-  const [currentPage, setCurrentPage] = useState(1);
+  const [compareMonths, setCompareMonths] = React.useState(['', '', '']);
+  const [sortConfig, setSortConfig] = React.useState({ key: 'mtdBs', direction: 'desc' });
+  const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 50;
 
-  const [noteText, setNoteText] = useState('');
-  const [showPresentation, setShowPresentation] = useState(false);
-  const presentationRef = useRef(null);
-  const [isCapturing, setIsCapturing] = useState(false);
+  const [noteText, setNoteText] = React.useState('');
+  const [showPresentation, setShowPresentation] = React.useState(false);
+  const presentationRef = React.useRef(null);
+  const [isCapturing, setIsCapturing] = React.useState(false);
 
-  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('am_dashboard_theme') === 'dark');
+  const [isDarkMode, setIsDarkMode] = React.useState(() => localStorage.getItem('am_dashboard_theme') === 'dark');
 
-  useEffect(() => { localStorage.setItem('am_dashboard_theme', isDarkMode ? 'dark' : 'light'); }, [isDarkMode]);
-  useEffect(() => { setShowFloatingBar(true); setShowPresentation(false); }, [selectedMex]);
+  React.useEffect(() => { localStorage.setItem('am_dashboard_theme', isDarkMode ? 'dark' : 'light'); }, [isDarkMode]);
+  React.useEffect(() => { setShowFloatingBar(true); setShowPresentation(false); }, [selectedMex]);
+
+  React.useEffect(() => {
+      const timer = setTimeout(() => {
+          setSearchTerm(searchInputValue);
+      }, 300);
+      return () => clearTimeout(timer);
+  }, [searchInputValue]);
 
   const handleMainScroll = (e) => {
       if(showPresentation) return;
       const currentScrollY = e.target.scrollTop;
-      if (currentScrollY > lastScrollY && currentScrollY > 20) setShowFloatingBar(false);
-      else setShowFloatingBar(true);
-      setLastScrollY(currentScrollY);
+      
+      if (currentScrollY > lastScrollY.current && currentScrollY > 20) {
+          setShowFloatingBar(false);
+      } else {
+          setShowFloatingBar(true);
+      }
+      lastScrollY.current = currentScrollY;
   };
 
   const handleSendWA = (templateType) => {
@@ -1080,10 +1092,14 @@ export default function App() {
   }, [activeData, searchTerm, selectedPriority, sortConfig]);
 
   const requestSort = (key) => setSortConfig({ key, direction: sortConfig?.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc' });
-  const paginatedData = useMemo(() => filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage), [filtered, currentPage]);
+  const paginatedData = React.useMemo(() => filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage), [filtered, currentPage]);
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
 
-  const handleSearchChange = (e) => { setSearchTerm(e.target.value); setCurrentPage(1); if (e.target.value && activeTab !== 'data' && !selectedMex) setActiveTab('data'); };
+  const handleSearchChange = (e) => { 
+      setSearchInputValue(e.target.value); 
+      setCurrentPage(1); 
+      if (e.target.value && activeTab !== 'data' && !selectedMex) setActiveTab('data'); 
+  };
   const onChartClick = (state) => { if (state?.activePayload?.[0]?.payload?.id) { setSelectedMex(state.activePayload[0].payload); setActiveTab('overview'); } };
 
   const renderMerchantCampaigns = (campaignStr, hideEmpty = false) => {
@@ -1094,7 +1110,9 @@ export default function App() {
     return (
         <div className="flex flex-wrap gap-1 mt-1.5">
             {camps.map((camp, idx) => (
-                <span key={idx} className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded-md text-[9px] font-bold flex items-center gap-1 shadow-sm max-w-full">
+                // DI SINI TEMPAT MERUBAH WARNANYA
+                // Contoh di bawah ini mengubahnya menjadi warna INDIGO (Biru keunguan)
+                <span key={idx} className="bg-emerald-20 text-black-700 border border-emerald-100 px-1.5 py-0.5 rounded-md text-[9px] font-bold flex items-center gap-1 shadow-sm max-w-full">
                     <Zap className="w-2.5 h-2.5 text-emerald-500 shrink-0" />
                     <span className="truncate">{camp}</span>
                 </span>
@@ -1643,7 +1661,7 @@ export default function App() {
                                   </div>
                                   <div className="min-w-0 flex-1">
                                       <p className="font-bold text-slate-800 text-sm truncate">{camp}</p>
-                                      <p className="text-[9px] font-black text-amber-50 uppercase tracking-widest mt-0.5">Active Program</p>
+                                      <p className="text-[9px] font-black text-black-50 uppercase tracking-widest mt-0.5">Active Program</p>
                                   </div>
                               </div>
                           ))}
@@ -1852,7 +1870,7 @@ export default function App() {
       <header className="header-main flex-none relative z-50 w-full bg-white border-b border-slate-200 transition-colors duration-300">
         <div className="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 h-16 md:h-20 flex items-center justify-between gap-4 md:gap-8">
           <div className="flex items-center gap-4 md:gap-6 flex-1 min-w-0">
-             <div className="flex items-center gap-2.5 cursor-pointer group shrink-0" onClick={() => { setSelectedMex(null); setActiveTab('overview'); setSearchTerm(''); }}>
+             <div className="flex items-center gap-2.5 cursor-pointer group shrink-0" onClick={() => { setSelectedMex(null); setActiveTab('overview'); setSearchInputValue(''); setSearchTerm(''); }}>
                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-[#00B14F] to-emerald-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-all">
                  <Activity className="w-4 h-4 md:w-5 md:h-5 text-white" />
                </div>
@@ -1872,7 +1890,7 @@ export default function App() {
              <div className="hidden md:flex items-center flex-1 min-w-0 relative">
                  {!selectedMex ? (
                     <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner header-nav-bg">
-                        <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'overview' ? 'bg-white text-[#00B14F] shadow-sm border border-slate-200/50 header-nav-active' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 header-nav-inactive'}`}>
+                        <button onClick={() => { setActiveTab('overview'); setSearchInputValue(''); setSearchTerm(''); }} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'overview' ? 'bg-white text-[#00B14F] shadow-sm border border-slate-200/50 header-nav-active' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 header-nav-inactive'}`}>
                             <LayoutDashboard className="w-4 h-4" /> Overview
                         </button>
                         <button onClick={() => setActiveTab('data')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'data' ? 'bg-white text-[#00B14F] shadow-sm border border-slate-200/50 header-nav-active' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 header-nav-inactive'}`}>
@@ -1929,7 +1947,7 @@ export default function App() {
             <div className="md:hidden border-t border-slate-200 bg-slate-50 header-mobile-sub">
                 <div className="flex flex-col px-4 py-2.5 gap-2">
                     <div className="flex w-full gap-2">
-                        <button onClick={() => { setActiveTab('overview'); setSearchTerm(''); }} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 ${activeTab === 'overview' ? 'bg-white text-[#00B14F] shadow-sm border border-slate-200 header-nav-active' : 'text-slate-500 hover:bg-slate-100 header-nav-inactive'}`}>
+                        <button onClick={() => { setActiveTab('overview'); setSearchInputValue(''); setSearchTerm(''); }} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 ${activeTab === 'overview' ? 'bg-white text-[#00B14F] shadow-sm border border-slate-200 header-nav-active' : 'text-slate-500 hover:bg-slate-100 header-nav-inactive'}`}>
                             <LayoutDashboard className="w-3.5 h-3.5" /> Overview
                         </button>
                         <button onClick={() => setActiveTab('data')} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 ${activeTab === 'data' ? 'bg-white text-[#00B14F] shadow-sm border border-slate-200 header-nav-active' : 'text-slate-500 hover:bg-slate-100 header-nav-inactive'}`}>
@@ -1952,13 +1970,13 @@ export default function App() {
                </div>
                <input 
                    type="text" 
-                   value={searchTerm} 
+                   value={searchInputValue} 
                    onChange={handleSearchChange} 
                    placeholder="Cari nama merchant atau ID..." 
                    className="w-full bg-white border border-slate-200 hover:border-emerald-300 rounded-2xl pl-10 lg:pl-12 pr-10 lg:pr-12 py-3 lg:py-3.5 text-xs lg:text-sm text-slate-800 font-bold focus:outline-none focus:border-[#00B14F] focus:ring-4 focus:ring-[#00B14F]/10 transition-all duration-300 shadow-sm" 
                />
-               {searchTerm && (
-                   <button onClick={() => setSearchTerm('')} className="absolute right-3 lg:right-4 top-1/2 -translate-y-1/2 p-1.5 lg:p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors">
+               {searchInputValue && (
+                   <button onClick={() => { setSearchInputValue(''); setSearchTerm(''); }} className="absolute right-3 lg:right-4 top-1/2 -translate-y-1/2 p-1.5 lg:p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors">
                        <X className="w-4 h-4" />
                    </button>
                )}
@@ -2128,7 +2146,7 @@ export default function App() {
                                   <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><UserPlus className="text-emerald-500 w-5 h-5"/> GMS Opt-In</h3>
                                   <p className="text-[10px] md:text-[11px] font-bold text-slate-500 mt-1">Merchant join GMS terbaru</p>
                               </div>
-                              <span className="bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-lg text-xs font-black border border-emerald-100">{optInList.length} Toko</span>
+                              <span className="bg-white-100 text-black-600 px-2.5 py-1 rounded-lg text-xs font-black border border-emerald-500">{optInList.length} Toko</span>
                           </div>
                           <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 max-h-[340px] flex flex-col gap-2.5">
                               {optInList.length === 0 ? (
@@ -2138,9 +2156,9 @@ export default function App() {
                                   </div>
                               ) : (
                                   optInList.map(mex => (
-                                      <div key={mex.id} onClick={() => setSelectedMex(mex)} className="bg-slate-50 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-200 p-3.5 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition-colors group shrink-0">
+                                      <div key={mex.id} onClick={() => setSelectedMex(mex)} className="bg-slate-50 hover:bg-emerald-20 border border-slate-100 hover:border-emerald-200 p-3.5 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition-colors group shrink-0">
                                           <div className="min-w-0 flex-1">
-                                              <p className="font-bold text-sm text-slate-800 group-hover:text-emerald-700 truncate transition-colors">{mex.name}</p>
+                                              <p className="font-bold text-sm text-slate-800 group-hover:text-black-700 truncate transition-colors">{mex.name}</p>
                                               <div className="mt-1.5 flex flex-wrap items-center gap-1.5 md:gap-2">
                                                   {mex.gmsOptInDate && mex.gmsOptInDate !== '-' && mex.gmsOptInDate !== '#N/A' && (
                                                       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 bg-white border border-slate-200 text-slate-600 text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-lg shadow-sm group-hover:border-slate-300 truncate max-w-full" title="Tanggal Join">
@@ -2148,13 +2166,13 @@ export default function App() {
                                                           {new Date(parseSafeDate(mex.gmsOptInDate)).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                       </span>
                                                   )}
-                                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 bg-emerald-50 border border-emerald-100 text-emerald-700 text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-lg shadow-sm group-hover:border-emerald-200 truncate max-w-full" title={mex.gmsOptIn}>
-                                                      <Package size={12} className="shrink-0 text-emerald-500" /> {mex.gmsOptIn}
+                                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 bg-white-100 border border-emerald-500 text-black-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-lg shadow-sm group-hover:border-emerald-200 truncate max-w-full" title={mex.gmsOptIn}>
+                                                      <Package size={12} className="shrink-0 text-black-500" /> {mex.gmsOptIn}
                                                   </span>
                                               </div>
                                           </div>
                                           <div className="text-right shrink-0 px-1 md:px-2">
-                                              <ChevronRight size={16} className="text-slate-300 group-hover:text-emerald-500 transition-colors" />
+                                              <ChevronRight size={16} className="text-slate-300 group-hover:text-black-500 transition-colors" />
                                           </div>
                                       </div>
                                   ))
@@ -2174,7 +2192,7 @@ export default function App() {
                           <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 max-h-[340px] flex flex-col gap-2.5">
                               {optOutList.length === 0 ? (
                                   <div className="flex-1 flex flex-col items-center justify-center text-slate-400 py-6 min-h-[160px]">
-                                      <UserMinus className="w-8 h-8 mb-2 opacity-20 text-rose-500" />
+                                      <UserMinus className="w-8 h-8 mb-2 opacity-20 text-black-500" />
                                       <p className="text-[10px] font-bold uppercase tracking-widest">Belum ada Opt-Out</p>
                                   </div>
                               ) : (
@@ -2190,7 +2208,7 @@ export default function App() {
                                                       </span>
                                                   )}
                                                   <span className="inline-flex items-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 bg-rose-50 border border-rose-100 text-rose-700 text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-lg shadow-sm group-hover:border-rose-200 truncate max-w-full" title={mex.gmsOptOut}>
-                                                      <XCircle size={12} className="shrink-0 text-rose-500" /> {mex.gmsOptOut}
+                                                      <XCircle size={12} className="shrink-0 text-black-500" /> {mex.gmsOptOut}
                                                   </span>
                                               </div>
                                           </div>
@@ -2412,7 +2430,7 @@ export default function App() {
                   <DashboardCard title="Sales" value={formatCurrency(selectedMex.mtdBs)} subLabel="Last Month" subValue={formatCurrency(selectedMex.lmBs)} icon={Activity} color="emerald" trend={selectedMex.lmBs > 0 ? ((selectedMex.rrBs - selectedMex.lmBs) / selectedMex.lmBs) * 100 : (selectedMex.rrBs > 0 ? 100 : 0)} borderClass="emerald-300" />
                   
                   <div onClick={() => setShowCampaignModal(true)} className="bg-white rounded-[28px] border border-slate-200 p-5 lg:p-6 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10 hover:border-amber-300 hover:-translate-y-1 group animate-fade-in-up stagger-3 h-full cursor-pointer">
-                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500"></div>
+                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-black-500"></div>
                       <Award className="absolute -bottom-6 -right-6 w-32 h-32 text-slate-900 opacity-5 rotate-[-15deg] pointer-events-none transition-transform duration-700 group-hover:scale-110" />
                       
                       {/* DIPERBAIKI */}
